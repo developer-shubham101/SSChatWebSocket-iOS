@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="17506" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_1" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="17505"/>
+        <capability name="Named colors" minToolsVersion="9.0"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <customFonts key="customFonts">
+        <array key="Roboto-Light.ttf">
+            <string>Roboto-Light</string>
+        </array>
+        <array key="Roboto-Regular.ttf">
+            <string>Roboto-Regular</string>
+        </array>
+    </customFonts>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="PickContactViewController" customModule="SSNodeJsChat" customModuleProvider="target">
+            <connections>
+                <outlet property="collectionFlow" destination="Jjh-6L-ncE" id="bBh-WX-qya"/>
+                <outlet property="collectionView" destination="8PG-cB-zLh" id="Jo6-Qr-Ij3"/>
+                <outlet property="contactTableView" destination="jeZ-fK-ZSn" id="K2B-PE-h1W"/>
+                <outlet property="searchField" destination="nA2-Ta-DDE" id="QXH-05-got"/>
+                <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
+            <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="hJk-Mr-C2s">
+                    <rect key="frame" x="0.0" y="44" width="414" height="818"/>
+                    <subviews>
+                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="7Bf-g2-TcB">
+                            <rect key="frame" x="0.0" y="0.0" width="414" height="45"/>
+                            <subviews>
+                                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="yoE-TA-h0m">
+                                    <rect key="frame" x="0.0" y="0.0" width="46" height="45"/>
+                                    <constraints>
+                                        <constraint firstAttribute="width" constant="46" id="E7B-GK-L72"/>
+                                    </constraints>
+                                    <state key="normal" image="ic_back"/>
+                                    <connections>
+                                        <action selector="didTapBack:" destination="-1" eventType="touchUpInside" id="aJj-C4-H9X"/>
+                                    </connections>
+                                </button>
+                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Contact" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="s2v-zx-4lt">
+                                    <rect key="frame" x="56" y="9.5" width="302" height="26"/>
+                                    <fontDescription key="fontDescription" name="Roboto-Regular" family="Roboto" pointSize="22"/>
+                                    <color key="textColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                    <nil key="highlightedColor"/>
+                                </label>
+                                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="17q-3J-lrN">
+                                    <rect key="frame" x="368" y="0.0" width="46" height="45"/>
+                                    <constraints>
+                                        <constraint firstAttribute="width" constant="46" id="aSM-ky-G4v"/>
+                                    </constraints>
+                                    <fontDescription key="fontDescription" name="Roboto-Regular" family="Roboto" pointSize="14"/>
+                                    <state key="normal" title="Done">
+                                        <color key="titleColor" name="AppDustyOrange"/>
+                                    </state>
+                                    <connections>
+                                        <action selector="didTapDone:" destination="-1" eventType="touchUpInside" id="fZr-TW-Hb9"/>
+                                    </connections>
+                                </button>
+                            </subviews>
+                            <color key="backgroundColor" name="AppWhite"/>
+                            <constraints>
+                                <constraint firstAttribute="bottom" secondItem="yoE-TA-h0m" secondAttribute="bottom" id="4rr-ek-J4A"/>
+                                <constraint firstAttribute="bottom" secondItem="17q-3J-lrN" secondAttribute="bottom" id="JCg-27-djv"/>
+                                <constraint firstAttribute="trailing" secondItem="17q-3J-lrN" secondAttribute="trailing" id="QOc-cR-DCj"/>
+                                <constraint firstItem="17q-3J-lrN" firstAttribute="leading" secondItem="s2v-zx-4lt" secondAttribute="trailing" constant="10" id="bdJ-Dd-VJU"/>
+                                <constraint firstItem="17q-3J-lrN" firstAttribute="top" secondItem="7Bf-g2-TcB" secondAttribute="top" id="h51-my-7Lv"/>
+                                <constraint firstAttribute="height" constant="45" id="n3X-vN-nnr"/>
+                                <constraint firstItem="s2v-zx-4lt" firstAttribute="centerY" secondItem="7Bf-g2-TcB" secondAttribute="centerY" id="tGd-E9-ZJk"/>
+                                <constraint firstItem="s2v-zx-4lt" firstAttribute="leading" secondItem="yoE-TA-h0m" secondAttribute="trailing" constant="10" id="u72-R8-Cv6"/>
+                                <constraint firstItem="yoE-TA-h0m" firstAttribute="top" secondItem="7Bf-g2-TcB" secondAttribute="top" id="v3U-6N-Chb"/>
+                                <constraint firstItem="yoE-TA-h0m" firstAttribute="leading" secondItem="7Bf-g2-TcB" secondAttribute="leading" id="yOk-29-8hO"/>
+                            </constraints>
+                        </view>
+                        <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="8PG-cB-zLh">
+                            <rect key="frame" x="0.0" y="45" width="414" height="122"/>
+                            <color key="backgroundColor" name="AppWhite"/>
+                            <constraints>
+                                <constraint firstAttribute="height" constant="122" id="5L9-cD-NDK"/>
+                            </constraints>
+                            <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="Jjh-6L-ncE">
+                                <size key="itemSize" width="50" height="50"/>
+                                <size key="headerReferenceSize" width="0.0" height="0.0"/>
+                                <size key="footerReferenceSize" width="0.0" height="0.0"/>
+                                <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
+                            </collectionViewFlowLayout>
+                            <cells/>
+                        </collectionView>
+                        <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="Search..." textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="nA2-Ta-DDE" customClass="ACFloatingTextfield" customModule="SSNodeJsChat" customModuleProvider="target">
+                            <rect key="frame" x="10" y="177" width="394" height="40"/>
+                            <constraints>
+                                <constraint firstAttribute="height" constant="40" id="xib-rj-P9M"/>
+                            </constraints>
+                            <color key="textColor" name="AppBlack"/>
+                            <fontDescription key="fontDescription" name="Roboto-Light" family="Roboto" pointSize="19"/>
+                            <textInputTraits key="textInputTraits"/>
+                            <userDefinedRuntimeAttributes>
+                                <userDefinedRuntimeAttribute type="color" keyPath="lineColor">
+                                    <color key="value" name="AppTextBorder"/>
+                                </userDefinedRuntimeAttribute>
+                                <userDefinedRuntimeAttribute type="color" keyPath="selectedLineColor">
+                                    <color key="value" name="AppTextBorder"/>
+                                </userDefinedRuntimeAttribute>
+                                <userDefinedRuntimeAttribute type="color" keyPath="selectedPlaceHolderColor">
+                                    <color key="value" red="0.0" green="0.0" blue="0.0" alpha="0.40927868449999999" colorSpace="custom" customColorSpace="sRGB"/>
+                                </userDefinedRuntimeAttribute>
+                            </userDefinedRuntimeAttributes>
+                        </textField>
+                        <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="jeZ-fK-ZSn">
+                            <rect key="frame" x="0.0" y="227" width="414" height="591"/>
+                            <color key="backgroundColor" name="AppWhite"/>
+                        </tableView>
+                    </subviews>
+                    <color key="backgroundColor" name="AppWhite"/>
+                    <constraints>
+                        <constraint firstAttribute="trailing" secondItem="jeZ-fK-ZSn" secondAttribute="trailing" id="72O-az-0t8"/>
+                        <constraint firstItem="nA2-Ta-DDE" firstAttribute="top" secondItem="8PG-cB-zLh" secondAttribute="bottom" constant="10" id="9x0-JK-Lf4"/>
+                        <constraint firstItem="7Bf-g2-TcB" firstAttribute="leading" secondItem="hJk-Mr-C2s" secondAttribute="leading" id="IUa-ng-czZ"/>
+                        <constraint firstItem="8PG-cB-zLh" firstAttribute="top" secondItem="7Bf-g2-TcB" secondAttribute="bottom" id="JCz-iS-808"/>
+                        <constraint firstItem="nA2-Ta-DDE" firstAttribute="leading" secondItem="hJk-Mr-C2s" secondAttribute="leading" constant="10" id="Trs-0z-EqW"/>
+                        <constraint firstItem="8PG-cB-zLh" firstAttribute="leading" secondItem="hJk-Mr-C2s" secondAttribute="leading" id="bb4-FE-t1P"/>
+                        <constraint firstItem="jeZ-fK-ZSn" firstAttribute="leading" secondItem="hJk-Mr-C2s" secondAttribute="leading" id="bvE-Jp-iDv"/>
+                        <constraint firstItem="7Bf-g2-TcB" firstAttribute="top" secondItem="hJk-Mr-C2s" secondAttribute="top" id="gDA-Ah-i1g"/>
+                        <constraint firstAttribute="trailing" secondItem="8PG-cB-zLh" secondAttribute="trailing" id="iXi-NL-uAs"/>
+                        <constraint firstAttribute="trailing" secondItem="nA2-Ta-DDE" secondAttribute="trailing" constant="10" id="jQt-F4-vur"/>
+                        <constraint firstAttribute="bottom" secondItem="jeZ-fK-ZSn" secondAttribute="bottom" id="kkA-Aq-ZSo"/>
+                        <constraint firstAttribute="trailing" secondItem="7Bf-g2-TcB" secondAttribute="trailing" id="pes-cU-sYL"/>
+                        <constraint firstItem="jeZ-fK-ZSn" firstAttribute="top" secondItem="nA2-Ta-DDE" secondAttribute="bottom" constant="10" id="uVg-tq-3TU"/>
+                    </constraints>
+                </view>
+            </subviews>
+            <viewLayoutGuide key="safeArea" id="fnl-2z-Ty3"/>
+            <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+            <constraints>
+                <constraint firstItem="hJk-Mr-C2s" firstAttribute="leading" secondItem="fnl-2z-Ty3" secondAttribute="leading" id="BMz-bt-qgI"/>
+                <constraint firstItem="fnl-2z-Ty3" firstAttribute="bottom" secondItem="hJk-Mr-C2s" secondAttribute="bottom" id="NNc-FA-1Sg"/>
+                <constraint firstItem="fnl-2z-Ty3" firstAttribute="trailing" secondItem="hJk-Mr-C2s" secondAttribute="trailing" id="OGf-Lt-aml"/>
+                <constraint firstItem="hJk-Mr-C2s" firstAttribute="top" secondItem="fnl-2z-Ty3" secondAttribute="top" id="Yq2-Es-pGQ"/>
+            </constraints>
+            <point key="canvasLocation" x="137.68115942028987" y="128.57142857142856"/>
+        </view>
+    </objects>
+    <resources>
+        <image name="ic_back" width="46" height="48"/>
+        <namedColor name="AppBlack">
+            <color red="0.32899999618530273" green="0.32400000095367432" blue="0.4779999852180481" alpha="0.33000001311302185" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="AppDustyOrange">
+            <color red="0.32899999618530273" green="0.32400000095367432" blue="0.4779999852180481" alpha="0.33000001311302185" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="AppTextBorder">
+            <color red="0.32899999618530273" green="0.32400000095367432" blue="0.4779999852180481" alpha="0.33000001311302185" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="AppWhite">
+            <color red="0.32899999618530273" green="0.32400000095367432" blue="0.4779999852180481" alpha="0.33000001311302185" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>

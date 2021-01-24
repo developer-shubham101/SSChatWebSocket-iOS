@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="15705" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_1" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15706"/>
+        <capability name="Named colors" minToolsVersion="9.0"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <customFonts key="customFonts">
+        <array key="Roboto-Regular.ttf">
+            <string>Roboto-Regular</string>
+        </array>
+    </customFonts>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" rowHeight="166" id="KGk-i7-Jjw" customClass="RightVideoTableViewCell" customModule="World_Album" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="412" height="166"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
+                <rect key="frame" x="0.0" y="0.0" width="412" height="166"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="eIU-eo-BZo" customClass="SSView" customModule="SSViews">
+                        <rect key="frame" x="279" y="3" width="130" height="131"/>
+                        <subviews>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="city" translatesAutoresizingMaskIntoConstraints="NO" id="NYb-Yb-kXg" customClass="SSImageView" customModule="SSViews">
+                                <rect key="frame" x="3" y="3" width="124" height="125"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="125" id="jtk-px-ygI"/>
+                                </constraints>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="radius" value="YES"/>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="radiusAmt">
+                                        <real key="value" value="10"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="clipOuterView" value="YES"/>
+                                </userDefinedRuntimeAttributes>
+                            </imageView>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="gaX-Oe-9eX" customClass="SSView" customModule="SSViews">
+                                <rect key="frame" x="45" y="45.5" width="40" height="40"/>
+                                <subviews>
+                                    <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ic_load" translatesAutoresizingMaskIntoConstraints="NO" id="qDC-q1-3r0" customClass="LoaderImageView" customModule="World_Album" customModuleProvider="target">
+                                        <rect key="frame" x="5" y="5" width="30" height="30"/>
+                                        <color key="tintColor" name="AppDustyOrange"/>
+                                    </imageView>
+                                </subviews>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="40" id="2CY-1U-KhK"/>
+                                    <constraint firstItem="qDC-q1-3r0" firstAttribute="top" secondItem="gaX-Oe-9eX" secondAttribute="top" constant="5" id="5k6-lI-pZQ"/>
+                                    <constraint firstAttribute="trailing" secondItem="qDC-q1-3r0" secondAttribute="trailing" constant="5" id="DnZ-04-YHl"/>
+                                    <constraint firstAttribute="height" constant="40" id="EPL-NY-E7J"/>
+                                    <constraint firstItem="qDC-q1-3r0" firstAttribute="leading" secondItem="gaX-Oe-9eX" secondAttribute="leading" constant="5" id="NOX-Cf-omF"/>
+                                    <constraint firstAttribute="bottom" secondItem="qDC-q1-3r0" secondAttribute="bottom" constant="5" id="T2u-3l-FPe"/>
+                                </constraints>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="border" value="NO"/>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="radius" value="YES"/>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="radiusAmt">
+                                        <real key="value" value="20"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                            </view>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="MnR-8Z-wfy" customClass="SSView" customModule="SSViews">
+                                <rect key="frame" x="42.5" y="84.5" width="45.5" height="18"/>
+                                <subviews>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="10%" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="qwE-9N-GSa">
+                                        <rect key="frame" x="10" y="2" width="25.5" height="14"/>
+                                        <fontDescription key="fontDescription" name="Roboto-Regular" family="Roboto" pointSize="12"/>
+                                        <color key="textColor" name="AppDustyOrange"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                </subviews>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="18" id="2yM-sb-n0t"/>
+                                    <constraint firstItem="qwE-9N-GSa" firstAttribute="leading" secondItem="MnR-8Z-wfy" secondAttribute="leading" constant="10" id="FuY-6W-jC2"/>
+                                    <constraint firstAttribute="trailing" secondItem="qwE-9N-GSa" secondAttribute="trailing" constant="10" id="KmC-Sj-ZBd"/>
+                                    <constraint firstItem="qwE-9N-GSa" firstAttribute="centerY" secondItem="MnR-8Z-wfy" secondAttribute="centerY" id="Xmz-wp-cbA"/>
+                                </constraints>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="radius" value="YES"/>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="radiusAmt">
+                                        <real key="value" value="9"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                            </view>
+                        </subviews>
+                        <color key="backgroundColor" name="AppDustyOrange"/>
+                        <constraints>
+                            <constraint firstItem="gaX-Oe-9eX" firstAttribute="centerX" secondItem="eIU-eo-BZo" secondAttribute="centerX" id="0zU-AE-46X"/>
+                            <constraint firstAttribute="width" constant="130" id="1a8-8t-MIQ"/>
+                            <constraint firstItem="MnR-8Z-wfy" firstAttribute="top" secondItem="gaX-Oe-9eX" secondAttribute="bottom" constant="-1" id="DLw-0z-Xz8"/>
+                            <constraint firstAttribute="trailing" secondItem="NYb-Yb-kXg" secondAttribute="trailing" constant="3" id="JAg-Sp-88b"/>
+                            <constraint firstItem="gaX-Oe-9eX" firstAttribute="centerY" secondItem="eIU-eo-BZo" secondAttribute="centerY" id="NUu-FW-9TV"/>
+                            <constraint firstItem="NYb-Yb-kXg" firstAttribute="top" secondItem="eIU-eo-BZo" secondAttribute="top" constant="3" id="Qyz-zs-fn8"/>
+                            <constraint firstItem="MnR-8Z-wfy" firstAttribute="centerX" secondItem="gaX-Oe-9eX" secondAttribute="centerX" id="blc-8I-3WW"/>
+                            <constraint firstAttribute="height" constant="131" id="lIj-0O-wLh"/>
+                            <constraint firstItem="NYb-Yb-kXg" firstAttribute="leading" secondItem="eIU-eo-BZo" secondAttribute="leading" constant="3" id="s1t-Vn-uX5"/>
+                        </constraints>
+                        <userDefinedRuntimeAttributes>
+                            <userDefinedRuntimeAttribute type="boolean" keyPath="radius" value="YES"/>
+                            <userDefinedRuntimeAttribute type="number" keyPath="radiusAmt">
+                                <real key="value" value="10"/>
+                            </userDefinedRuntimeAttribute>
+                        </userDefinedRuntimeAttributes>
+                    </view>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="2 mins ago" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="DIA-ch-hvR">
+                        <rect key="frame" x="342.5" y="137" width="59.5" height="14"/>
+                        <fontDescription key="fontDescription" name="Roboto-Regular" family="Roboto" pointSize="12"/>
+                        <color key="textColor" name="AppBrownishGrey"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                </subviews>
+                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                <constraints>
+                    <constraint firstAttribute="trailing" secondItem="eIU-eo-BZo" secondAttribute="trailing" constant="3" id="CVw-g8-cyF"/>
+                    <constraint firstItem="eIU-eo-BZo" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" constant="3" id="jDZ-4F-mah"/>
+                    <constraint firstItem="DIA-ch-hvR" firstAttribute="top" secondItem="eIU-eo-BZo" secondAttribute="bottom" constant="3" id="tGO-zo-yNS"/>
+                    <constraint firstAttribute="trailing" secondItem="DIA-ch-hvR" secondAttribute="trailing" constant="10" id="x6d-lj-CVD"/>
+                </constraints>
+            </tableViewCellContentView>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+            <viewLayoutGuide key="safeArea" id="njF-e1-oar"/>
+            <connections>
+                <outlet property="chatImage" destination="NYb-Yb-kXg" id="e8j-l9-pd0"/>
+                <outlet property="loadingImage" destination="qDC-q1-3r0" id="NgW-dC-AQl"/>
+                <outlet property="progressLabel" destination="qwE-9N-GSa" id="sCi-XU-j9g"/>
+                <outlet property="time" destination="DIA-ch-hvR" id="n77-h7-aXa"/>
+            </connections>
+            <point key="canvasLocation" x="204.34782608695653" y="193.52678571428569"/>
+        </tableViewCell>
+    </objects>
+    <resources>
+        <image name="city" width="630" height="472"/>
+        <image name="ic_load" width="170.66667175292969" height="170.66667175292969"/>
+        <namedColor name="AppBrownishGrey">
+            <color red="0.35294117647058826" green="0.35294117647058826" blue="0.35294117647058826" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="AppDustyOrange">
+            <color red="0.96078431372549022" green="0.52156862745098043" blue="0.14117647058823529" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+    </resources>
+</document>

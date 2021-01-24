@@ -1,0 +1,33 @@
+# Uncomment the next line to define a global platform for your project
+# platform :ios, '9.0'
+
+target 'SSNodeJsChat' do
+  # Comment the next line if you don't want to use dynamic frameworks
+  use_frameworks!
+
+  # Pods for SSNodeJsChat
+
+  pod 'SDWebImage'
+  pod 'IQKeyboardManager'
+  #pod 'Starscream', '~> 4.0.0'
+  pod 'Alamofire', '~> 4.5'
+  pod 'Socket.IO-Client-Swift', '~> 15.2.0'
+  pod 'SSViews'
+  pod 'GoogleMaps'
+  pod 'GooglePlaces'
+  pod 'GooglePlacePicker'
+  pod 'Toast-Swift' 
+  pod 'DKImagePickerController'
+  pod 'CropViewController'
+
+
+  target 'SSNodeJsChatTests' do
+    inherit! :search_paths
+    # Pods for testing
+  end
+
+  target 'SSNodeJsChatUITests' do
+    # Pods for testing
+  end
+
+end

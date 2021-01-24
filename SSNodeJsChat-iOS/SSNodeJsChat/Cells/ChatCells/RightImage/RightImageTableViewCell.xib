@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="15705" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina4_7" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15706"/>
+        <capability name="Named colors" minToolsVersion="9.0"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <customFonts key="customFonts">
+        <array key="Roboto-Regular.ttf">
+            <string>Roboto-Regular</string>
+        </array>
+    </customFonts>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell contentMode="scaleToFill" selectionStyle="none" indentationWidth="10" rowHeight="163" id="KGk-i7-Jjw" customClass="RightImageTableViewCell" customModule="World_Album" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="163"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
+                <rect key="frame" x="0.0" y="0.0" width="320" height="163"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="eEX-NU-mJf" customClass="SSView" customModule="SSViews">
+                        <rect key="frame" x="187" y="3" width="130" height="131"/>
+                        <subviews>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="city" translatesAutoresizingMaskIntoConstraints="NO" id="9D9-fd-KuA" customClass="SSImageView" customModule="SSViews">
+                                <rect key="frame" x="3" y="3" width="124" height="125"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="125" id="wfr-yJ-KYL"/>
+                                </constraints>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="radius" value="YES"/>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="radiusAmt">
+                                        <real key="value" value="10"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="clipOuterView" value="YES"/>
+                                </userDefinedRuntimeAttributes>
+                            </imageView>
+                        </subviews>
+                        <color key="backgroundColor" name="AppDustyOrange"/>
+                        <constraints>
+                            <constraint firstAttribute="height" constant="131" id="33x-TK-epT"/>
+                            <constraint firstItem="9D9-fd-KuA" firstAttribute="top" secondItem="eEX-NU-mJf" secondAttribute="top" constant="3" id="4Qg-OB-wEm"/>
+                            <constraint firstAttribute="width" constant="130" id="BGc-b4-R08"/>
+                            <constraint firstItem="9D9-fd-KuA" firstAttribute="leading" secondItem="eEX-NU-mJf" secondAttribute="leading" constant="3" id="Hc1-mn-F8b"/>
+                            <constraint firstAttribute="trailing" secondItem="9D9-fd-KuA" secondAttribute="trailing" constant="3" id="mGI-X1-Pfx"/>
+                        </constraints>
+                        <userDefinedRuntimeAttributes>
+                            <userDefinedRuntimeAttribute type="boolean" keyPath="radius" value="YES"/>
+                            <userDefinedRuntimeAttribute type="number" keyPath="radiusAmt">
+                                <real key="value" value="10"/>
+                            </userDefinedRuntimeAttribute>
+                        </userDefinedRuntimeAttributes>
+                    </view>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="2 mins ago" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="yud-Vy-xSO">
+                        <rect key="frame" x="250.5" y="136" width="59.5" height="14"/>
+                        <fontDescription key="fontDescription" name="Roboto-Regular" family="Roboto" pointSize="12"/>
+                        <color key="textColor" name="AppBrownishGrey"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                </subviews>
+                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                <constraints>
+                    <constraint firstAttribute="trailing" secondItem="eEX-NU-mJf" secondAttribute="trailing" constant="3" id="DfQ-bx-wp5"/>
+                    <constraint firstItem="eEX-NU-mJf" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" constant="3" id="ecM-XL-36c"/>
+                    <constraint firstAttribute="trailing" secondItem="yud-Vy-xSO" secondAttribute="trailing" constant="10" id="i3i-Km-tQG"/>
+                    <constraint firstItem="yud-Vy-xSO" firstAttribute="top" secondItem="9D9-fd-KuA" secondAttribute="bottom" constant="5" id="pyI-Cc-cOd"/>
+                </constraints>
+            </tableViewCellContentView>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+            <viewLayoutGuide key="safeArea" id="njF-e1-oar"/>
+            <connections>
+                <outlet property="chatImage" destination="9D9-fd-KuA" id="4dz-fW-yEE"/>
+                <outlet property="time" destination="yud-Vy-xSO" id="6bO-dV-Bf8"/>
+            </connections>
+            <point key="canvasLocation" x="132.80000000000001" y="166.8665667166417"/>
+        </tableViewCell>
+    </objects>
+    <resources>
+        <image name="city" width="630" height="472"/>
+        <namedColor name="AppBrownishGrey">
+            <color red="0.35294117647058826" green="0.35294117647058826" blue="0.35294117647058826" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="AppDustyOrange">
+            <color red="0.96078431372549022" green="0.52156862745098043" blue="0.14117647058823529" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+    </resources>
+</document>

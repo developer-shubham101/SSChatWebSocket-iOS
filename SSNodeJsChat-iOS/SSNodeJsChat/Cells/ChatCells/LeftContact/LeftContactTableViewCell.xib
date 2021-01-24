@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="15705" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_1" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15706"/>
+        <capability name="Named colors" minToolsVersion="9.0"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <customFonts key="customFonts">
+        <array key="Roboto-Light.ttf">
+            <string>Roboto-Light</string>
+        </array>
+        <array key="Roboto-Regular.ttf">
+            <string>Roboto-Regular</string>
+        </array>
+    </customFonts>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" rowHeight="94" id="KGk-i7-Jjw" customClass="LeftContactTableViewCell" customModule="World_Album" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="404" height="80"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
+                <rect key="frame" x="0.0" y="0.0" width="404" height="80"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="WfC-GW-XQI" customClass="SSView" customModule="SSViews">
+                        <rect key="frame" x="3" y="3" width="341" height="53"/>
+                        <subviews>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Shubham Sharma" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="lSU-Xo-ZCh">
+                                <rect key="frame" x="8" y="9.5" width="293" height="17"/>
+                                <fontDescription key="fontDescription" name="Roboto-Regular" family="Adani" pointSize="14"/>
+                                <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="7877462405" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="bUQ-j9-wPw">
+                                <rect key="frame" x="8" y="28.5" width="293" height="14"/>
+                                <fontDescription key="fontDescription" name="Roboto-Light" family="Roboto" pointSize="12"/>
+                                <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <imageView userInteractionEnabled="NO" contentMode="center" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ic_contact_icon" translatesAutoresizingMaskIntoConstraints="NO" id="2o7-uw-hab">
+                                <rect key="frame" x="313" y="8" width="20" height="20"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="20" id="bBy-nA-vR5"/>
+                                    <constraint firstAttribute="height" constant="20" id="iH6-zb-Oom"/>
+                                </constraints>
+                            </imageView>
+                        </subviews>
+                        <color key="backgroundColor" name="AppChatCell"/>
+                        <constraints>
+                            <constraint firstItem="2o7-uw-hab" firstAttribute="leading" secondItem="lSU-Xo-ZCh" secondAttribute="trailing" constant="12" id="0W4-s5-OCP"/>
+                            <constraint firstAttribute="trailing" secondItem="bUQ-j9-wPw" secondAttribute="trailing" constant="40" id="ER4-tK-CLS"/>
+                            <constraint firstAttribute="trailing" secondItem="2o7-uw-hab" secondAttribute="trailing" constant="8" id="GKQ-QP-cKt"/>
+                            <constraint firstItem="2o7-uw-hab" firstAttribute="top" secondItem="WfC-GW-XQI" secondAttribute="top" constant="8" id="Mhh-f4-0R6"/>
+                            <constraint firstItem="bUQ-j9-wPw" firstAttribute="top" secondItem="lSU-Xo-ZCh" secondAttribute="bottom" constant="2" id="kHH-tA-uXe"/>
+                            <constraint firstItem="lSU-Xo-ZCh" firstAttribute="leading" secondItem="WfC-GW-XQI" secondAttribute="leading" constant="8" id="l9q-H0-8Uz"/>
+                            <constraint firstItem="bUQ-j9-wPw" firstAttribute="leading" secondItem="WfC-GW-XQI" secondAttribute="leading" constant="8" id="rxS-MS-GVZ"/>
+                            <constraint firstItem="lSU-Xo-ZCh" firstAttribute="centerY" secondItem="2o7-uw-hab" secondAttribute="centerY" id="zG8-fB-U0Y"/>
+                        </constraints>
+                        <userDefinedRuntimeAttributes>
+                            <userDefinedRuntimeAttribute type="boolean" keyPath="radius" value="YES"/>
+                            <userDefinedRuntimeAttribute type="number" keyPath="radiusAmt">
+                                <real key="value" value="10"/>
+                            </userDefinedRuntimeAttribute>
+                        </userDefinedRuntimeAttributes>
+                    </view>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="2 mins ago" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="zsD-Xu-3E5">
+                        <rect key="frame" x="10" y="61" width="59.5" height="14"/>
+                        <fontDescription key="fontDescription" name="Roboto-Regular" family="Roboto" pointSize="12"/>
+                        <color key="textColor" name="AppBrownishGrey"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                </subviews>
+                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                <constraints>
+                    <constraint firstItem="WfC-GW-XQI" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" constant="3" id="IA1-0T-80I"/>
+                    <constraint firstAttribute="bottom" secondItem="zsD-Xu-3E5" secondAttribute="bottom" constant="5" id="OMS-cG-EkX"/>
+                    <constraint firstAttribute="trailing" secondItem="WfC-GW-XQI" secondAttribute="trailing" constant="60" id="agR-4G-pcf"/>
+                    <constraint firstItem="WfC-GW-XQI" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="3" id="c5w-h3-xKZ"/>
+                    <constraint firstItem="zsD-Xu-3E5" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="10" id="j6C-ad-TCv"/>
+                    <constraint firstItem="zsD-Xu-3E5" firstAttribute="top" secondItem="WfC-GW-XQI" secondAttribute="bottom" constant="5" id="z4f-ba-dPy"/>
+                </constraints>
+            </tableViewCellContentView>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+            <viewLayoutGuide key="safeArea" id="njF-e1-oar"/>
+            <connections>
+                <outlet property="contactName" destination="lSU-Xo-ZCh" id="FtW-eu-phz"/>
+                <outlet property="number" destination="bUQ-j9-wPw" id="029-m8-rLS"/>
+                <outlet property="time" destination="zsD-Xu-3E5" id="WIl-gu-Gtz"/>
+            </connections>
+            <point key="canvasLocation" x="343.47826086956525" y="169.41964285714286"/>
+        </tableViewCell>
+    </objects>
+    <resources>
+        <image name="ic_contact_icon" width="13" height="13"/>
+        <namedColor name="AppBrownishGrey">
+            <color red="0.35294117647058826" green="0.35294117647058826" blue="0.35294117647058826" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="AppChatCell">
+            <color red="0.95294117647058818" green="0.95294117647058818" blue="0.95294117647058818" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+    </resources>
+</document>

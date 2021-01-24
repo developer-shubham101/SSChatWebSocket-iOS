@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="15705" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_1" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15706"/>
+        <capability name="Named colors" minToolsVersion="9.0"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <customFonts key="customFonts">
+        <array key="Roboto-Regular.ttf">
+            <string>Roboto-Regular</string>
+        </array>
+    </customFonts>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="UploadStatusView" customModule="World_Album" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="409" height="50"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <view clipsSubviews="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="0nz-13-1kD">
+                    <rect key="frame" x="0.0" y="0.0" width="409" height="50"/>
+                    <subviews>
+                        <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.29999999999999999" translatesAutoresizingMaskIntoConstraints="NO" id="NoC-0g-dqz">
+                            <rect key="frame" x="65" y="24" width="287" height="2"/>
+                            <constraints>
+                                <constraint firstAttribute="height" constant="2" id="MGP-R4-qSe"/>
+                            </constraints>
+                            <color key="progressTintColor" name="AppDustyOrange"/>
+                            <color key="trackTintColor" name="AppBrownishGrey"/>
+                        </progressView>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="1dF-CI-GO5">
+                            <rect key="frame" x="372" y="9" width="32" height="32"/>
+                            <constraints>
+                                <constraint firstAttribute="height" constant="32" id="8kA-n5-yMN"/>
+                                <constraint firstAttribute="width" constant="32" id="OKa-jM-DGc"/>
+                            </constraints>
+                            <color key="tintColor" name="AppRuby"/>
+                            <inset key="imageEdgeInsets" minX="7" minY="7" maxX="7" maxY="7"/>
+                            <state key="normal" image="ic_close"/>
+                            <connections>
+                                <action selector="didTapCancel:" destination="iN0-l3-epB" eventType="touchUpInside" id="Fbb-XA-5Li"/>
+                            </connections>
+                        </button>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="30%" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="7Y2-nJ-5My">
+                            <rect key="frame" x="65" y="28" width="25.5" height="14"/>
+                            <fontDescription key="fontDescription" name="Roboto-Regular" family="Roboto" pointSize="12"/>
+                            <color key="textColor" name="AppWhite"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="File.jpg" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="Zly-bt-6Tc">
+                            <rect key="frame" x="65" y="5.5" width="39" height="14"/>
+                            <fontDescription key="fontDescription" name="Roboto-Regular" family="Roboto" pointSize="12"/>
+                            <color key="textColor" name="AppWhite"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                        <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="logo" translatesAutoresizingMaskIntoConstraints="NO" id="inv-Jj-uTI">
+                            <rect key="frame" x="5" y="5" width="40" height="40"/>
+                            <constraints>
+                                <constraint firstAttribute="width" secondItem="inv-Jj-uTI" secondAttribute="height" multiplier="1:1" id="DBU-D2-4BT"/>
+                            </constraints>
+                        </imageView>
+                    </subviews>
+                    <color key="backgroundColor" red="0.25882352941176467" green="0.25882352941176467" blue="0.25882352941176467" alpha="0.85471960616438358" colorSpace="custom" customColorSpace="sRGB"/>
+                    <constraints>
+                        <constraint firstItem="NoC-0g-dqz" firstAttribute="leading" secondItem="inv-Jj-uTI" secondAttribute="trailing" constant="20" id="C3N-Xy-wFH"/>
+                        <constraint firstItem="NoC-0g-dqz" firstAttribute="centerY" secondItem="0nz-13-1kD" secondAttribute="centerY" id="F0s-xS-y1V"/>
+                        <constraint firstItem="Zly-bt-6Tc" firstAttribute="leading" secondItem="NoC-0g-dqz" secondAttribute="leading" id="Jnu-go-mw4"/>
+                        <constraint firstItem="1dF-CI-GO5" firstAttribute="centerY" secondItem="0nz-13-1kD" secondAttribute="centerY" id="VSS-u1-v3d"/>
+                        <constraint firstAttribute="bottom" secondItem="inv-Jj-uTI" secondAttribute="bottom" constant="5" id="VXT-ic-tcE"/>
+                        <constraint firstItem="7Y2-nJ-5My" firstAttribute="top" secondItem="NoC-0g-dqz" secondAttribute="bottom" constant="2" id="Xeh-bd-Wcl"/>
+                        <constraint firstItem="7Y2-nJ-5My" firstAttribute="leading" secondItem="NoC-0g-dqz" secondAttribute="leading" id="hIW-wo-sVN"/>
+                        <constraint firstAttribute="trailing" secondItem="1dF-CI-GO5" secondAttribute="trailing" constant="5" id="iyL-s0-LML"/>
+                        <constraint firstItem="inv-Jj-uTI" firstAttribute="leading" secondItem="0nz-13-1kD" secondAttribute="leading" constant="5" id="j8k-yN-aPY"/>
+                        <constraint firstItem="NoC-0g-dqz" firstAttribute="top" secondItem="Zly-bt-6Tc" secondAttribute="bottom" constant="4.5" id="l77-OR-vhA"/>
+                        <constraint firstAttribute="height" constant="50" id="tZk-Cz-NEh"/>
+                        <constraint firstItem="inv-Jj-uTI" firstAttribute="top" secondItem="0nz-13-1kD" secondAttribute="top" constant="5" id="w64-ZL-XaI"/>
+                        <constraint firstItem="1dF-CI-GO5" firstAttribute="leading" secondItem="NoC-0g-dqz" secondAttribute="trailing" constant="20" id="xkS-09-eEZ"/>
+                    </constraints>
+                    <userDefinedRuntimeAttributes>
+                        <userDefinedRuntimeAttribute type="number" keyPath="cornerRadius">
+                            <integer key="value" value="5"/>
+                        </userDefinedRuntimeAttribute>
+                    </userDefinedRuntimeAttributes>
+                </view>
+            </subviews>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+            <constraints>
+                <constraint firstItem="0nz-13-1kD" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" id="AQS-9E-YAG"/>
+                <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="0nz-13-1kD" secondAttribute="trailing" id="PPT-dn-6mG"/>
+                <constraint firstItem="0nz-13-1kD" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="UpG-xK-dhY"/>
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>
+            <connections>
+                <outlet property="fileProgress" destination="7Y2-nJ-5My" id="KWk-qD-G5V"/>
+                <outlet property="fileTitle" destination="Zly-bt-6Tc" id="ZcK-LM-pbz"/>
+                <outlet property="progressBar" destination="NoC-0g-dqz" id="s32-Q6-O1D"/>
+                <outlet property="progressUploadImage" destination="inv-Jj-uTI" id="XZl-W7-7L5"/>
+                <outlet property="uploadProgress" destination="inv-Jj-uTI" id="gLv-Ld-3K4"/>
+            </connections>
+            <point key="canvasLocation" x="134.05797101449275" y="-130.58035714285714"/>
+        </view>
+    </objects>
+    <resources>
+        <image name="ic_close" width="256" height="256"/>
+        <image name="logo" width="120" height="120"/>
+        <namedColor name="AppBrownishGrey">
+            <color red="0.35294117647058826" green="0.35294117647058826" blue="0.35294117647058826" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="AppDustyOrange">
+            <color red="0.96078431372549022" green="0.52156862745098043" blue="0.14117647058823529" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="AppRuby">
+            <color red="0.80784313725490198" green="0.0" blue="0.32941176470588235" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="AppWhite">
+            <color red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+    </resources>
+</document>
