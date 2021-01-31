@@ -11,8 +11,7 @@ var webSocketsServerPort = 1337;
 var webSocketServer = require('websocket').server;
 var http = require('http');
 var mongoose = require('mongoose');
-var cons = {};
-var loginUsers = {}
+
 
 
 
@@ -50,23 +49,8 @@ const messageSchema = mongoose.Schema({
 	messageContent: Object
 });
 
-/* var MessageSchema = {
-	roomId:  mongoose.Schema.Types.ObjectId,
-
-	message: String,
-	message_type: String,
-
-	media: String,
-
-	receverId: String,
-	time: String,
-
-	senderId: String,
-	message_content: Object
-}; */
-
 var MessageSchema = {
-	roomId: mongoose.Schema.Types.ObjectId,
+	roomId: String,
 
 	message: String,
 	message_type: String,
@@ -79,14 +63,6 @@ var MessageSchema = {
 	sender_id: String,
 	message_content: Object
 };
-
-
-
-
-
-
-
-
 
 var MessageModel = mongoose.model('Message', MessageSchema);
 
@@ -257,45 +233,27 @@ function messageRequest(request) {
 		} else if (requestData.type == 'addMessage') {
 
 			let messageData = requestData;
-			console.log("Message Data" + messageData.roomId);
+			console.log("Message Data" + messageData);
 
 
 			/* 
 			roomId: String,
-
+			
 			message: String,
 			message_type: String,
-
+			
 			media: String,
-
+			
 			receverId: String,
 			time: String,
-
+			
 			senderId: String,
 			message_content: Object
 			*/
+			let currentData = `${Date.now()}`;
 
-			/* var user = new MsgModel({
-				roomId: mongoose.Schema.Types.ObjectId(messageData.roomId),
-
-				message: messageData.message,
-				message_type: "TXT",
-
-				media: "",
-				
-				receverId: 12,
-				time: "asdasd",
-				
-				senderId: 33,
-				message_content: { "contactName": "Shubham Sharma", "contactNo": "7877462405" }
-			});
-			user.save().then((savedMessage) => {
-				console.log(`Message Saved.`, savedMessage);
-			}).catch((ex) => {
-				console.error(`Message Failed to Saved.`, ex);
-			}); */
-			var user = new MessageModel({
-				roomId: mongoose.Types.ObjectId(messageData.roomId),
+			var user = new MsgModel({
+				roomId: messageData.roomId,
 
 				message: messageData.message,
 				message_type: messageData.message_type,
@@ -311,28 +269,7 @@ function messageRequest(request) {
 			// try {
 			user.save().then((savedMessage) => {
 				console.log(`Message Saved.`, savedMessage);
-
-
-				let room = RoomModel.findById(mongoose.Types.ObjectId(messageData.roomId)).then((room, err) => {
-					console.log('room', room['userList']);
-
-					room.userList.forEach(user => {
-						if (cons.hasOwnProperty(user)) {
-							console.log('user is login', user);
-
-							cons[user].sendUTF(responseSuccess(201, {
-								messageData: savedMessage,
-								type: 'newMessage'
-							}, "Data Found", true));
-
-						} else {
-
-							console.log('user is not login', user);
-						}
-					});
-					// conso
-
-				});
+				connection.sendUTF(responseSuccess(201, savedMessage, "message All list", true));
 			}).catch((ex) => {
 				console.error(`Message Failed to Saved.`, ex);
 				connection.sendUTF(responseSuccess(500, JSON.stringify(savedMessage), "message All list", true));
@@ -489,46 +426,17 @@ function loginRequest(request) {
 				return connection.sendUTF(responseError(400, "Username and password are required.", true));
 			}
 
-
-
 			let fondData = { "userName": requestData.userName, "password": requestData.password };
-			UsersModel.findOne(fondData, (err, userData) => {
-
-				// console.log('userData', userData);
-				// console.log('userData', userData['userId']);
-
-				if (!userData) {
-
-					return connection.sendUTF(responseError(401, "Unauthorized", true));
-
-				}
-				if (!isFine(userData['userId'])) {
-					return connection.sendUTF(responseError(401, "UserId not found.", true));
-
-				}
-				connection['uId'] = userData['userId'];
-
-				cons[userData['userId']] = connection;
-
-				loginUsers[userData['userId']] = userData;
-
-
-
-				// broadcast(responseSuccess(200,
-				// 	{
-				// 		'type': 'login_users',
-				// 		'data': loginUsers
-				// 	}, "Success.", true), false);
-
-
-				console.log('login cons', cons);
-
+			UsersModel.find(fondData, (err, messages) => {
 				//res.send(messages);
-				console.log(`On connect Error:::${err} users:::`, userData);
+				console.log(`On connect Error:::${err} users:::`, messages);
+				if (messages && messages.length > 0) {
+					console.log(`user login successfully`);
+					connection.sendUTF(JSON.stringify(messages[0]));
+				} else {
+					connection.sendUTF(responseError(401, "Unauthorized", true));
 
-				console.log(`user login successfully`, userData);
-				connection.sendUTF(responseSuccess(200, userData, "Login Success", true));
-
+				}
 			});
 		} else if (requestData.type == 'register') {
 
@@ -545,8 +453,8 @@ function loginRequest(request) {
 				return connection.sendUTF(responseError(400, "UserId is required.", true));
 			}
 
-			UsersModel.find({ userId: requestData.userId, userName: requestData.userName }).then((userData) => {
-				console.log('userData', userData);
+			UsersModel.find({ userId: requestData.userId, userName: requestData.userName }).then((fondData2) => {
+				console.log('userData', userData.length);
 				if (userData.length) {
 
 					return connection.sendUTF(responseError(400, "User is already exist.", true));
@@ -641,9 +549,7 @@ function loginRequest(request) {
 
 	// user disconnected
 	connection.on('close', function (connection) {
-		console.log((new Date()) + 'connection closed', connection['uId']);
-
-
+		console.log((new Date()) + 'connection closed');
 	});
 }
 
@@ -658,17 +564,6 @@ function isFine(item) {
 		return true;
 	}
 }
-
-function broadcast(data, stringify = true) {
-	var send_data = data;
-	if (stringify) {
-		send_data = JSON.stringify(send_data);
-	}
-	Object.keys(cons).forEach((key, index) => {
-		cons[key].sendUTF(send_data);
-	})
-}
-
 
 function registerRequest(request) {
 
@@ -699,9 +594,7 @@ function allUser(request) {
 			console.log(`On connect Error:::${err} users:::`, messages);
 			if (messages && messages.length > 0) {
 				console.log(`user login successfully`);
-				// connection.sendUTF(JSON.stringify(messages));
-
-				connection.sendUTF(responseSuccess(200, messages, "User list.", true));
+				connection.sendUTF(JSON.stringify(messages));
 			} else {
 				connection.sendUTF(responseError(404, "Not Found", true));
 

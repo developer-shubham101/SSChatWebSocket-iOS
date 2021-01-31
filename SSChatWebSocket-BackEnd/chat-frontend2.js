@@ -220,14 +220,7 @@ $(function () {
 
 	$('#login_btn').on('click', (event) => {
 
-		var dataObj = {type: 'login', userName: 'abcuser', password: '123456'};
-		console.log('data', dataObj);
-		connectionLogin.send(JSON.stringify(dataObj));
-	})
-
-	$('#login_anil_btn').on('click', (event) => {
-
-		var dataObj = {type: 'login', userName: 'anil', password: '123456'};
+		var dataObj = {type: 'login', userName: 'shubhum', password: '123456'};
 		console.log('data', dataObj);
 		connectionLogin.send(JSON.stringify(dataObj));
 	})
@@ -243,7 +236,7 @@ $(function () {
 	$('#register_btn').on('click', (event) => {
 
 		// var userData = { type: "register", userId:4, userName: 'abcuser', password: '123456' };
-		var userData = { type: "register", userName: 'abcuser', password: '123456', userId:4 };
+		var userData = { type: "register", userName: 'shubhum', password: '123456', userId:5 };
 		console.log('register userData', userData);
 		connectionLogin.send(JSON.stringify(userData));
 
