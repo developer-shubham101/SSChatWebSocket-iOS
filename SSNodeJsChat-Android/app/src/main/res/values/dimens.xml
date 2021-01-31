@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="heading1">24sp</dimen>
+    <dimen name="heading2">20sp</dimen>
+
+
+    <dimen name="reg_input_heading">17sp</dimen>
+
+
+    <!-- Default screen margins, per the Android Design guidelines. -->
+
+</resources>

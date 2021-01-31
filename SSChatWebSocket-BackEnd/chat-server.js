@@ -515,25 +515,26 @@ function chatRequest(request) {
 	});
 }
 function originIsAllowed(request) {
+	let requestPath = request.resourceURL.pathname.replace(/\/$/, "");
 	// put logic here to detect whether the specified origin is allowed.
-	console.log(`origin:::   ${request.resourceURL.pathname}`);
-	if ("/chat" === request.resourceURL.pathname) {
+	console.log(`origin:::   ${requestPath}`);
+	if ("/chat" === requestPath) {
 		chatRequest(request);
 		return true;
-	} else if ("/login" === request.resourceURL.pathname) {
+	} else if ("/login" === requestPath) {
 		loginRequest(request);
 		return true;
-	} else if ("/room" === request.resourceURL.pathname) {
+	} else if ("/room" === requestPath) {
 		roomRequest(request);
 		return true;
-	} else if ("/message" === request.resourceURL.pathname) {
+	} else if ("/message" === requestPath) {
 		console.log('request........', request.resourceURL.query.key);
 		messageRequest(request);
 		return true;
-	} else if ('/register' === request.resourceURL.pathname) {
+	} else if ('/register' === requestPath) {
 		registerRequest(request);
 		return true;
-	} else if ('/users' === request.resourceURL.pathname) {
+	} else if ('/users' === requestPath) {
 		allUser(request);
 		return true;
 	}

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="start"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginTop="8dp"
+            android:minWidth="100dp"
+            android:layout_marginEnd="24dp"
+            android:layout_marginRight="24dp"
+            android:padding="3dp"
+            android:background="@drawable/bg_left_chat"
+            android:orientation="vertical">
+
+            <com.cusom.views.CustomFontTextView
+                android:id="@+id/chatLeftTextMessage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+
+                android:textColor="@android:color/black"
+                android:textSize="14sp"
+                tools:text="@tools:sample/lorem" />
+
+        </LinearLayout>
+
+        <com.cusom.views.CustomFontTextView
+            android:id="@+id/chatLeftTextTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start"
+            android:ellipsize="end"
+            android:gravity="start"
+            android:maxLines="1"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="2dp"
+
+
+            android:textSize="12sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/chatLeftTextMessage"
+            tools:text="@tools:sample/date/hhmm"
+            android:layout_marginLeft="8dp" />
+
+
+    </LinearLayout>
+</layout>

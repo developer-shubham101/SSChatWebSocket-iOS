@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data />
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginRight="5dp"
+        card_view:cardElevation="3dp"
+        card_view:contentPaddingBottom="-3dp"
+        card_view:contentPaddingLeft="-3dp"
+        card_view:contentPaddingRight="-3dp"
+        card_view:contentPaddingTop="-3dp">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            card_view:layout_constraintBottom_toTopOf="@+id/postDescription"
+            card_view:layout_constraintTop_toTopOf="@+id/postDescription">
+
+
+            <com.cusom.views.CustomFontTextView
+                android:id="@+id/rowAllUserName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+
+
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginRight="8dp"
+                android:layout_marginBottom="8dp"
+                android:textSize="14sp"
+                card_view:layout_constraintBottom_toBottomOf="parent"
+                card_view:layout_constraintEnd_toEndOf="parent"
+                card_view:layout_constraintStart_toStartOf="parent"
+                card_view:layout_constraintTop_toTopOf="parent"
+                tools:text="@tools:sample/last_names" />
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.cardview.widget.CardView>
+</layout>

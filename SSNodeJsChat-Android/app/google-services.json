@@ -1,0 +1,83 @@
+{
+  "project_info": {
+    "project_number": "991199564730",
+    "firebase_url": "https://sschatreact.firebaseio.com",
+    "project_id": "sschatreact",
+    "storage_bucket": "sschatreact.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:991199564730:android:6f755d0d9e0b29ac",
+        "android_client_info": {
+          "package_name": "com.sschatreact"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "991199564730-6l2213gkjpab2bqd95t7n7gv6r4qovhg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA_wjTV84499G4V_paRq0DcCmh9Comw6Yw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "991199564730-6l2213gkjpab2bqd95t7n7gv6r4qovhg.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "991199564730-mhqug75gtkomc1kks5ccl3v020jmmk1e.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "in.newdevpoint.SSChatReact"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:991199564730:android:99be30f5f1f6c52afec383",
+        "android_client_info": {
+          "package_name": "in.newdevpoint.ssnodejschat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "991199564730-6l2213gkjpab2bqd95t7n7gv6r4qovhg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA_wjTV84499G4V_paRq0DcCmh9Comw6Yw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "991199564730-6l2213gkjpab2bqd95t7n7gv6r4qovhg.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "991199564730-mhqug75gtkomc1kks5ccl3v020jmmk1e.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "in.newdevpoint.SSChatReact"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

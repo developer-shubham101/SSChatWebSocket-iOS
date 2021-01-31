@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/chatMute"
+        android:title="Mute"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/changeWallpaper"
+        android:title="Change Wallpaper"
+        app:showAsAction="never" />
+
+</menu>
