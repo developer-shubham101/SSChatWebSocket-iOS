@@ -5,10 +5,20 @@ import com.google.gson.annotations.SerializedName;
 
 public class ResponseModel<T> {
     private String message;
+    @SerializedName("type")
+    private String type;
     private String response;
     @SerializedName("statusCode")
     private int status_code;
     private T data;
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
 
     public String getMessage() {
         return message;

@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "fcm-node": "^1.5.2",
     "mongoose": "^5.11.8",
     "websocket": "^1.0.33"
   },

@@ -2,23 +2,44 @@ package in.newdevpoint.ssnodejschat.model;
 
 import com.google.gson.annotations.SerializedName;
 
-import java.util.Map;
-
 public class FSUsersModel {
 
     @SerializedName("userName")
-	private String name = "";
+    private String name = "";
 
-	private String email = "";
+    @SerializedName("email")
+    private String email = "";
+
     @SerializedName("_id")
-	private String id;
-	private String profile_image = "";
-//    private boolean isOnline  = false;
+    private String id;
 
+    @SerializedName("profile_image")
+    private String profile_image = "";
 
-	public FSUsersModel() {
-	}
+    @SerializedName("last_seen")
+    private String lastSeen = "";
 
+    @SerializedName("is_online")
+    private boolean isOnline = false;
+
+    public FSUsersModel() {
+    }
+
+    public String getLastSeen() {
+        return lastSeen;
+    }
+
+    public void setLastSeen(String lastSeen) {
+        this.lastSeen = lastSeen;
+    }
+
+    public boolean isOnline() {
+        return isOnline;
+    }
+
+    public void setOnline(boolean online) {
+        isOnline = online;
+    }
 
     public String getName() {
         return name;

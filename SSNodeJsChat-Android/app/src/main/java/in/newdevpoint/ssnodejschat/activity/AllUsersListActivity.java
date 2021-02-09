@@ -1,73 +1,52 @@
 package in.newdevpoint.ssnodejschat.activity;
 
 import android.os.Bundle;
-import android.widget.TextView;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.databinding.DataBindingUtil;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import in.newdevpoint.ssnodejschat.R;
 import in.newdevpoint.ssnodejschat.adapter.UsersListAdapter;
+import in.newdevpoint.ssnodejschat.databinding.ActivityAllUsersListBinding;
 import in.newdevpoint.ssnodejschat.model.FSUsersModel;
+import in.newdevpoint.ssnodejschat.observer.WebSocketObserver;
+import in.newdevpoint.ssnodejschat.observer.WebSocketSingleton;
+import in.newdevpoint.ssnodejschat.utility.UserDetails;
 import in.newdevpoint.ssnodejschat.webService.APIClient;
 import in.newdevpoint.ssnodejschat.webService.ResponseModel;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.WebSocket;
-import okhttp3.WebSocketListener;
-import okio.ByteString;
 
-public class AllUsersListActivity extends AppCompatActivity {
-    private static final String TAG = "UsersActivity:";
-    //    private static final String TAG = "UsersActivity";
-    private static final boolean BACK_PRESSED = false;
-    private static final int NORMAL_CLOSURE_STATUS = 10000;
-    private final HashMap<String, FSUsersModel> alterNativeUserList = new HashMap<>();
-    private final String CHAT_URL = APIClient.BASE_URL_WEB_SOCKET + "/users";
-    private RecyclerView recyclerView;
-    private TextView noUsersText;
-    //    -----------------------
+public class AllUsersListActivity extends AppCompatActivity implements WebSocketObserver {
+    public static final String TAG = "UsersActivity:";
+
     private UsersListAdapter adapter;
-    private FSUsersModel myDetail;
-    private WebSocket webSocket;
+    private ActivityAllUsersListBinding roomListBinding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_room_list);
+
+        roomListBinding = DataBindingUtil.setContentView(this, R.layout.activity_all_users_list);
+        WebSocketSingleton.getInstant().register(this);
 
 
-        recyclerView = findViewById(R.id.usersList);
-        noUsersText = findViewById(R.id.noUsersText);
-
-
-        start();
         initRecycler();
 
-    }
 
+        joinCommand();
 
-    private void start() {
-
-        // WebSocket
-        Request request = new Request.Builder().url(CHAT_URL).build();
-        EchoWebSocketListener listener = new EchoWebSocketListener();
-        OkHttpClient okHttpClient = new OkHttpClient();
-        webSocket = okHttpClient.newWebSocket(request, listener);
-        okHttpClient.dispatcher().executorService().shutdown();
     }
 
 
@@ -82,6 +61,7 @@ public class AllUsersListActivity extends AppCompatActivity {
             @Override
             public void onClick(FSUsersModel item) {
 
+                createRoomCommand(item);
 //                HashMap<String, FSUsersModel> chatUsersMap = new HashMap<>();
 ////                chatUsersMap.put(currentUser.getUid(), myDetail);
 //                chatUsersMap.put(item.getSenderUserDetail().getId(), item.getSenderUserDetail());
@@ -96,76 +76,87 @@ public class AllUsersListActivity extends AppCompatActivity {
         });
 
 
-        recyclerView.setHasFixedSize(true);
+        roomListBinding.usersList.setHasFixedSize(true);
         LinearLayoutManager mLayoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(mLayoutManager);
-        recyclerView.setAdapter(adapter);
+        roomListBinding.usersList.setLayoutManager(mLayoutManager);
+        roomListBinding.usersList.setAdapter(adapter);
 
 
+    }
+
+    private void createRoomCommand(FSUsersModel connectWith) {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            JSONArray usersList = new JSONArray();
+            usersList.put(connectWith.getId());
+            usersList.put(UserDetails.myDetail.getId());
+            jsonObject.put("userList", usersList);
+            jsonObject.put("type", "createRoom");
+
+            jsonObject.put(APIClient.KeyConstant.REQUEST_TYPE_KEY, APIClient.KeyConstant.REQUEST_TYPE_ROOM);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        WebSocketSingleton.getInstant().sendMessage(jsonObject);
     }
 
     private void joinCommand() {
         JSONObject jsonObject = new JSONObject();
         try {
-            jsonObject.put("command", "join");
+            jsonObject.put("type", "allUsers");
+
+            jsonObject.put(APIClient.KeyConstant.REQUEST_TYPE_KEY, APIClient.KeyConstant.REQUEST_TYPE_USERS);
 //			jsonObject.put("room", roomId);
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        webSocket.send(jsonObject.toString());
+        WebSocketSingleton.getInstant().sendMessage(jsonObject);
     }
 
-    // WebSocket
-    private final class EchoWebSocketListener extends WebSocketListener {
+    @Override
+    public void onWebSocketResponse(String response) {
+        try {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    System.out.println("received message: " + response);
 
-        @Override
-        public void onOpen(WebSocket webSocket, Response response) {
-            joinCommand();
-        }
+                    Gson gson = new Gson();
+                    Type type = new TypeToken<ResponseModel<Object>>() {
+                    }.getType();
 
-        @Override
-        public void onMessage(WebSocket webSocket, final String text) {
-            System.out.println("received message: " + text);
-            runOnUiThread(() -> {
+                    ResponseModel<Object> objectResponseModel = gson.fromJson(response, type);
 
-                Gson gson = new Gson();
-                Type type = new TypeToken<ResponseModel<ArrayList<FSUsersModel>>>() {
-                }.getType();
+                    if (objectResponseModel.getType().equals(APIClient.KeyConstant.RESPONSE_TYPE_USERS)) {
 
+                        if (objectResponseModel.getStatus_code() == 200) {
 
-                ResponseModel<ArrayList<FSUsersModel>> obj = gson.fromJson(text, type);
+                            Type typeUserList = new TypeToken<ResponseModel<ArrayList<FSUsersModel>>>() {
+                            }.getType();
 
-
-                if (obj.getStatus_code() == 200) {
-
-                    adapter.addAll(obj.getData());
+                            ResponseModel<ArrayList<FSUsersModel>> arrayListResponseModel = gson.fromJson(response, typeUserList);
 
 
-                } else {
-                    Toast.makeText(AllUsersListActivity.this, obj.getMessage(), Toast.LENGTH_SHORT).show();
+                            adapter.addAll(arrayListResponseModel.getData());
+                        } else {
+                            Toast.makeText(AllUsersListActivity.this, objectResponseModel.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+
+                    } else {
+                        Log.d(TAG, "onWebSocketResponse: " + objectResponseModel.getType());
+                    }
                 }
-
             });
 
-        }
 
-        @Override
-        public void onMessage(WebSocket webSocket, ByteString bytes) {
-            System.out.println("onMessage: " + bytes.hex());
-            Toast.makeText(AllUsersListActivity.this, "onMessage:" + bytes.hex(), Toast.LENGTH_SHORT).show();
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
+    }
 
-        @Override
-        public void onClosing(WebSocket webSocket, int code, String reason) {
-            System.out.println("onClosing: " + code + " / " + reason);
-            webSocket.close(NORMAL_CLOSURE_STATUS, null);
-
-        }
-
-        @Override
-        public void onFailure(WebSocket webSocket, Throwable t, Response response) {
-            System.out.println("onFailure: " + t.getMessage());
-        }
+    @Override
+    public String getActivityName() {
+        return AllUsersListActivity.class.getName();
     }
 
 }

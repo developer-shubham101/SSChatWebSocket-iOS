@@ -35,7 +35,6 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-
 import com.bumptech.glide.request.RequestOptions;
 import com.downloader.OnDownloadListener;
 import com.downloader.request.DownloadRequest;
@@ -78,6 +77,8 @@ import in.newdevpoint.ssnodejschat.model.FSUsersModel;
 import in.newdevpoint.ssnodejschat.model.MediaMetaModel;
 import in.newdevpoint.ssnodejschat.model.MediaModel;
 import in.newdevpoint.ssnodejschat.model.UploadFileMode;
+import in.newdevpoint.ssnodejschat.observer.WebSocketObserver;
+import in.newdevpoint.ssnodejschat.observer.WebSocketSingleton;
 import in.newdevpoint.ssnodejschat.stickyheader.stickyView.StickHeaderItemDecoration;
 import in.newdevpoint.ssnodejschat.utility.DownloadUtility;
 import in.newdevpoint.ssnodejschat.utility.FileOpenUtility;
@@ -86,18 +87,13 @@ import in.newdevpoint.ssnodejschat.utility.PermissionClass;
 import in.newdevpoint.ssnodejschat.utility.UserDetails;
 import in.newdevpoint.ssnodejschat.utility.Utils;
 import in.newdevpoint.ssnodejschat.webService.APIClient;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.WebSocket;
-import okhttp3.WebSocketListener;
-import okio.ByteString;
+import in.newdevpoint.ssnodejschat.webService.ResponseModel;
 
 
 public class ChatActivity extends AppCompatActivity implements View.OnClickListener,
         PermissionClass.PermissionRequire,
         UploadFileProgressFragment.UploadFileProgressCallback,
-        PlayAudioFragment.PlayAudioCallback {
+        PlayAudioFragment.PlayAudioCallback, WebSocketObserver {
     private static final String TAG = "ChatActivity";
     private static final int REQUEST_READ_STORAGE_FOR_UPLOAD_IMAGE = 3;
     private static final int REQUEST_READ_STORAGE_FOR_UPLOAD_VIDEO = 4;
@@ -118,7 +114,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     private final HashMap<Date, ArrayList<ChatModel>> chatList = new HashMap<>();
     private final PlayAudioFragment uploadFragment = new PlayAudioFragment();
     private final boolean isLoadingOldMessage = false;
-    private final String CHAT_URL = APIClient.BASE_URL_WEB_SOCKET + "/message?key=sample";
+    //    private final String CHAT_URL = APIClient.BASE_URL_WEB_SOCKET + "/message?key=sample";
     public boolean mStartRecording = true;
     private boolean isMute = false;
     private FSUsersModel otherUser;
@@ -148,29 +144,30 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     };
     private boolean applyBlur = false;
     private boolean isSetWallpaper = false;
-    private WebSocket webSocket;
+//    private WebSocket webSocket;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+        WebSocketSingleton.getInstant().register(this);
 
-        FSUsersModel user12 = new FSUsersModel();
-        FSUsersModel user23 = new FSUsersModel();
-
-        user12.setId("12");
-        user12.setName("Shubham");
-        user12.setEmail("Shubham@gmail.com");
-
-
-        user23.setId("12");
-        user23.setName("Shubham");
-        user23.setEmail("Shubham@gmail.com");
-
-        UserDetails.chatUsers.put("12", user12);
-        UserDetails.chatUsers.put("23", user23);
-
-        UserDetails.myDetail = user23;
+//        FSUsersModel user12 = new FSUsersModel();
+//        FSUsersModel user23 = new FSUsersModel();
+//
+//        user12.setId("12");
+//        user12.setName("Shubham");
+//        user12.setEmail("Shubham@gmail.com");
+//
+//
+//        user23.setId("12");
+//        user23.setName("Shubham");
+//        user23.setEmail("Shubham@gmail.com");
+//
+//        UserDetails.chatUsers.put("12", user12);
+//        UserDetails.chatUsers.put("23", user23);
+//
+//        UserDetails.myDetail = user23;
 
         // Record to the external cache directory for visibility
         fileName = getExternalCacheDir().getAbsolutePath();
@@ -202,8 +199,6 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         binding.audioPlayerFragment.setVisibility(View.GONE);
 
 
-        start();
-
         setAudioPlayer();
 
 
@@ -219,17 +214,11 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
             Bitmap myBitmap = BitmapFactory.decodeFile(wallpaperFilePath);
             binding.chatBgImage.setImageBitmap(myBitmap);
         }
+
+
+        joinCommand();
     }
 
-    private void start() {
-
-        // WebSocket
-        Request request = new Request.Builder().url(CHAT_URL).build();
-        EchoWebSocketListener listener = new EchoWebSocketListener();
-        OkHttpClient okHttpClient = new OkHttpClient();
-        webSocket = okHttpClient.newWebSocket(request, listener);
-        okHttpClient.dispatcher().executorService().shutdown();
-    }
 
     void addChatMenu() {
         binding.chatMenu.setOnClickListener(v -> {
@@ -309,6 +298,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
             popup.show();
         });
     }
+
 
     private void setAudioPlayer() {
         uploadFragment.setPlayAudioCallback(this);
@@ -667,8 +657,19 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.i(TAG, "onDestroy: ");
+//        webSocket.cancel();
+    }
+
+    @Override
     protected void onStop() {
         super.onStop();
+        Log.i(TAG, "onStop: ");
+
+        WebSocketSingleton.getInstant().register(this);
+
 //        mUserRef.child(currentUser.getUid()).child("isOnline").setValue(false);
 
     }
@@ -776,22 +777,24 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
 
 
         messageMap.put("type", "addMessage");
-        messageMap.put("roomId", "213123123");
+        messageMap.put("roomId", UserDetails.roomId);
+        messageMap.put("room", UserDetails.roomId);
 
         messageMap.put("message", message);
         messageMap.put("message_type", messageType.toString());
 //        messageMap.put("sender_id", UserDetails.myDetail.getId());
-        messageMap.put("sender_id", "23");
+        messageMap.put("sender_id", UserDetails.myDetail.getId());
 
-        messageMap.put("receiver_id", "12");
+        messageMap.put("receiver_id", "12312faa");
 
         messageMap.put("message_content", messageContent);
+        messageMap.put(APIClient.KeyConstant.REQUEST_TYPE_KEY, APIClient.KeyConstant.REQUEST_TYPE_MESSAGE);
 //        messageMap.put("time", time);
 
         // TODO: 27/01/21 SendMessage
 //        chatReference.add(messageMap);
 
-        webSocket.send(new JSONObject(messageMap).toString());
+        WebSocketSingleton.getInstant().sendMessage(new JSONObject(messageMap));
     }
 
     private void chooseVideoFromGallery() {
@@ -1249,41 +1252,47 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         JSONObject jsonObject = new JSONObject();
         try {
             jsonObject.put("type", "allMessage");
-//			jsonObject.put("room", roomId);
+            jsonObject.put("room", UserDetails.roomId);
+
+            jsonObject.put(APIClient.KeyConstant.REQUEST_TYPE_KEY, APIClient.KeyConstant.REQUEST_TYPE_MESSAGE);
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        webSocket.send(jsonObject.toString());
+        WebSocketSingleton.getInstant().sendMessage(jsonObject);
     }
 
-    // WebSocket
-    private final class EchoWebSocketListener extends WebSocketListener {
+    @Override
+    public void onWebSocketResponse(String response) {
+        Log.d(TAG, "received message: " + response);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
 
-        @Override
-        public void onOpen(WebSocket webSocket, Response response) {
-            joinCommand();
-        }
+                Gson gson = new Gson();
+                Type type = new TypeToken<ResponseModel<Object>>() {
+                }.getType();
 
-        @Override
-        public void onMessage(WebSocket webSocket, final String text) {
-            System.out.println("received message: " + text);
-            runOnUiThread(() -> {
-                try {
+                ResponseModel<Object> objectResponseModel = gson.fromJson(response, type);
 
-                    JSONObject responseData = new JSONObject(text);
+                if (objectResponseModel.getType().equals(APIClient.KeyConstant.RESPONSE_TYPE_MESSAGES)) {
 
-                    int responseCode = responseData.getInt("status_code");
-                    if (responseCode == 200) {
-                        JSONArray jsonObject = responseData.getJSONArray("data");
-                        for (int i = 0; i < jsonObject.length(); i++) {
-                            JSONObject nthObject = jsonObject.getJSONObject(i);
-                            appendMessage(nthObject);
+
+                    try {
+
+                        JSONObject responseData = new JSONObject(response);
+
+                        int responseCode = responseData.getInt("statusCode");
+                        if (responseCode == 200) {
+                            JSONArray jsonObject = responseData.getJSONArray("data");
+                            for (int i = 0; i < jsonObject.length(); i++) {
+                                JSONObject nthObject = jsonObject.getJSONObject(i);
+                                appendMessage(nthObject);
+                            }
+                        } else if (responseCode == 201) {
+                            appendMessage(responseData.getJSONObject("data"));
+                        } else {
+                            Toast.makeText(ChatActivity.this, responseData.getString("message"), Toast.LENGTH_SHORT).show();
                         }
-                    } else if (responseCode == 201) {
-                        appendMessage(responseData.getJSONObject("data"));
-                    } else {
-                        Toast.makeText(ChatActivity.this, responseData.getString("message"), Toast.LENGTH_SHORT).show();
-                    }
 
 
 //                        if (jsonObject.has("message")) {
@@ -1293,28 +1302,20 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
 //                            binding.chatRecyclerView.scrollToPosition(chattingAdapter.items.size() - 1);
 //                        }
 
-                } catch (JSONException e) {
-                    e.printStackTrace();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    Log.d(TAG, "onWebSocketResponse: " + objectResponseModel.getType());
                 }
-            });
-        }
-
-        @Override
-        public void onMessage(WebSocket webSocket, ByteString bytes) {
-            System.out.println("onMessage: " + bytes.hex());
-            Toast.makeText(ChatActivity.this, "onMessage:" + bytes.hex(), Toast.LENGTH_SHORT).show();
-        }
-
-        @Override
-        public void onClosing(WebSocket webSocket, int code, String reason) {
-            System.out.println("onClosing: " + code + " / " + reason);
-            webSocket.close(NORMAL_CLOSURE_STATUS, null);
-
-        }
-
-        @Override
-        public void onFailure(WebSocket webSocket, Throwable t, Response response) {
-            System.out.println("onFailure: " + t.getMessage());
-        }
+            }
+        });
     }
+
+    @Override
+    public String getActivityName() {
+        return ChatActivity.class.getName();
+    }
+
+
 }

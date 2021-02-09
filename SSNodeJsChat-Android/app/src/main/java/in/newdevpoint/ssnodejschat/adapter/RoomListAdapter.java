@@ -11,13 +11,13 @@ import java.util.ArrayList;
 
 import in.newdevpoint.ssnodejschat.R;
 import in.newdevpoint.ssnodejschat.databinding.RowRoomListBinding;
-import in.newdevpoint.ssnodejschat.databinding.RowUserListBinding;
-import in.newdevpoint.ssnodejschat.model.FSChatModel;
+import in.newdevpoint.ssnodejschat.model.FSRoomModel;
+import in.newdevpoint.ssnodejschat.utility.UserDetails;
 
 
 public class RoomListAdapter extends RecyclerView.Adapter<RoomListAdapter.MyViewHolder> {
 
-    private final ArrayList<FSChatModel> list = new ArrayList<>();
+    private final ArrayList<FSRoomModel> list = new ArrayList<>();
 
 
     private final CallBackForSinglePost callBack;
@@ -41,20 +41,24 @@ public class RoomListAdapter extends RecyclerView.Adapter<RoomListAdapter.MyView
     @Override
     public void onBindViewHolder(final MyViewHolder holder, int position) {
 
-        FSChatModel item = list.get(position);
+        FSRoomModel item = list.get(position);
         System.out.println(item);
         holder.binding.rowChatUserName.setText(item.getSenderUserDetail().getName());
         holder.binding.rowChatUserLastMessage.setText(item.getLastMessage());
-        holder.binding.rowChatUserPendingMessages.setText(Long.toString(item.getNewMessage()));
+
+        if (item.getUnread() != null && item.getUnread().get(UserDetails.myDetail.getId()) != null){
+            holder.binding.rowChatUserPendingMessages.setText(Long.toString(item.getUnread().get(UserDetails.myDetail.getId())));
+        }
 
 
-//        if(item.isOnline()){
-//            holder.onlineStatusOffline.setVisibility(View.GONE);
-//            holder.onlineStatusOnline.setVisibility(View.VISIBLE);
-//        }else{
-//            holder.onlineStatusOffline.setVisibility(View.VISIBLE);
-//            holder.onlineStatusOnline.setVisibility(View.GONE);
-//        }
+
+        if(item.getSenderUserDetail().isOnline()){
+            holder.binding.onlineStatusOffline.setVisibility(View.GONE);
+            holder.binding.onlineStatusOnline.setVisibility(View.VISIBLE);
+        }else{
+            holder.binding.onlineStatusOffline.setVisibility(View.VISIBLE);
+            holder.binding.onlineStatusOnline.setVisibility(View.GONE);
+        }
 
 
     }
@@ -64,13 +68,24 @@ public class RoomListAdapter extends RecyclerView.Adapter<RoomListAdapter.MyView
         return list.size();
     }
 
-    public void addAll(ArrayList<FSChatModel> list) {
+    public void addAll(ArrayList<FSRoomModel> list) {
         this.list.clear();
         this.list.addAll(list);
         notifyDataSetChanged();
     }
 
-    public ArrayList<FSChatModel> getAllList() {
+
+    public void updateElement(FSRoomModel element) {
+        for (int i = 0; i < this.list.size(); i++) {
+            if (this.list.get(i).getRoomId().equals(element.getRoomId())) {
+                this.list.set(i, element);
+                notifyDataSetChanged();
+                break;
+            }
+        }
+    }
+
+    public ArrayList<FSRoomModel> getAllList() {
         return this.list;
 
     }
@@ -78,7 +93,7 @@ public class RoomListAdapter extends RecyclerView.Adapter<RoomListAdapter.MyView
     public interface CallBackForSinglePost {
         void onClick(int position);
 
-        void onClick(FSChatModel item);
+        void onClick(FSRoomModel item);
 
     }
 

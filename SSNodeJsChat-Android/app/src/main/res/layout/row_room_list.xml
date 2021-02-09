@@ -33,14 +33,12 @@
                 android:layout_height="wrap_content"
 
 
-                android:layout_marginStart="8dp"
-
-                android:layout_marginLeft="8dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginLeft="16dp"
                 android:textSize="14sp"
                 card_view:layout_constraintEnd_toEndOf="@+id/rowChatUserLastMessage"
-                card_view:layout_constraintStart_toStartOf="parent"
-                card_view:layout_constraintTop_toTopOf="parent"
+                card_view:layout_constraintStart_toEndOf="@+id/rowChatUserPic"
+                card_view:layout_constraintTop_toTopOf="@+id/rowChatUserPic"
                 tools:text="@tools:sample/last_names" />
 
             <com.cusom.views.CustomFontTextView
@@ -65,19 +63,44 @@
                 android:layout_height="wrap_content"
 
 
-                android:layout_marginStart="8dp"
-
-                android:layout_marginLeft="8dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginLeft="16dp"
                 android:layout_marginTop="4dp"
                 android:layout_marginEnd="8dp"
                 android:layout_marginRight="8dp"
-                android:layout_marginBottom="8dp"
                 android:textSize="14sp"
-                card_view:layout_constraintBottom_toBottomOf="parent"
                 card_view:layout_constraintEnd_toStartOf="@+id/rowChatUserPendingMessages"
-                card_view:layout_constraintStart_toStartOf="parent"
+                card_view:layout_constraintStart_toEndOf="@+id/rowChatUserPic"
                 card_view:layout_constraintTop_toBottomOf="@+id/rowChatUserName"
                 tools:text="@tools:sample/date/ddmmyy" />
+
+            <com.cusom.views.CustomRoundRectCornerImageView
+                android:id="@+id/rowChatUserPic"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                card_view:layout_constraintBottom_toBottomOf="parent"
+                card_view:layout_constraintStart_toStartOf="parent"
+                card_view:layout_constraintTop_toTopOf="parent"
+                tools:srcCompat="@tools:sample/avatars" />
+            <View
+                android:id="@+id/onlineStatusOnline"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:background="@drawable/online_status_view_bg"
+                card_view:layout_constraintBottom_toBottomOf="@+id/rowChatUserPic"
+                card_view:layout_constraintEnd_toEndOf="@+id/rowChatUserPic" />
+            <View
+                android:id="@+id/onlineStatusOffline"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:background="@drawable/offline_status_view_bg"
+                card_view:layout_constraintBottom_toBottomOf="@+id/rowChatUserPic"
+                card_view:layout_constraintEnd_toEndOf="@+id/rowChatUserPic" />
+
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.cardview.widget.CardView>
 </layout>

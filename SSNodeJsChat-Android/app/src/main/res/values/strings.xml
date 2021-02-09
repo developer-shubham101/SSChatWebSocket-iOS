@@ -9,5 +9,6 @@
     <string name="validation_email">Please enter E-mail</string>
     <string name="validation_password">Please enter Password</string>
     <string name="validation_valid_email">Please enter valid E-mail</string>
+    <string name="default_notification_channel_id">Default</string>
 
 </resources>
