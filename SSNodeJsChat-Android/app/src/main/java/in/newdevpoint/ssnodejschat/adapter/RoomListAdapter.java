@@ -46,20 +46,21 @@ public class RoomListAdapter extends RecyclerView.Adapter<RoomListAdapter.MyView
         holder.binding.rowChatUserName.setText(item.getSenderUserDetail().getName());
         holder.binding.rowChatUserLastMessage.setText(item.getLastMessage());
 
-        if (item.getUnread() != null && item.getUnread().get(UserDetails.myDetail.getId()) != null){
+        if (item.getUnread() != null && item.getUnread().get(UserDetails.myDetail.getId()) != null) {
             holder.binding.rowChatUserPendingMessages.setText(Long.toString(item.getUnread().get(UserDetails.myDetail.getId())));
         }
 
+//        if(item.getSenderUserDetail().isOnline()){
+//            holder.binding.onlineStatusOffline.setVisibility(View.GONE);
+//            holder.binding.onlineStatusOnline.setVisibility(View.VISIBLE);
+//        }else{
+//            holder.binding.onlineStatusOffline.setVisibility(View.VISIBLE);
+//            holder.binding.onlineStatusOnline.setVisibility(View.GONE);
+//        }
 
 
-        if(item.getSenderUserDetail().isOnline()){
-            holder.binding.onlineStatusOffline.setVisibility(View.GONE);
-            holder.binding.onlineStatusOnline.setVisibility(View.VISIBLE);
-        }else{
-            holder.binding.onlineStatusOffline.setVisibility(View.VISIBLE);
-            holder.binding.onlineStatusOnline.setVisibility(View.GONE);
-        }
-
+        holder.binding.onlineStatusOffline.setVisibility(View.GONE);
+        holder.binding.onlineStatusOnline.setVisibility(View.GONE);
 
     }
 

@@ -152,23 +152,6 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_chat);
         WebSocketSingleton.getInstant().register(this);
 
-//        FSUsersModel user12 = new FSUsersModel();
-//        FSUsersModel user23 = new FSUsersModel();
-//
-//        user12.setId("12");
-//        user12.setName("Shubham");
-//        user12.setEmail("Shubham@gmail.com");
-//
-//
-//        user23.setId("12");
-//        user23.setName("Shubham");
-//        user23.setEmail("Shubham@gmail.com");
-//
-//        UserDetails.chatUsers.put("12", user12);
-//        UserDetails.chatUsers.put("23", user23);
-//
-//        UserDetails.myDetail = user23;
-
         // Record to the external cache directory for visibility
         fileName = getExternalCacheDir().getAbsolutePath();
         fileName += "/audiorecordtest.m4a";
@@ -200,10 +183,6 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
 
 
         setAudioPlayer();
-
-
-//        initChatMessageListener();
-
 
         addChatMenu();
 

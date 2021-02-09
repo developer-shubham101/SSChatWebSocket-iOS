@@ -584,6 +584,16 @@ async function loginRequest(requestData, connection) {
 	}
 }
 
+function formatTheMessages(message) {
+	message = JSON.parse(JSON.stringify(message));
+	// message["timestamp"] = new Date(message.time).getTime();
+
+	message = Object.assign({}, message, { "timestamp": new Date(message.time).getTime() });
+	console.log("Message::::", message);
+	return message;
+
+}
+
 async function messageRequest(requestData, connection) {
 
 	var key = requestData.room
@@ -602,11 +612,14 @@ async function messageRequest(requestData, connection) {
 		MsgModel[`message_${key}`].find(findObject, (err, messages) => {
 			//res.send(messages);
 			console.log(`On connect Error:::${err} data:::`, messages);
-			// connection.sendUTF(`user login successfully ${messages}`);
 
 			if (messages && messages.length > 0) {
-				console.log(`Room Data Found....`);
-				connection.sendUTF(responseSuccess(200, "message", messages, "message All list", true));
+				console.log(`All Message Found....`);
+				let formatMessages = messages.map((element) => {
+					return formatTheMessages(element);
+				});
+
+				connection.sendUTF(responseSuccess(200, "message", formatMessages, "message All list", true));
 			} else {
 				connection.sendUTF(responseError(404, "message", "Data not found.", true));
 			}
@@ -709,7 +722,7 @@ async function messageRequest(requestData, connection) {
 					if (cons.hasOwnProperty(user)) {
 						console.log('user is login', user);
 
-						cons[user].sendUTF(responseSuccess(201, "message", savedMessage, "Data Found", true));
+						cons[user].sendUTF(responseSuccess(201, "message", formatTheMessages(savedMessage), "Data Found", true));
 
 					} else {
 

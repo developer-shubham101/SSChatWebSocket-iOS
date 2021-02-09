@@ -4,8 +4,6 @@ package in.newdevpoint.ssnodejschat.model;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-
-
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -17,6 +15,8 @@ import java.io.File;
 import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import in.newdevpoint.ssnodejschat.AppApplication;
@@ -25,7 +25,7 @@ import in.newdevpoint.ssnodejschat.utility.DownloadUtility;
 
 public class ChatModel implements StickyMainData {
 
-    private final Date messageDate;
+    private Date messageDate = new Date();
     private String documentId;
     private String message = "";
     private String message_on = "";
@@ -122,28 +122,28 @@ public class ChatModel implements StickyMainData {
         }
 
 
-      /*  Timestamp time = (Timestamp) rawData.getString("time");
+        try {
+            long timestamp = Long.parseLong(rawData.getString("timestamp"));
+            messageDate = new Date(timestamp);
 
-
-        messageDate = new Date(time.getSeconds() * 1000);
 //		String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(tempDate);
 
 
-        message_on = new SimpleDateFormat("HH:mm:ss").format(messageDate);
+            message_on = new SimpleDateFormat("HH:mm:ss").format(messageDate);
 
-        String tmpDate = new SimpleDateFormat("yyyy-MM-dd").format(messageDate);
-
-        try {
+            String tmpDate = new SimpleDateFormat("yyyy-MM-dd").format(messageDate);
             createdDate = new SimpleDateFormat("yyyy-MM-dd").parse(tmpDate + " 12:00:00");
         } catch (ParseException e) {
             e.printStackTrace();
-        }*/
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
 
 //		createdDate = tempDate;
 //		createdDate = new SimpleDateFormat("yyyy-MM-dd").format(tempDate);
 
-        createdDate = new Date();
-        messageDate = new Date();
+//        createdDate = new Date();
+//        messageDate = new Date();
 
     }
 

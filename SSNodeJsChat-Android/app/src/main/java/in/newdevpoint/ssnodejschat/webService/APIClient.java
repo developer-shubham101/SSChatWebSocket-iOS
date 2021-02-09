@@ -9,15 +9,9 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class APIClient {
     public static final String IMAGE_URL = "http://172.16.16.18:8005/storage/";
     public static final String BASE_URL_WEB_SOCKET = "ws://172.16.16.18:1337/v1";
-//    public static final String ALL_ROOM_LIST_URL = APIClient.BASE_URL_WEB_SOCKET + "/room";
-//    public static final String ALL_USERS_LIST_URL = APIClient.BASE_URL_WEB_SOCKET + "/users";
-//    public static final String LOGIN_URL = APIClient.BASE_URL_WEB_SOCKET + "/login";
     private static final String BASE_URL = "http://testapi.newdevpoint.in/";
     private static Retrofit retrofit = null;
 
-    public static String getChatUrl(String room) {
-        return APIClient.BASE_URL_WEB_SOCKET + "/message?key=" + room;
-    }
 
     public static Retrofit getClient() {
         if (retrofit == null) {
