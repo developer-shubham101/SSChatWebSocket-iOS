@@ -57,6 +57,7 @@
         <activity android:name=".activity.RoomListActivity" />
         <activity android:name=".activity.AllUsersListActivity" />
         <activity android:name=".activity.ChatActivity" />
+        <activity android:name=".activity.UpdateProfileActivity" />
         <!--        <activity android:name="in.newdevpoint.ssnodejschat.activity.LoginActivity" />-->
         <!--        <activity android:name="in.newdevpoint.ssnodejschat.activity.RoomListActivity" />-->
 

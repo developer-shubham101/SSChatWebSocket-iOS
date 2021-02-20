@@ -3,7 +3,6 @@ package in.newdevpoint.ssnodejschat.activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,7 +24,9 @@ import in.newdevpoint.ssnodejschat.adapter.RoomListAdapter;
 import in.newdevpoint.ssnodejschat.databinding.ActivityRoomListBinding;
 import in.newdevpoint.ssnodejschat.model.FSRoomModel;
 import in.newdevpoint.ssnodejschat.model.FSUsersModel;
+import in.newdevpoint.ssnodejschat.model.RoomNewResponseModel;
 import in.newdevpoint.ssnodejschat.model.RoomResponseModel;
+import in.newdevpoint.ssnodejschat.observer.ResponseType;
 import in.newdevpoint.ssnodejschat.observer.WebSocketObserver;
 import in.newdevpoint.ssnodejschat.observer.WebSocketSingleton;
 import in.newdevpoint.ssnodejschat.utility.UserDetails;
@@ -51,12 +52,8 @@ public class RoomListActivity extends AppCompatActivity implements WebSocketObse
 
         initRecycler();
 
-        roomListBinding.openAllUsers.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(RoomListActivity.this, AllUsersListActivity.class));
-            }
-        });
+        roomListBinding.openAllUsers.setOnClickListener(v -> startActivity(new Intent(RoomListActivity.this, AllUsersListActivity.class)));
+        roomListBinding.homNotification.setOnClickListener(v -> startActivity(new Intent(this, UpdateProfileActivity.class)));
 
 
         joinCommand();
@@ -65,7 +62,7 @@ public class RoomListActivity extends AppCompatActivity implements WebSocketObse
 
     private void initRecycler() {
 
-        adapter = new RoomListAdapter(new RoomListAdapter.CallBackForSinglePost() {
+        adapter = new RoomListAdapter(this, new RoomListAdapter.CallBackForSinglePost() {
             @Override
             public void onClick(int position) {
 
@@ -74,14 +71,13 @@ public class RoomListActivity extends AppCompatActivity implements WebSocketObse
             @Override
             public void onClick(FSRoomModel item) {
 
-//                HashMap<String, FSUsersModel> chatUsersMap = new HashMap<>();
-////                chatUsersMap.put(currentUser.getUid(), myDetail);
-//                chatUsersMap.put(item.getUserList(), item.getSenderUserDetail());
-//                Log.i(TAG, "onClick: " + item.getRoomId());
-                UserDetails.roomId = item.getRoomId();
-//                UserDetails.chatUsers = chatUsersMap;
-//                UserDetails.myDetail = myDetail;
-                startActivity(new Intent(RoomListActivity.this, ChatActivity.class));
+                Intent intent = new Intent(RoomListActivity.this, ChatActivity.class);
+                intent.putExtra(ChatActivity.INTENT_EXTRAS_KEY_IS_GROUP, item.isGroup());
+                intent.putExtra(ChatActivity.INTENT_EXTRAS_KEY_GROUP_DETAILS, item.getGroupDetails());
+                intent.putExtra(ChatActivity.INTENT_EXTRAS_KEY_ROOM_ID, item.getRoomId());
+                intent.putExtra(ChatActivity.INTENT_EXTRAS_KEY_SENDER_DETAILS, item.getSenderUserDetail());
+
+                startActivity(intent);
             }
 
         });
@@ -111,65 +107,86 @@ public class RoomListActivity extends AppCompatActivity implements WebSocketObse
     }
 
     @Override
-    public void onWebSocketResponse(String response) {
+    public void onWebSocketResponse(String response, String type, int statusCode, String message) {
         try {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    System.out.println("received message: " + response);
+            runOnUiThread(() -> {
+                System.out.println("received message: " + response);
 
-                    Gson gson = new Gson();
-                    Type type = new TypeToken<ResponseModel<Object>>() {
-                    }.getType();
-
-                    ResponseModel<Object> objectResponseModel = gson.fromJson(response, type);
+                Gson gson = new Gson();
 
 
-                    if (objectResponseModel.getType().equals(APIClient.KeyConstant.RESPONSE_TYPE_ROOM)) {
+                if (ResponseType.RESPONSE_TYPE_ROOM.equalsTo(type)) {
 
 
-                        if (objectResponseModel.getStatus_code() == 200) {
+                    if (statusCode == 200) {
 
-                            Type type1 = new TypeToken<ResponseModel<RoomResponseModel>>() {
-                            }.getType();
-                            ResponseModel<RoomResponseModel> roomResponseModelResponseModel = gson.fromJson(response, type1);
-                            UserDetails.chatUsers = roomResponseModelResponseModel.getData().getUserListMap();
-                            for (FSRoomModel element : roomResponseModelResponseModel.getData().getRoomList()) {
+                        Type type1 = new TypeToken<ResponseModel<RoomResponseModel>>() {
+                        }.getType();
+                        ResponseModel<RoomResponseModel> roomResponseModelResponseModel = gson.fromJson(response, type1);
+                        UserDetails.chatUsers = roomResponseModelResponseModel.getData().getUserListMap();
+                        for (FSRoomModel element : roomResponseModelResponseModel.getData().getRoomList()) {
 
-                                for (String userId : element.getUserList()) {
-                                    if (!userId.equals(UserDetails.myDetail.getId())) {
-                                        element.setSenderUserDetail(UserDetails.chatUsers.get(userId));
-                                        break;
-                                    }
-                                }
-                            }
-                            adapter.addAll(roomResponseModelResponseModel.getData().getRoomList());
-//                    startActivity(new Intent(RoomListActivity.this, RoomListActivity.class));
-                        } else {
-                            Toast.makeText(RoomListActivity.this, objectResponseModel.getMessage(), Toast.LENGTH_SHORT).show();
-                        }
-                    } else if (objectResponseModel.getType().equals(APIClient.KeyConstant.RESPONSE_TYPE_ROOM_MODIFIED)) {
-                        if (objectResponseModel.getStatus_code() == 200) {
-                            Type type1 = new TypeToken<ResponseModel<FSRoomModel>>() {
-                            }.getType();
-                            ResponseModel<FSRoomModel> roomResponseModelResponseModel = gson.fromJson(response, type1);
-
-                            for (String userId : roomResponseModelResponseModel.getData().getUserList()) {
+                            for (String userId : element.getUserList()) {
                                 if (!userId.equals(UserDetails.myDetail.getId())) {
-                                    roomResponseModelResponseModel.getData().setSenderUserDetail(UserDetails.chatUsers.get(userId));
+                                    element.setSenderUserDetail(UserDetails.chatUsers.get(userId));
                                     break;
                                 }
                             }
-
-                            adapter.updateElement(roomResponseModelResponseModel.getData());
-
-                        } else {
-                            Toast.makeText(RoomListActivity.this, objectResponseModel.getMessage(), Toast.LENGTH_SHORT).show();
-
                         }
+                        adapter.addAll(roomResponseModelResponseModel.getData().getRoomList());
+//                    startActivity(new Intent(RoomListActivity.this, RoomListActivity.class));
                     } else {
-                        Log.d(TAG, "onWebSocketResponse: " + objectResponseModel.getType());
+                        Toast.makeText(RoomListActivity.this, message, Toast.LENGTH_SHORT).show();
                     }
+                } else if (ResponseType.RESPONSE_TYPE_ROOM_MODIFIED.equalsTo(type)) {
+                    if (statusCode == 200) {
+                        Type type1 = new TypeToken<ResponseModel<FSRoomModel>>() {
+                        }.getType();
+                        ResponseModel<FSRoomModel> roomResponseModelResponseModel = gson.fromJson(response, type1);
+
+                        for (String userId : roomResponseModelResponseModel.getData().getUserList()) {
+                            if (!userId.equals(UserDetails.myDetail.getId())) {
+                                roomResponseModelResponseModel.getData().setSenderUserDetail(UserDetails.chatUsers.get(userId));
+                                break;
+                            }
+                        }
+
+                        adapter.updateElement(roomResponseModelResponseModel.getData());
+
+                    } else {
+                        Toast.makeText(RoomListActivity.this, message, Toast.LENGTH_SHORT).show();
+
+                    }
+                }else if (ResponseType.RESPONSE_TYPE_CREATE_ROOM.equalsTo(type)) {
+                    if (statusCode == 200) {
+
+                        Type type1 = new TypeToken<ResponseModel<RoomNewResponseModel>>() {
+                        }.getType();
+                        ResponseModel<RoomNewResponseModel> roomResponseModelResponseModel = gson.fromJson(response, type1);
+
+                        HashMap<String, FSUsersModel> tmpUserList = roomResponseModelResponseModel.getData().getUserListMap();
+                        for (String key : tmpUserList.keySet()) {
+                            UserDetails.chatUsers.put(key, tmpUserList.get(key));
+                        }
+
+                        FSRoomModel element = roomResponseModelResponseModel.getData().getNewRoom();
+
+                        for (String userId : element.getUserList()) {
+                            if (!userId.equals(UserDetails.myDetail.getId())) {
+                                element.setSenderUserDetail(UserDetails.chatUsers.get(userId));
+                                break;
+                            }
+                        }
+
+
+                        adapter.add(element);
+
+                    } else {
+                        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+                    }
+
+                } else {
+                    Log.d(TAG, "onWebSocketResponse: " + type);
                 }
             });
 
@@ -185,4 +202,14 @@ public class RoomListActivity extends AppCompatActivity implements WebSocketObse
         return RoomListActivity.class.getName();
     }
 
+
+    @Override
+    public ResponseType[] registerFor() {
+        return new ResponseType[]{
+                ResponseType.RESPONSE_TYPE_ROOM,
+                ResponseType.RESPONSE_TYPE_ROOM_MODIFIED,
+                ResponseType.RESPONSE_TYPE_CREATE_ROOM
+
+        };
+    }
 }

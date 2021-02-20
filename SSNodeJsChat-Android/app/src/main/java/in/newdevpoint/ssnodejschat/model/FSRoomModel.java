@@ -22,14 +22,38 @@ public class FSRoomModel {
     @SerializedName("unread")
     private @Nullable
     HashMap<String, Integer> unread;
+
+    @SerializedName("last_message_time")
     private String lastMessageTime = "";
 
 
     @SerializedName("last_message")
     private String lastMessage = "";
 
+    @SerializedName("type")
+    private String type = "";
     @Nullable
     private FSUsersModel senderUserDetail;
+
+
+    @SerializedName("group_details")
+    private FSGroupModel groupDetails;
+
+    public FSGroupModel getGroupDetails() {
+        return groupDetails;
+    }
+
+    public void setGroupDetails(FSGroupModel groupDetails) {
+        this.groupDetails = groupDetails;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public boolean isGroup() {
+        return this.type.equals("group");
+    }
 
     @Nullable
     public HashMap<String, Integer> getUnread() {

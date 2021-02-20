@@ -13,20 +13,20 @@ var http = require('http');
 var mongoose = require('mongoose');
 
 var FCM = require('fcm-node');
-
-//SSChat React
-// var serverKey = 'AAAA5sgZE7o: APA91bGdnxQsMAvPjrHmEdcjIWseqPMJA_89mq3Y - Wu9EZXiAtzUjGJx1ldPzEvu2YunT6xeFbzP2sEJkoZYP7Zqip0 - bkzS3YX1KD8yVPm - DGL0RRHUso2Yrd1Rdjxc_B_sH56pnb4d';
-
-//Tryst
-var serverKey = 'AAAAP4u6PVI:APA91bEWx0iGiQT4_4RYXd5sW3eeQ3ThQwGfA2scuWWqrvObMs0OMiIpsPhBvcrXlW_oSJAJHw_qjq0ZDOeD1gI84Dd_5kLLJ1OM0XHwexvtdj5tsWftCLEb_dsQf0cZqFNQfZSUhati'; //put your server key here
+var serverKey = 'AAAAvvRfWBg:APA91bFUq2aKcEeodJab7UjMLUVXLgMXgJC26g0yReAOpziaDMqkzWJfWIfEEyiDwQmn_VVXd2LJS8hS6xIrIG3TBEWupOfOGt1rCn1qh8pR_TOltJw8MMkppvtfAdHuBMBwDij1HeC3'; //put your server key here
 var fcm = new FCM(serverKey);
+
+
+
 
 var cons = {};
 var loginUsers = {}
 
 
+
+
 var dbUrl = 'mongodb://127.0.0.1:27017/ReactChat';
-// var dbUrl = 'mongodb://127.0.0.1:27017/Tryste-Tmp';
+// var dbUrl = 'mongodb://127.0.0.1:27017/hi-chat';
 
 var UsersModel = mongoose.model('Users', {
 
@@ -34,7 +34,7 @@ var UsersModel = mongoose.model('Users', {
 	password: String,
 	firstName: String,
 	lastName: String,
-	profile_pic: String,
+	profilePic: String,
 	userId: Number,
 	email: String,
 	device_id: String,
@@ -63,9 +63,7 @@ var RoomModel = mongoose.model('Room', {
 
 	type: String, //group/individual
 	last_message: Object,
-	last_message_time: Date,
 	message_info: Object,
-	group_details: Object,
 	users_meta: Object,
 	userList: Array,
 
@@ -150,7 +148,7 @@ var MsgModel = {};
 
 function isFine(item) {
 
-	if (item == '' || item == 'undefined' || item == null) {
+	if (item == 'undefined' || item == null) {
 
 		return false;
 	} else {
@@ -244,97 +242,20 @@ function chatRequest(request) {
 //MARK:- Private Functions
 
 function getLastMessage(message, type) {
-	switch (type) {
-		case "TEXT":
-
-			return message.substring(0, 100);
-		case "IMAGE":
-			return "📷";
-		case "DOCUMENT":
-			return "📄";
-		case "LOCATION":
-			return "📍";
-		case "CONTACT":
-			return "📞";
-		case "VIDEO":
-			return "🎞️";
-		case "REPlAY":
-			return "Replay";
-		default:
-			return message.substring(0, 100);
-	}
-
+	return message;
 }
 
 function updateOnlineStatus(userId, online) {
-	///Create new object to update online and lst seen status
 	let dataToUpdate = { last_seen: new Date(), is_online: online };
 
-	UsersModel.findOneAndUpdate({ userId: userId }, dataToUpdate, { new: false, useFindAndModify: false }, (err, updated_user) => {
+	UsersModel.findOneAndUpdate({ _id: userId }, dataToUpdate, { new: true, useFindAndModify: false }, (err, updated_user) => {
 		console.log("On Update Online Status:: ", err, updated_user);
 
-		updated_user["is_online"] = online;
-
-		/// Notify to all active user about that user status
 		Object.keys(cons).forEach((element) => {
 			cons[element].sendUTF(responseSuccess(200, "userModified", updated_user, "Online/Offline Status Changed", true));
-		});
-
-	});
-}
-function createNewRoomNotify(savedMessage) {
-	let fondData = { userId: { $in: savedMessage.userList } };
-	// { "userName": requestData.userName, "password": requestData.password };
-	UsersModel.find(fondData, (err, userList) => {
-
-		userList = userList.map((element) => {
-			let x = Object.assign({}, {
-				"_id": "",
-				"userName": "",
-				"password": "",
-				"userId": 0,
-				"fcm_token": "",
-				"device_id": "",
-				"is_online": false,
-				"last_seen": "",
-				"firstName": "",
-				"profile_pic": ""
-			}, JSON.parse(JSON.stringify(element)))
-			// console.log(x);
-			return x;
 		})
 
-		let responseData = { newRoom: savedMessage, userList: userList };
-		// console.log(`Room Saved.`, savedMessage.userList);
-		savedMessage.userList.forEach(element => {
-			// console.log(`Room Saved.`, element, cons[element]);
-			if (cons[element]) {
-				cons[element].sendUTF(responseSuccess(200, "createRoom", responseData, "New Room Created", true));
-			}
-
-		});
 	});
-}
-function createNewRoom(findObject, connection) {
-
-	var room = new RoomModel(findObject);
-
-	room.save().then((savedMessage) => {
-		// console.log(`Room Saved.`, savedMessage);
-		if (savedMessage) {
-
-			createNewRoomNotify(savedMessage);
-
-		} else {
-			connection.sendUTF(responseError(500, "createRoom", "Failed To create room", true));
-		}
-
-	}).catch((ex) => {
-		console.error(`Room Failed to Saved.`, ex);
-		connection.sendUTF(responseError(500, "createRoom", "Failed To create room", true));
-	});
-
-
 }
 //MARK:- Oprations
 async function roomRequest(requestData, connection) {
@@ -351,13 +272,13 @@ async function roomRequest(requestData, connection) {
 		});
 
 		console.log(findObject);
-		RoomModel.find(findObject).sort({ last_message_time: -1 }).exec((err, messages) => {
+		RoomModel.find(findObject, (err, messages) => {
 			//res.send(messages);
-			// console.log(`On connect Error:::${err} data:::`, messages);
+			console.log(`On connect Error:::${err} data:::`, messages);
 			// connection.sendUTF(`user login successfully ${messages}`);
 
 			if (messages && messages.length > 0) {
-				console.log(`Room Data Found....`, messages);
+				console.log(`Room Data Found....`);
 				let usersList = [];
 				messages.forEach((element) => {
 					usersList = usersList.concat(Object.keys(element.users));
@@ -365,29 +286,12 @@ async function roomRequest(requestData, connection) {
 
 				usersList = [...new Set(usersList)];
 
-				let fondData = { userId: { $in: usersList } };
+				let fondData = { _id: { $in: usersList } };
 				// { "userName": requestData.userName, "password": requestData.password };
 				UsersModel.find(fondData, (err, userList) => {
 
-					userList = userList.map((element) => {
-						let x = Object.assign({}, {
-							"_id": "",
-							"userName": "",
-							"password": "",
-							"userId": 0,
-							"fcm_token": "",
-							"device_id": "",
-							"is_online": false,
-							"last_seen": "",
-							"firstName": "",
-							"profile_pic": ""
-						}, JSON.parse(JSON.stringify(element)))
-						// console.log(x);
-						return x;
-					})
-
 					let responseData = { roomList: messages, userList: userList };
-					// console.log(`responseData::: `, responseData);
+					console.log(`responseData::: `, responseData);
 					connection.sendUTF(responseSuccess(200, "allRooms", responseData, "Data Found", true));
 					// userList
 				});
@@ -405,32 +309,6 @@ async function roomRequest(requestData, connection) {
 		userList.forEach((element) => {
 			findObject[`users.${element}`] = true;
 		});
-
-		/* 
-		
-		users: Object,
-
-	type: String, //group/individual
-	last_message: Object,
-	message_info: Object,
-	users_meta: Object,
-	userList: Array,
-
-	unread: Object,
-	*/
-		if (requestData.room_type == "group") {
-			findObject["type"] = "group";
-			let groupDetails = Object.assign({}, {
-				group_name: "untitled group",
-			}, requestData.group_details);
-			findObject["group_details"] = groupDetails;
-			findObject["type"] = "group";
-		} else {
-			findObject["type"] = "individual";
-		}
-
-		findObject['last_message_time'] = new Date();
-		findObject['userList'] = userList;
 		if (userList.length == 2) {
 
 			let group = await RoomModel.find({ userList: { $all: userList, $size: userList.length } });
@@ -438,18 +316,37 @@ async function roomRequest(requestData, connection) {
 			// let group = await RoomModel.find({ 'users.anil' : true,  'users.shubhum' : true });
 			if (group.length) {
 				console.log('Group already exists');
-
-				createNewRoomNotify(group[0]);
-
-				// connection.sendUTF(responseSuccess(200, "createRoom", group[0], "New Room Created", true));
-			} else {
-				createNewRoom(findObject, connection);
+				connection.sendUTF(responseError(400, "createRoom", "Group is already exist.", true));
 			}
-		} else {
-			createNewRoom(findObject, connection);
+			console.log('group', group);
+			console.log("userList", userList);
 		}
 
+		findObject['userList'] = userList;
+
+
+		/* 
+		users: Object,
+
+	type: String, //group/individual
+	last_message: Object,
+	message_info: Object,
+	users_meta: Object,
+	userList: Array
+	 */
+
+		var room = new RoomModel(findObject);
+
+		room.save().then((savedMessage) => {
+			console.log(`Room Saved.`, savedMessage);
+
+		}).catch((ex) => {
+			console.error(`Room Failed to Saved.`, ex);
+		});
+
+		connection.sendUTF(responseError(404, "allRooms", "Not Found", true));
 	}
+
 
 }
 async function allUser(requestData, connection) {
@@ -509,7 +406,7 @@ async function loginRequest(requestData, connection) {
 					await userData.save();
 
 					//res.send(messages);
-					// console.log(`On connect Error:::${err} users:::`, userData);
+					console.log(`On connect Error:::${err} users:::`, userData);
 
 					console.log(`user login successfully`, userData);
 					connection.sendUTF(responseSuccess(200, "login", userData, "Login Success", true));
@@ -566,7 +463,7 @@ async function loginRequest(requestData, connection) {
 
 				} else {
 
-					let userId = userData['userId'];
+					let userId = userData['_id'];
 
 					connection['uId'] = userId;
 
@@ -579,8 +476,6 @@ async function loginRequest(requestData, connection) {
 					await userData.save();
 
 					connection.sendUTF(responseSuccess(200, "login", userData, "Login Success", true));
-
-					updateOnlineStatus(userId, true);
 				}
 
 			});
@@ -632,10 +527,12 @@ async function loginRequest(requestData, connection) {
 
 	} else if (requestData.type == 'updateProfile') {
 
-		/* if (!isFine(requestData._id)) {
+		if (!isFine(requestData._id)) {
 			connection.sendUTF(responseError(400, "updateProfile", "ObjectId is not provided.", true));
-		} else */ if (!isFine(requestData.userId)) {
+		} else if (!isFine(requestData.userId)) {
+
 			connection.sendUTF(responseError(400, "updateProfile", "userId is required.", true));
+
 		} else {
 			var dataToUpdate = {};
 			if (isFine(requestData.userName)) {
@@ -646,9 +543,9 @@ async function loginRequest(requestData, connection) {
 				dataToUpdate['password'] = requestData.password;
 			}
 
-			// if (isFine(requestData.userId)) {
-			// 	dataToUpdate['userId'] = requestData.userId;
-			// }
+			if (isFine(requestData.userId)) {
+				dataToUpdate['userId'] = requestData.userId;
+			}
 
 			if (isFine(requestData.firstName)) {
 				dataToUpdate['firstName'] = requestData.firstName;
@@ -658,46 +555,27 @@ async function loginRequest(requestData, connection) {
 				dataToUpdate['lastName'] = requestData.lastName;
 			}
 
-			if (isFine(requestData.profile_pic)) {
-				dataToUpdate['profile_pic'] = requestData.profile_pic;
+			if (isFine(requestData.profilePic)) {
+				dataToUpdate['profilePic'] = requestData.profilePic;
 			}
 
 			if (isFine(requestData.email)) {
 				dataToUpdate['email'] = requestData.email;
 			}
 
-			if (isFine(requestData.fcm_token)) {
-				dataToUpdate['fcm_token'] = requestData.fcm_token;
-			}
+			dataToUpdate.fcm_token = isFine(requestData.fcm_token) ? requestData.fcm_token : '';
+			dataToUpdate.device_id = isFine(requestData.device_id) ? requestData.device_id : '';
 
-			if (isFine(requestData.device_id)) {
-				dataToUpdate['device_id'] = requestData.device_id;
-			}
 
-			UsersModel.findOneAndUpdate({ /* _id: requestData._id,  */userId: requestData.userId }, dataToUpdate, { new: false, useFindAndModify: false }, (err, updated_user) => {
+			UsersModel.findOneAndUpdate({ _id: requestData._id, userId: requestData.userId }, dataToUpdate, { new: true, useFindAndModify: false }, (err, updated_user) => {
 				if (err) {
-					connection.sendUTF(responseError(500, "updateProfile", "Internal Server Error.", true));
+					return connection.sendUTF(responseError(500, "updateProfile", "Internal Server Error.", true));
 				}
 
 				if (updated_user == null) {
-					connection.sendUTF(responseError(400, "updateProfile", "No user found.", true));
+					return connection.sendUTF(responseError(400, "updateProfile", "No user found.", true));
 				}
-
-				connection.sendUTF(responseSuccess(200, "updateProfile", updated_user, "Data updated successfully.", true));
-
-
-
-
-				UsersModel.find({ _id: mongoose.Types.ObjectId(updated_user._id) }, (err, findUser) => {
-
-					if (findUser && findUser.length > 0) {
-						/// Notify to all active user about that user profile
-						Object.keys(cons).forEach((element) => {
-							cons[element].sendUTF(responseSuccess(200, "userModified", findUser[0], "User Details Changed", true));
-						});
-					}
-				});
-
+				return connection.sendUTF(responseSuccess(200, "updateProfile", updated_user, "Data updated successfully.", true));
 			});
 		}
 
@@ -711,7 +589,7 @@ function formatTheMessages(message) {
 	// message["timestamp"] = new Date(message.time).getTime();
 
 	message = Object.assign({}, message, { "timestamp": new Date(message.time).getTime() });
-	// console.log("Message::::", message);
+	console.log("Message::::", message);
 	return message;
 
 }
@@ -810,8 +688,7 @@ async function messageRequest(requestData, connection) {
 					newMessageInfo = { unread: unread }
 				}
 
-				newMessageInfo["last_message"] = getLastMessage(messageData.message, messageData.message_type);
-				newMessageInfo["last_message_time"] = new Date();
+				newMessageInfo["last_message"] = getLastMessage(messageData.message, messageData.message_type)
 
 				console.log('MessageRequest:::: newMessageInfo:: ', newMessageInfo);
 
@@ -824,7 +701,7 @@ async function messageRequest(requestData, connection) {
 	users_meta: Object,
 	userList: Array */
 				RoomModel.findOneAndUpdate({ _id: mongoose.Types.ObjectId(room._id) }, newMessageInfo, { new: true, useFindAndModify: false }, (err, updatedRoom) => {
-					// console.log("RoomModel::: update", err, updatedRoom);
+					console.log("RoomModel::: update", err, updatedRoom);
 					if (err) {
 
 					} else {
@@ -838,6 +715,8 @@ async function messageRequest(requestData, connection) {
 					}
 
 				});
+
+
 
 				room.userList.forEach(user => {
 					if (cons.hasOwnProperty(user)) {
@@ -856,15 +735,15 @@ async function messageRequest(requestData, connection) {
 				});
 
 
-				let fondData = { userId: { $in: room.userList } };
+				let fondData = { _id: { $in: room.userList } };
 				// { "userName": requestData.userName, "password": requestData.password };
 				UsersModel.find(fondData, (err, userList) => {
 
 					let receverUserList = userList.filter((element) => {
-						return element.userId != messageData.sender_id;
+						return element._id != messageData.sender_id;
 					});
 					let senderUserDetail = userList.find((element) => {
-						return element.userId == messageData.sender_id;
+						return element._id == messageData.sender_id;
 					});
 
 					let fcmTokens = receverUserList.map((element) => {
@@ -889,13 +768,13 @@ async function messageRequest(requestData, connection) {
 						}
 					};
 
-					/* fcm.send(message, function (err, response) {
+					fcm.send(message, function (err, response) {
 						if (err) {
 							console.log("Something has gone wrong!");
 						} else {
 							console.log("Successfully sent with response: ", response);
 						}
-					}); */
+					});
 
 				});
 
@@ -916,7 +795,7 @@ async function messageRequest(requestData, connection) {
 
 }
 function createConnection(requestData, connection) {
-	// console.log("createConnection::", requestData);
+	console.log("createConnection::", requestData);
 	if (requestData.type == "create") {
 		if (isFine(requestData.user_id)) {
 			let userId = requestData.user_id;

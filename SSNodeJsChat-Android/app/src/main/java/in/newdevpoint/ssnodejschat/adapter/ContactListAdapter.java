@@ -20,11 +20,11 @@ import in.newdevpoint.ssnodejschat.model.ContactModel;
 public class ContactListAdapter extends RecyclerView.Adapter<ContactListAdapter.MyHolder> implements Filterable {
 
     private final Context context;
-    private ArrayList<ContactModel> filteredTagUserListModelArrayList;
     private final OnCheckBoxClickListener onCheckBoxClickListener;
     //Two data sources, the original data and filtered data
 //    private ArrayList<TagUserListModel> originalData;
     private final ArrayList<ContactModel> originalTagListData;
+    private ArrayList<ContactModel> filteredTagUserListModelArrayList;
 
     public ContactListAdapter(Context context, OnCheckBoxClickListener onCheckBoxClickListener, ArrayList<ContactModel> filteredTagUserListModelArrayList) {
         this.context = context;

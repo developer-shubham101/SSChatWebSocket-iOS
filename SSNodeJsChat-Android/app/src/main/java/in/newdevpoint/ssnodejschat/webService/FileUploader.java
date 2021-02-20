@@ -26,8 +26,8 @@ import retrofit2.http.POST;
 public class FileUploader {
 
     private static final String TAG = "FileUploader";
+    private final UploadInterface uploadInterface;
     public FileUploaderCallback fileUploaderCallback;
-
     private File files;
     private @Nullable
     File thumb;
@@ -35,7 +35,6 @@ public class FileUploader {
     private long totalFileLength = 0;
     private long totalFileUploaded = 0;
     private String filekey = "";
-    private final UploadInterface uploadInterface;
     private String auth_token = "";
 //	private String responses;
 
@@ -97,7 +96,9 @@ public class FileUploader {
         }
 
 
-        builder.addFormDataPart("channel_id", "sample");
+//        builder.addFormDataPart("channel_id", "sample");
+
+        builder.addFormDataPart("room_id", "sample");
         builder.addPart(filePart);
 
         Call<JsonElement> call;
@@ -132,10 +133,12 @@ public class FileUploader {
     }
 
     private interface UploadInterface {
-        @POST("upload")
+        // @POST("upload")
+        @POST("user-tryster-chat-file")
         Call<JsonElement> uploadFile(@Body MultipartBody requestBody, @Header("Authorization") String authorization);
 
-        @POST("upload")
+        //@POST("upload")
+        @POST("user-tryster-chat-file")
         Call<JsonElement> uploadFile(@Body MultipartBody requestBody);
     }
 

@@ -28,9 +28,11 @@
             <com.cusom.views.CustomFontTextView
                 android:id="@+id/rowAllUserName"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="0dp"
 
 
+                android:layout_marginStart="8dp"
+                android:layout_marginLeft="8dp"
                 android:layout_marginTop="8dp"
                 android:layout_marginEnd="8dp"
                 android:layout_marginRight="8dp"
@@ -38,9 +40,15 @@
                 android:textSize="14sp"
                 card_view:layout_constraintBottom_toBottomOf="parent"
                 card_view:layout_constraintEnd_toEndOf="parent"
-                card_view:layout_constraintStart_toStartOf="parent"
+                card_view:layout_constraintStart_toEndOf="@+id/rowAllUserCheck"
                 card_view:layout_constraintTop_toTopOf="parent"
                 tools:text="@tools:sample/last_names" />
+
+            <CheckBox
+                android:id="@+id/rowAllUserCheck"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                card_view:layout_constraintStart_toStartOf="parent" />
 
 
         </androidx.constraintlayout.widget.ConstraintLayout>

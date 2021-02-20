@@ -33,6 +33,40 @@ $(function () {
 	// var registerConnection = new WebSocket('ws://127.0.0.1:1337/register');
 	var userListConnection = new WebSocket('ws://127.0.0.1:1337/v1/users');
 
+	setTimeout(() => {
+		// connectionRoom.send(JSON.stringify({ "userName": "anil", "password": 123456 }));
+		// connectionRoom.send(JSON.stringify({ "userName": "anil", "password": 123456 }));
+		// connectionLogin.send(JSON.stringify({ "userName": "anil", "password": "123456" }));
+	}, 10);
+
+	setTimeout(() => {
+		// connectionRoom.send(JSON.stringify({ "userName": "anil", "password": 123456 }));
+		// connectionRoom.send(JSON.stringify({ "userName": "anil", "password": 123456 }));
+		// connectionRoom.send(JSON.stringify({ type: "allRooms", "userList": ["anil"] }));
+	}, 100);
+
+	setTimeout(() => {
+		// connectionRoom.send(JSON.stringify({ "userName": "anil", "password": 123456 }));
+		// connectionRoom.send(JSON.stringify({ "userName": "anil", "password": 123456 }));
+		// userListConnection.send(JSON.stringify({ type: "allRooms", "userList": ["anil"] }));
+	}, 100);
+
+	setTimeout(() => {
+		// connectionRoom.send(JSON.stringify({ "userName": "anil", "password": 123456 }));
+		// connectionRoom.send(JSON.stringify({ "userName": "anil", "password": 123456 }));
+		/* var userData = { type: "updateProfile", _id: "600a729f49ee8a46a466487e" };
+		console.log('userData', userData);
+		connectionLogin.send(JSON.stringify(userData)); */
+	}, 100);
+
+	setTimeout(() => {
+		// connectionRoom.send(JSON.stringify({ "userName": "anil", "password": 123456 }));
+		// connectionRoom.send(JSON.stringify({ "userName": "anil", "password": 123456 }));
+		/* var userData = { type: "register", userId:4, userName: 'abcuser', password: '123456' };
+		console.log('register userData', userData);
+		connectionLogin.send(JSON.stringify(userData)); */
+	}, 100);
+
 
 	connectionLogin.onmessage = function (message) {
 		console.log("Login message receved ", message.data);
@@ -40,7 +74,7 @@ $(function () {
 
 
 	connectionRoom.onmessage = function (message) {
-		// console.log("Room response receved ", message);
+		console.log("Room response receved ", message);
 
 		try {
 			var json = JSON.parse(message.data);
@@ -48,9 +82,9 @@ $(function () {
 			console.log('This doesn\'t look like a valid JSON: ', message.data);
 			return;
 		}
-		console.log("Login message receved ", json);
+		console.log("Login message receved ", json._id);
 
-		// connectionMessage.send(JSON.stringify({ "roomId": 12/* json._id */, "message": "hello this is the messgae " }));
+		connectionMessage.send(JSON.stringify({ "roomId": 12/* json._id */, "message": "hello this is the messgae " }));
 
 	};
 	connectionMessage.onmessage = function (message) {
@@ -186,21 +220,14 @@ $(function () {
 
 	$('#login_btn').on('click', (event) => {
 
-		var dataObj = {type: 'login', userName: 'abcuser', password: '123456', device_id:'abc_id',fcm_token:'test_token'};
-		console.log('data', dataObj);
-		connectionLogin.send(JSON.stringify(dataObj));
-	})
-
-	$('#login_anil_btn').on('click', (event) => {
-
-		var dataObj = {type: 'login', userName: 'anil', password: '123456'};
+		var dataObj = {type: 'login', userName: 'shubhum', password: '123456'};
 		console.log('data', dataObj);
 		connectionLogin.send(JSON.stringify(dataObj));
 	})
 
 	$('#profile_btn').on('click', (event) => {
 
-		var userData = { type: "updateProfile", _id: "601d0017485981283c1d7334", userId: 5, firstName: "New", lastName: "User", profilePic: "https://i.pinimg.com/originals/7e/41/9d/7e419d717322788e3c2f3271273b0f3d.jpg",email:"new@user.com" };
+		var userData = { type: "updateProfile", _id: "600fb28a7d03c711d859bb5c", userId: 4, firstName: "New", lastName: "User", profilePic: "https://i.pinimg.com/originals/7e/41/9d/7e419d717322788e3c2f3271273b0f3d.jpg",email:"new@user.com" };
 		console.log('userData', userData);
 		connectionLogin.send(JSON.stringify(userData));
 
@@ -209,25 +236,7 @@ $(function () {
 	$('#register_btn').on('click', (event) => {
 
 		// var userData = { type: "register", userId:4, userName: 'abcuser', password: '123456' };
-		var userData = { type: "register", userName: 'abcuser', password: '123456', userId:4 };
-		console.log('register userData', userData);
-		connectionLogin.send(JSON.stringify(userData));
-
-	})
-
-	$('#register_as_anil_btn').on('click', (event) => {
-
-		// var userData = { type: "register", userId:4, userName: 'abcuser', password: '123456' };
-		var userData = { type: "register", userName: 'anil', password: '123456', userId:5 };
-		console.log('register userData', userData);
-		connectionLogin.send(JSON.stringify(userData));
-
-	})
-
-	$('#login_or_create_btn').on('click', (event) => {
-
-		// var userData = { type: "register", userId:4, userName: 'abcuser', password: '123456' };
-		var userData = { type: "loginOrCreate", userName: 'rajan', password: '123456', userId:7 };
+		var userData = { type: "register", userName: 'shubhum', password: '123456', userId:5 };
 		console.log('register userData', userData);
 		connectionLogin.send(JSON.stringify(userData));
 
@@ -236,7 +245,7 @@ $(function () {
 	$('#create_room_btn').on('click', (event) => {
 
 		// var userData = { type: "register", userId:4, userName: 'abcuser', password: '123456' };
-		var userData = { type: "createRoom", "userList": ["4","5", "7"] };
+		var userData = { type: "createRoom", "userList": ["shubhum", "sdanil"] };
 		console.log('register userData', userData);
 		// connectionLogin.send(JSON.stringify(userData));
 		connectionRoom.send(JSON.stringify(userData));
@@ -258,7 +267,7 @@ $(function () {
 	$('#new_message_btn').on('click', (event) => {
 
 		// var userData = { type: "register", userId:4, userName: 'abcuser', password: '123456' };
-		var userData = { type: "addMessage", "roomId": "601d191a01ba0c1686e6e161", "message": "hello this is the messgae " };
+		var userData = { type: "addMessage", "roomId": "601103fe9fbde776d5bae20e", "message": "hello this is the messgae " };
 		console.log('register userData', userData);
 		// connectionLogin.send(JSON.stringify(userData));
 		connectionMessage.send(JSON.stringify(userData));

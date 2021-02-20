@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.os.CancellationSignal;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Looper;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
@@ -35,7 +36,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.Glide;
 import com.downloader.OnDownloadListener;
 import com.downloader.request.DownloadRequest;
 import com.google.gson.Gson;
@@ -64,6 +65,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 
+import in.newdevpoint.ssnodejschat.AppApplication;
 import in.newdevpoint.ssnodejschat.R;
 import in.newdevpoint.ssnodejschat.adapter.ChatAdapter;
 import in.newdevpoint.ssnodejschat.adapter.HeaderDataImpl;
@@ -73,10 +75,12 @@ import in.newdevpoint.ssnodejschat.fragment.PlayAudioFragment;
 import in.newdevpoint.ssnodejschat.fragment.UploadFileProgressFragment;
 import in.newdevpoint.ssnodejschat.model.ChatModel;
 import in.newdevpoint.ssnodejschat.model.ContactModel;
+import in.newdevpoint.ssnodejschat.model.FSGroupModel;
 import in.newdevpoint.ssnodejschat.model.FSUsersModel;
 import in.newdevpoint.ssnodejschat.model.MediaMetaModel;
 import in.newdevpoint.ssnodejschat.model.MediaModel;
 import in.newdevpoint.ssnodejschat.model.UploadFileMode;
+import in.newdevpoint.ssnodejschat.observer.ResponseType;
 import in.newdevpoint.ssnodejschat.observer.WebSocketObserver;
 import in.newdevpoint.ssnodejschat.observer.WebSocketSingleton;
 import in.newdevpoint.ssnodejschat.stickyheader.stickyView.StickHeaderItemDecoration;
@@ -94,6 +98,12 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         PermissionClass.PermissionRequire,
         UploadFileProgressFragment.UploadFileProgressCallback,
         PlayAudioFragment.PlayAudioCallback, WebSocketObserver {
+
+
+    public static final String INTENT_EXTRAS_KEY_IS_GROUP = "isGroup";
+    public static final String INTENT_EXTRAS_KEY_GROUP_DETAILS = "groupDetails";
+    public static final String INTENT_EXTRAS_KEY_ROOM_ID = "roomID";
+    public static final String INTENT_EXTRAS_KEY_SENDER_DETAILS = "senderDetails";
     private static final String TAG = "ChatActivity";
     private static final int REQUEST_READ_STORAGE_FOR_UPLOAD_IMAGE = 3;
     private static final int REQUEST_READ_STORAGE_FOR_UPLOAD_VIDEO = 4;
@@ -104,12 +114,11 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     private static final int CHAT_BUNCH_COUNT = 30;
     private static final int GALLERY = 1;
     private static final int CAMERA = 2;
-    private static final int NORMAL_CLOSURE_STATUS = 10000;
-    public static RequestOptions userProfileDefaultOptions = new RequestOptions().placeholder(R.drawable.user_profile_image).error(R.drawable.user_profile_image);
+
     private static String fileName = null;
     private final String displayName = "";
     ///Document for pagination
-    private final int currentBunch = CHAT_BUNCH_COUNT;
+
     private final ArrayList<ChatModel> chatListTmp = new ArrayList<>();
     private final HashMap<Date, ArrayList<ChatModel>> chatList = new HashMap<>();
     private final PlayAudioFragment uploadFragment = new PlayAudioFragment();
@@ -117,7 +126,6 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     //    private final String CHAT_URL = APIClient.BASE_URL_WEB_SOCKET + "/message?key=sample";
     public boolean mStartRecording = true;
     private boolean isMute = false;
-    private FSUsersModel otherUser;
     private ActivityChatBinding binding;
     private PermissionClass permissionClass;
     private MediaRecorder recorder = null;
@@ -144,19 +152,24 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     };
     private boolean applyBlur = false;
     private boolean isSetWallpaper = false;
-//    private WebSocket webSocket;
+
+    private String _roomId;
+    private boolean _isGroup;
+    private FSGroupModel _groupDetails;
+    private FSUsersModel _senderDetails;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
-        WebSocketSingleton.getInstant().register(this);
+
 
         // Record to the external cache directory for visibility
         fileName = getExternalCacheDir().getAbsolutePath();
         fileName += "/audiorecordtest.m4a";
 
-        handler = new Handler();
+        handler = new Handler(Looper.getMainLooper());
 
         binding = DataBindingUtil.setContentView(ChatActivity.this, R.layout.activity_chat);
         permissionClass = new PermissionClass(this, this);
@@ -195,7 +208,46 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         }
 
 
+        parseExtras();
+
+        if (_isGroup) {
+            setGroupDetails();
+        } else {
+            setIndividualDetails();
+        }
+
+
         joinCommand();
+
+
+    }
+
+    private void parseExtras() {
+        _roomId = getIntent().getStringExtra(ChatActivity.INTENT_EXTRAS_KEY_ROOM_ID);
+        _isGroup = getIntent().getBooleanExtra(ChatActivity.INTENT_EXTRAS_KEY_IS_GROUP, false);
+        _groupDetails = (FSGroupModel) getIntent().getSerializableExtra(ChatActivity.INTENT_EXTRAS_KEY_GROUP_DETAILS);
+        _senderDetails = (FSUsersModel) getIntent().getSerializableExtra(ChatActivity.INTENT_EXTRAS_KEY_SENDER_DETAILS);
+    }
+
+
+    private void setIndividualDetails() {
+
+        binding.chatChatWithUserName.setText(_senderDetails.getName());
+        binding.chatChatWithUserStatus.setText(_senderDetails.isOnline() ? "Online" : _senderDetails.getLastSeen());
+        Glide.with(this)
+                .setDefaultRequestOptions(AppApplication.USER_PROFILE_DEFAULT_GLIDE_CONFIG)
+                .load(Utils.getImageString(_senderDetails.getProfile_image()))
+                .into(binding.chatUserProfile);
+
+
+    }
+
+    private void setGroupDetails() {
+
+        binding.chatChatWithUserName.setText(_groupDetails.getGroup_name());
+        binding.chatChatWithUserStatus.setText(_groupDetails.getAbout_group());
+//        Glide.with(this).setDefaultRequestOptions(userProfileDefaultOptions).load(groupInfo.getRoomImage()).into(binding.chatUserProfile);
+
     }
 
 
@@ -216,7 +268,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                     switch (item.getItemId()) {
                         case R.id.chatMute:
                             //IF is single user chat then check some other user details and set it
-                            if (!UserDetails.isGroup) {
+                            if (!_isGroup) {
                                 isMute = !isMute;
                                 // TODO: 27/01/21 Block Code
                                 /*HashMap<String, Object> newValue = new HashMap<>();
@@ -286,172 +338,6 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         ft.commit();
     }
 
-    /* private void initChatMessageListener() {
-         ///IF is single user chat then check some other user details and set it
-         if (!UserDetails.isGroup) {
-             ///if it is single user chat then fetch oher user's details
-
-
- //			Collection<FSUsersModel> otherUsers = Collections2.filter(new ArrayList<>(UserDetails.chatUsers.values()), input -> !input.getId().equals(currentUser.getUid()));
-
-             ArrayList<FSUsersModel> allOtherUsers = new ArrayList<>(UserDetails.chatUsers.values());
-
-             for (FSUsersModel element : allOtherUsers) {
-                 if (!element.getId().equals(currentUser.getUid())) {
-                     otherUser = element;
-                     break;
-                 }
-             }
-             if (otherUser != null) {
-                 threadDocReference.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                     @Override
-                     public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-
-                         if (task.isSuccessful()) {
-
-                             DocumentSnapshot documentSnapshot = task.getResult();
-
-                             if (documentSnapshot != null) {
-                                 Map<String, Object> data = documentSnapshot.getData();
-                                 if (data != null) {
-                                     Map<String, Object> otherUserData = (Map<String, Object>) data.get(otherUser.getId());
-
-
-                                     if (otherUserData != null) {
-                                         Object isMuteObj = otherUserData.get("isMute");
-                                         isMute = (isMuteObj instanceof Boolean) && (boolean) isMuteObj;
-                                         if (isMute) {
-                                             binding.attachmentWrapper.setVisibility(View.GONE);
-                                             binding.blockedWrapper.setVisibility(View.VISIBLE);
-                                             binding.chatRecordingWrapper.setVisibility(View.GONE);
-                                             binding.chatMessageWrapper.setVisibility(View.GONE);
-                                         } else {
-                                             binding.attachmentWrapper.setVisibility(View.GONE);
-                                             binding.blockedWrapper.setVisibility(View.GONE);
-                                             binding.chatRecordingWrapper.setVisibility(View.GONE);
-                                             binding.chatMessageWrapper.setVisibility(View.VISIBLE);
-                                         }
-                                     }
-
-
-                                 }
-                             }
-
-
-                         } else {
-                             Log.d(TAG, "get failed with ", task.getException());
-                         }
-                     }
-                 });
-
-
-                 binding.chatChatWithUserName.setText(otherUser.getName());
-
-
-                 Glide.with(this).setDefaultRequestOptions(userProfileDefaultOptions).load(otherUser.getProfile_image()).into(binding.chatUserProfile);
-
-                 db.collection("users/").document(otherUser.getId()).addSnapshotListener(new EventListener<DocumentSnapshot>() {
-                     @Override
-                     public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
-                         if (e != null) {
-                             Log.w(TAG, "Listen failed.", e);
-                             return;
-                         }
-
-                         if (documentSnapshot != null) {
-                             Map<String, Object> data = documentSnapshot.getData();
-
-                             if (data != null) {
-                                 boolean onlineStatus = (boolean) data.get("online");
-
-                                 Object timeObject = data.get("last_active");
-
-                                 if (onlineStatus) {
-                                     binding.chatChatWithUserStatus.setText("Online");
-                                 } else if (timeObject instanceof Timestamp) {
-                                     Timestamp time = (Timestamp) timeObject;
-                                     Date tempDate = new Date(time.getSeconds() * 1000);
-                                     String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(tempDate);
-                                     binding.chatChatWithUserStatus.setText(timestamp);
-                                 } else {
-                                     binding.chatChatWithUserStatus.setText("Offline");
-                                 }
-                             }
-
-                         }
-                     }
-                 });
-             }
-
-             chatReference.orderBy("time", Query.Direction.DESCENDING).limit(currentBunch).addSnapshotListener(new EventListener<QuerySnapshot>() {
-                 @Override
-                 public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
-                     if (e != null) {
-                         Log.w(TAG, "Listen failed.", e);
-                         return;
-                     }
-
-                     if (queryDocumentSnapshots != null && !queryDocumentSnapshots.isEmpty()) {
-                         for (DocumentChange dc : queryDocumentSnapshots.getDocumentChanges()) {
-                             switch (dc.getType()) {
-                                 case ADDED:
-                                     Log.d(TAG, "New city: " + dc.getDocument().getData());
-                                     appendMessage(dc);
-                                     binding.chatRecyclerView.smoothScrollToPosition(adapter.getItemCount() - 1);
-                                     break;
-                                 case MODIFIED:
-                                     Log.d(TAG, "Modified city: " + dc.getDocument().getData());
-                                     break;
-                                 case REMOVED:
-                                     Log.d(TAG, "Removed city: " + dc.getDocument().getData());
-                                     break;
-                             }
-                         }
-
-                     } else {
-                         Log.d(TAG, "Current data: null");
-                     }
-                 }
-             });
-
-         }
-     }
-
-     private void appendMessage(DocumentChange dc) {
-         Map<String, Object> chatData = dc.getDocument().getData();
-         FSUsersModel senderDetails = UserDetails.chatUsers.get(chatData.get("sender_id"));
-
-         ChatModel chatModel = new ChatModel(dc.getDocument().getId(), chatData, senderDetails);
-
-         chatListTmp.add(chatModel);
-
-         Date tempDate = chatModel.getCreatedDate();
-         ArrayList<ChatModel> correspondingChatList = chatList.get(tempDate);
-
-
-         if (correspondingChatList == null) {
-             correspondingChatList = new ArrayList<>();
-             chatList.put(tempDate, correspondingChatList);
-         }
-         correspondingChatList.add(chatModel);
-
-
-         Collections.sort(correspondingChatList, (o1, o2) -> o1.getMessageDate().compareTo(o2.getMessageDate()));
-
-         ArrayList<Date> keys = new ArrayList<>(chatList.keySet());
-
-         Collections.sort(keys);
-
-
-         adapter.clearAll();
-         for (Date key : keys) {
-             ArrayList<ChatModel> chatForThatDay = chatList.get(key);
- //										HeaderDataImpl headerData1 = new HeaderDataImpl(R.layout.header1_item_recycler, key);
-             HeaderDataImpl headerData1 = new HeaderDataImpl(R.layout.header1_item_recycler, key);
-             adapter.setHeaderAndData(chatForThatDay, headerData1);
-         }
-
-     }*/
     private void appendMessage(JSONObject chatData) throws JSONException {
 
 
@@ -621,18 +507,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onStart() {
         super.onStart();
-//        mUserRef.child(currentUser.getUid()).child("isOnline").setValue(true);
-//        mUserRef.child(currentUser.getUid()).addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(com.google.firebase.database.DataSnapshot dataSnapshot) {
-//                displayName = dataSnapshot.child("profileDisplayName").getValue(String.class);
-//            }
-//
-//            @Override
-//            public void onCancelled(DatabaseError databaseError) {
-//
-//            }
-//        });
+        WebSocketSingleton.getInstant().register(this);
     }
 
     @Override
@@ -756,8 +631,8 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
 
 
         messageMap.put("type", "addMessage");
-        messageMap.put("roomId", UserDetails.roomId);
-        messageMap.put("room", UserDetails.roomId);
+        messageMap.put("roomId", _roomId);
+        messageMap.put("room", _roomId);
 
         messageMap.put("message", message);
         messageMap.put("message_type", messageType.toString());
@@ -1231,7 +1106,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         JSONObject jsonObject = new JSONObject();
         try {
             jsonObject.put("type", "allMessage");
-            jsonObject.put("room", UserDetails.roomId);
+            jsonObject.put("room", _roomId);
 
             jsonObject.put(APIClient.KeyConstant.REQUEST_TYPE_KEY, APIClient.KeyConstant.REQUEST_TYPE_MESSAGE);
         } catch (JSONException e) {
@@ -1241,37 +1116,28 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public void onWebSocketResponse(String response) {
+    public void onWebSocketResponse(String response, String type, int statusCode, String message) {
         Log.d(TAG, "received message: " + response);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-
-                Gson gson = new Gson();
-                Type type = new TypeToken<ResponseModel<Object>>() {
-                }.getType();
-
-                ResponseModel<Object> objectResponseModel = gson.fromJson(response, type);
-
-                if (objectResponseModel.getType().equals(APIClient.KeyConstant.RESPONSE_TYPE_MESSAGES)) {
+        runOnUiThread(() -> {
+            try {
+                if (ResponseType.RESPONSE_TYPE_MESSAGES.equalsTo(type)) {
 
 
-                    try {
+                    JSONObject responseData = new JSONObject(response);
 
-                        JSONObject responseData = new JSONObject(response);
-
-                        int responseCode = responseData.getInt("statusCode");
-                        if (responseCode == 200) {
-                            JSONArray jsonObject = responseData.getJSONArray("data");
-                            for (int i = 0; i < jsonObject.length(); i++) {
-                                JSONObject nthObject = jsonObject.getJSONObject(i);
-                                appendMessage(nthObject);
-                            }
-                        } else if (responseCode == 201) {
-                            appendMessage(responseData.getJSONObject("data"));
-                        } else {
-                            Toast.makeText(ChatActivity.this, responseData.getString("message"), Toast.LENGTH_SHORT).show();
+                    int responseCode = responseData.getInt("statusCode");
+                    if (responseCode == 200) {
+                        JSONArray jsonObject = responseData.getJSONArray("data");
+                        for (int i = 0; i < jsonObject.length(); i++) {
+                            JSONObject nthObject = jsonObject.getJSONObject(i);
+                            appendMessage(nthObject);
                         }
+                    } else if (responseCode == 201) {
+                        // TODO: 17/02/21 Fix if room id is same only then add the message
+                        appendMessage(responseData.getJSONObject("data"));
+                    } else {
+                        Toast.makeText(ChatActivity.this, responseData.getString("message"), Toast.LENGTH_SHORT).show();
+                    }
 
 
 //                        if (jsonObject.has("message")) {
@@ -1281,12 +1147,31 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
 //                            binding.chatRecyclerView.scrollToPosition(chattingAdapter.items.size() - 1);
 //                        }
 
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+                } else if (ResponseType.RESPONSE_TYPE_USER_MODIFIED.equalsTo(type)) {
+                    Log.d(TAG, "received message: " + response);
+
+                    Type type1 = new TypeToken<ResponseModel<FSUsersModel>>() {
+                    }.getType();
+
+                    ResponseModel<FSUsersModel> fsUsersModelResponseModel = new Gson().fromJson(response, type1);
+
+                    _senderDetails = fsUsersModelResponseModel.getData();
+                    if (_isGroup) {
+//                    setGroupDetails();
+                    } else {
+                        setIndividualDetails();
                     }
+
+//                otherUser = UserDetails.chatUsers.get(id);
+//
+//                setOtherDetails();
                 } else {
-                    Log.d(TAG, "onWebSocketResponse: " + objectResponseModel.getType());
+                    Log.d(TAG, "onWebSocketResponse: " + type);
                 }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         });
     }
@@ -1294,6 +1179,14 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public String getActivityName() {
         return ChatActivity.class.getName();
+    }
+
+    @Override
+    public ResponseType[] registerFor() {
+        return new ResponseType[]{
+                ResponseType.RESPONSE_TYPE_MESSAGES,
+                ResponseType.RESPONSE_TYPE_USER_MODIFIED
+        };
     }
 
 

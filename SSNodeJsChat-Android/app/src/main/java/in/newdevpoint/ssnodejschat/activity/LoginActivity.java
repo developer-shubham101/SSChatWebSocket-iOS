@@ -20,6 +20,7 @@ import java.lang.reflect.Type;
 import in.newdevpoint.ssnodejschat.R;
 import in.newdevpoint.ssnodejschat.databinding.ActivityLoginBinding;
 import in.newdevpoint.ssnodejschat.model.FSUsersModel;
+import in.newdevpoint.ssnodejschat.observer.ResponseType;
 import in.newdevpoint.ssnodejschat.observer.WebSocketObserver;
 import in.newdevpoint.ssnodejschat.observer.WebSocketSingleton;
 import in.newdevpoint.ssnodejschat.utility.PreferenceUtils;
@@ -28,9 +29,29 @@ import in.newdevpoint.ssnodejschat.utility.Validate;
 import in.newdevpoint.ssnodejschat.webService.APIClient;
 import in.newdevpoint.ssnodejschat.webService.ResponseModel;
 
+class TmpUserModel {
+    String email;
+    String password;
+    String userId;
+
+    public TmpUserModel(String email, String password, String userId) {
+        this.email = email;
+        this.password = password;
+        this.userId = userId;
+    }
+}
+
 public class LoginActivity extends AppCompatActivity implements WebSocketObserver {
     private static final String EMAIL = "email";
     private static final String TAG = "LoginActivity";
+    private final TmpUserModel[] listOfTmpUsers = {
+            new TmpUserModel("anil@yopmail.com", "123456", "1"),
+            new TmpUserModel("amit@yopmail.com", "123456", "2"),
+            new TmpUserModel("shubham@yopmail.com", "123456", "3"),
+            new TmpUserModel("ali@yopmail.com", "123456", "4"),
+            new TmpUserModel("samreen@yopmail.com", "123456", "5")
+    };
+    private final TmpUserModel tmpUserModel = listOfTmpUsers[2];
     //    private Waiting mWaitingDialog;
     private ActivityLoginBinding loginBinding;
 
@@ -44,27 +65,29 @@ public class LoginActivity extends AppCompatActivity implements WebSocketObserve
         WebSocketSingleton.getInstant().register(this);
 
 
-        if (PreferenceUtils.isUserLogin(this)){
-            UserDetails.myDetail = PreferenceUtils.getRegisterUser(this);
-            startActivity(new Intent(LoginActivity.this, RoomListActivity.class));
+//        if (PreferenceUtils.isUserLogin(this)){
+//            UserDetails.myDetail = PreferenceUtils.getRegisterUser(this);
+//            startActivity(new Intent(LoginActivity.this, RoomListActivity.class));
+//
+//
+//            JSONObject jsonObject = new JSONObject();
+//            try {
+//                Toast.makeText(this, PreferenceUtils.getRegisterUser(this).getId() + " User Id", Toast.LENGTH_SHORT).show();
+//                jsonObject.put("user_id", PreferenceUtils.getRegisterUser(this).getId());
+//
+//                jsonObject.put("type", "create");
+//                jsonObject.put(APIClient.KeyConstant.REQUEST_TYPE_KEY, APIClient.KeyConstant.REQUEST_TYPE_CREATE_CONNECTION);
+////            mWaitingDialog.show();
+//
+//                WebSocketSingleton.getInstant().sendMessage(jsonObject);
+//
+//            } catch (JSONException e) {
+//                e.printStackTrace();
+//            }
+//        }
 
 
-            JSONObject jsonObject = new JSONObject();
-            try {
-                Toast.makeText(this, PreferenceUtils.getRegisterUser(this).getId() + " User Id", Toast.LENGTH_SHORT).show();
-                jsonObject.put("user_id", PreferenceUtils.getRegisterUser(this).getId());
-
-                jsonObject.put("type", "create");
-                jsonObject.put(APIClient.KeyConstant.REQUEST_TYPE_KEY, APIClient.KeyConstant.REQUEST_TYPE_CREATE_CONNECTION);
-//            mWaitingDialog.show();
-
-                WebSocketSingleton.getInstant().sendMessage(jsonObject);
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-
+        loginBinding.loginUserEmail.setText(tmpUserModel.email);
 
 
         loginBinding.loginBtn.setOnClickListener(new View.OnClickListener() {
@@ -73,7 +96,6 @@ public class LoginActivity extends AppCompatActivity implements WebSocketObserve
                 fetchLoginApi();
             }
         });
-
 
 
     }
@@ -92,11 +114,11 @@ public class LoginActivity extends AppCompatActivity implements WebSocketObserve
 //        mWaitingDialog.show();
         JSONObject jsonObject = new JSONObject();
         try {
-            jsonObject.put("userId", 1);
+            jsonObject.put("userId", tmpUserModel.userId);
             jsonObject.put("userName", loginBinding.loginUserEmail.getText().toString());
             jsonObject.put("password", loginBinding.loginPassword.getText().toString());
             jsonObject.put("fcm_token", PreferenceUtils.getDeviceToken(this));
-            jsonObject.put("type", "login");
+            jsonObject.put("type", "loginOrCreate");
             jsonObject.put(APIClient.KeyConstant.REQUEST_TYPE_KEY, APIClient.KeyConstant.REQUEST_TYPE_LOGIN);
 //            mWaitingDialog.show();
 
@@ -108,38 +130,49 @@ public class LoginActivity extends AppCompatActivity implements WebSocketObserve
     }
 
     @Override
-    public void onWebSocketResponse(String response) {
-
-        Gson gson = new Gson();
-        Type type = new TypeToken<ResponseModel<Object>>() {
-        }.getType();
-
-        ResponseModel<Object> objectResponseModel = gson.fromJson(response, type);
+    public void onWebSocketResponse(String response, String type, int statusCode, String message) {
+        try {
+            runOnUiThread(() -> {
+                Gson gson = new Gson();
 
 
-        if (objectResponseModel.getType().equals(APIClient.KeyConstant.RESPONSE_TYPE_LOGIN)) {
+                if (ResponseType.RESPONSE_TYPE_LOGIN.equalsTo(type) ||
+                        ResponseType.RESPONSE_TYPE_LOGIN_OR_CREATE.equalsTo(type)) {
 
 
-            Type type1 = new TypeToken<ResponseModel<FSUsersModel>>() {
-            }.getType();
+                    Type type1 = new TypeToken<ResponseModel<FSUsersModel>>() {
+                    }.getType();
 
-            ResponseModel<FSUsersModel> fsUsersModelResponseModel = gson.fromJson(response, type1);
-            if (fsUsersModelResponseModel.getStatus_code() == 200) {
-                UserDetails.myDetail = fsUsersModelResponseModel.getData();
+                    ResponseModel<FSUsersModel> fsUsersModelResponseModel = gson.fromJson(response, type1);
+                    if (fsUsersModelResponseModel.getStatus_code() == 200) {
+                        UserDetails.myDetail = fsUsersModelResponseModel.getData();
 
-                PreferenceUtils.loginUser(this, fsUsersModelResponseModel.getData());
-                startActivity(new Intent(LoginActivity.this, RoomListActivity.class));
-            } else {
-                Toast.makeText(LoginActivity.this, fsUsersModelResponseModel.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        } else {
-            Log.d(TAG, "onWebSocketResponse: " + objectResponseModel.getType());
+                        PreferenceUtils.loginUser(LoginActivity.this, fsUsersModelResponseModel.getData());
+                        startActivity(new Intent(LoginActivity.this, RoomListActivity.class));
+                    } else {
+                        Toast.makeText(LoginActivity.this, fsUsersModelResponseModel.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Log.d(TAG, "onWebSocketResponse: " + type);
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
     }
 
+
     @Override
     public String getActivityName() {
         return LoginActivity.class.getName();
+    }
+
+    @Override
+    public ResponseType[] registerFor() {
+        return new ResponseType[]{
+                ResponseType.RESPONSE_TYPE_LOGIN,
+                ResponseType.RESPONSE_TYPE_LOGIN_OR_CREATE,
+        };
     }
 }

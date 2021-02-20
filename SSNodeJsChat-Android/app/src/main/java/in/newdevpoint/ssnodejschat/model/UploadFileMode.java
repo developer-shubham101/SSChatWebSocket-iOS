@@ -6,7 +6,7 @@ public class UploadFileMode {
 	@SerializedName("thumbnail")
 	private String thumbnail;
 
-	@SerializedName("file_path")
+	@SerializedName("file")
 	private String file;
 
 	@SerializedName("updated_at")

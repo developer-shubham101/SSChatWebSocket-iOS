@@ -17,15 +17,21 @@ import in.newdevpoint.ssnodejschat.model.FSUsersModel;
 public class UsersListAdapter extends RecyclerView.Adapter<UsersListAdapter.MyViewHolder> {
 
     private final ArrayList<FSUsersModel> list = new ArrayList<>();
-
-
     private final CallBackForSinglePost callBack;
     private final String TAG = UsersListAdapter.class.getSimpleName();
+    private boolean isGroupMode = false;
 
     public UsersListAdapter(CallBackForSinglePost callback) {
         this.callBack = callback;
     }
 
+    public boolean isGroupMode() {
+        return isGroupMode;
+    }
+
+    public void setGroupMode(boolean groupMode) {
+        isGroupMode = groupMode;
+    }
 
     @Override
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -43,6 +49,8 @@ public class UsersListAdapter extends RecyclerView.Adapter<UsersListAdapter.MyVi
         FSUsersModel item = list.get(position);
         System.out.println(item);
         holder.binding.rowAllUserName.setText(item.getName());
+
+        holder.binding.rowAllUserCheck.setChecked(item.isChecked());
 
 
 //        if(item.isOnline()){
@@ -87,10 +95,12 @@ public class UsersListAdapter extends RecyclerView.Adapter<UsersListAdapter.MyVi
             super(binding.getRoot());
             this.binding = binding;
 
-            binding.getRoot().setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-
+            binding.getRoot().setOnClickListener(v -> {
+                if (isGroupMode) {
+                    FSUsersModel tmpItem = list.get(getAdapterPosition());
+                    tmpItem.setChecked(!tmpItem.isChecked());
+                    notifyDataSetChanged();
+                } else {
                     callBack.onClick(list.get(getAdapterPosition()));
                 }
             });

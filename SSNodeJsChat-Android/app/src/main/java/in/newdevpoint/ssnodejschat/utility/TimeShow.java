@@ -3,13 +3,19 @@ package in.newdevpoint.ssnodejschat.utility;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 public class TimeShow {
 
-    public static String TimeFormatYesterdayToDay(String timeOfMomentUpload) {
+    //2021-02-19T17:53:32.901+00:00
+    public static String TimeFormatYesterdayToDay(String timeOfMomentUpload, String fromFormat) {
+        return TimeFormatYesterdayToDay(timeOfMomentUpload, fromFormat, "dd-MM-yyyy 'at' hh:mm:ss");
+    }
+
+    public static String TimeFormatYesterdayToDay(String timeOfMomentUpload, String fromFormat, String toFormat) {
         try {
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            SimpleDateFormat format = new SimpleDateFormat(fromFormat, Locale.getDefault());
             Date past = format.parse(timeOfMomentUpload);
             Date now = new Date();
             long seconds = TimeUnit.MILLISECONDS.toSeconds(now.getTime() - past.getTime());
@@ -37,13 +43,17 @@ public class TimeShow {
                 return days + " days ago";
             } else {
 
-                DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy 'at' hh:mm:ss");
-                String strDate = dateFormat.format(past);
-                return strDate;
+                DateFormat dateFormat = new SimpleDateFormat(toFormat, Locale.getDefault());
+                return dateFormat.format(past);
             }
         } catch (Exception j) {
             j.printStackTrace();
         }
         return "";
+    }
+
+    public static String TimeFormatYesterdayToDay(String timeOfMomentUpload) {
+        return TimeFormatYesterdayToDay(timeOfMomentUpload, "yyyy-MM-dd HH:mm:ss", "dd-MM-yyyy 'at' hh:mm:ss");
+
     }
 }

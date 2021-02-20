@@ -1,19 +1,26 @@
 package in.newdevpoint.ssnodejschat.model;
-
 import com.google.gson.annotations.SerializedName;
 
-public class FSUsersModel {
+
+import java.io.Serializable;
+
+public class FSUsersModel implements Serializable {
 
     @SerializedName("userName")
+    private String userName = "";
+
+
+    @SerializedName("firstName")
     private String name = "";
+
 
     @SerializedName("email")
     private String email = "";
 
-    @SerializedName("_id")
+    @SerializedName("userId")
     private String id;
 
-    @SerializedName("profile_image")
+    @SerializedName("profile_pic")
     private String profile_image = "";
 
     @SerializedName("last_seen")
@@ -22,7 +29,18 @@ public class FSUsersModel {
     @SerializedName("is_online")
     private boolean isOnline = false;
 
+
+    private boolean isChecked = false;
+
     public FSUsersModel() {
+    }
+
+    public boolean isChecked() {
+        return isChecked;
+    }
+
+    public void setChecked(boolean checked) {
+        isChecked = checked;
     }
 
     public String getLastSeen() {
@@ -39,6 +57,14 @@ public class FSUsersModel {
 
     public void setOnline(boolean online) {
         isOnline = online;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
     public String getName() {

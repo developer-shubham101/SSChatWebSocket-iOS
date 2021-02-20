@@ -1,5 +1,6 @@
 package in.newdevpoint.ssnodejschat.adapter;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -7,12 +8,16 @@ import android.view.ViewGroup;
 import androidx.databinding.DataBindingUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+
 import java.util.ArrayList;
 
 import in.newdevpoint.ssnodejschat.R;
 import in.newdevpoint.ssnodejschat.databinding.RowRoomListBinding;
 import in.newdevpoint.ssnodejschat.model.FSRoomModel;
+import in.newdevpoint.ssnodejschat.utility.TimeShow;
 import in.newdevpoint.ssnodejschat.utility.UserDetails;
+import in.newdevpoint.ssnodejschat.utility.Utils;
 
 
 public class RoomListAdapter extends RecyclerView.Adapter<RoomListAdapter.MyViewHolder> {
@@ -22,8 +27,10 @@ public class RoomListAdapter extends RecyclerView.Adapter<RoomListAdapter.MyView
 
     private final CallBackForSinglePost callBack;
     private final String TAG = RoomListAdapter.class.getSimpleName();
+    private final Context context;
 
-    public RoomListAdapter(CallBackForSinglePost callback) {
+    public RoomListAdapter(Context c, CallBackForSinglePost callback) {
+        this.context = c;
         this.callBack = callback;
     }
 
@@ -42,12 +49,39 @@ public class RoomListAdapter extends RecyclerView.Adapter<RoomListAdapter.MyView
     public void onBindViewHolder(final MyViewHolder holder, int position) {
 
         FSRoomModel item = list.get(position);
-        System.out.println(item);
-        holder.binding.rowChatUserName.setText(item.getSenderUserDetail().getName());
+        if (item.isGroup()) {
+            holder.binding.rowChatUserName.setText(item.getGroupDetails().getGroup_name());
+
+        } else {
+            holder.binding.rowChatUserName.setText(item.getSenderUserDetail().getName());
+
+            if (item.getSenderUserDetail() != null) {
+//            holder.binding.rowChatUserPic
+                Glide.with(context).load(Utils.getImageString(item.getSenderUserDetail().getProfile_image())).into(holder.binding.rowChatUserPic);
+            }
+        }
+
+
         holder.binding.rowChatUserLastMessage.setText(item.getLastMessage());
+        holder.binding.rowChatUserLastMessageTime.setText(TimeShow.TimeFormatYesterdayToDay(item.getLastMessageTime(), "yyyy-MM-dd'T'HH:mm:ss.SSS"));
 
         if (item.getUnread() != null && item.getUnread().get(UserDetails.myDetail.getId()) != null) {
-            holder.binding.rowChatUserPendingMessages.setText(Long.toString(item.getUnread().get(UserDetails.myDetail.getId())));
+            Integer unreadCount = item.getUnread().get(UserDetails.myDetail.getId());
+            if (unreadCount > 0) {
+                holder.binding.rowChatUserPendingMessages.setVisibility(View.VISIBLE);
+            } else {
+                holder.binding.rowChatUserPendingMessages.setVisibility(View.INVISIBLE);
+            }
+
+            if (unreadCount > 99) {
+                holder.binding.rowChatUserPendingMessages.setText("99+");
+            } else {
+                holder.binding.rowChatUserPendingMessages.setText(unreadCount.toString());
+            }
+
+
+        } else {
+            holder.binding.rowChatUserPendingMessages.setVisibility(View.INVISIBLE);
         }
 
 //        if(item.getSenderUserDetail().isOnline()){
@@ -76,10 +110,18 @@ public class RoomListAdapter extends RecyclerView.Adapter<RoomListAdapter.MyView
     }
 
 
+    public void add(FSRoomModel item) {
+        this.list.add(item);
+        notifyDataSetChanged();
+    }
+
+
     public void updateElement(FSRoomModel element) {
         for (int i = 0; i < this.list.size(); i++) {
             if (this.list.get(i).getRoomId().equals(element.getRoomId())) {
-                this.list.set(i, element);
+//                this.list.set(i, element);
+                this.list.remove(i);
+                this.list.add(0, element);
                 notifyDataSetChanged();
                 break;
             }

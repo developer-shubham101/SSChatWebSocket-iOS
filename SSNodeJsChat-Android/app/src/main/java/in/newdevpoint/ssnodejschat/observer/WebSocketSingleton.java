@@ -1,23 +1,27 @@
 package in.newdevpoint.ssnodejschat.observer;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-import in.newdevpoint.ssnodejschat.activity.AllUsersListActivity;
+import in.newdevpoint.ssnodejschat.AppApplication;
+import in.newdevpoint.ssnodejschat.utility.PreferenceUtils;
+import in.newdevpoint.ssnodejschat.utility.UserDetails;
 import in.newdevpoint.ssnodejschat.webService.APIClient;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
-import okio.ByteString;
 
 // Uses the Subject interface to update all Observers
 
-public class WebSocketSingleton implements DownloadSubject {
+public class WebSocketSingleton extends WebSocketListener implements DownloadSubject {
     private static final int NORMAL_CLOSURE_STATUS = 10000;
 
     private static final String TAG = "DownloadUtility";
@@ -42,10 +46,14 @@ public class WebSocketSingleton implements DownloadSubject {
 
     @Override
     public void register(WebSocketObserver newWebSocketObserver) {
+        int observerIndex = webSocketObservers.indexOf(newWebSocketObserver);
+        if (observerIndex == -1){
+            // Adds a new observer to the ArrayList
+            webSocketObservers.add(newWebSocketObserver);
+        }else{
+            Log.d(TAG, "Subscriber is already registered");
+        }
 
-        // Adds a new observer to the ArrayList
-
-        webSocketObservers.add(newWebSocketObserver);
 
     }
 
@@ -69,24 +77,52 @@ public class WebSocketSingleton implements DownloadSubject {
     @Override
     public void notifyObserver(String response) {
 
-        // Cycle through all observers and notifies them of
-        // price changes
+        try {
+            JSONObject jsonObject = new JSONObject(response);
 
-        for (WebSocketObserver webSocketObserver : webSocketObservers) {
-            Log.d(TAG, "notifyObserver: " + (webSocketObserver.getActivityName()));
-            webSocketObserver.onWebSocketResponse(response);
+            String responseType = jsonObject.getString("type");
+            String message = jsonObject.getString("message");
+            int statusCode = jsonObject.getInt("statusCode");
 
+            // Cycle through all observers and notifies them of
+            // price changes
+
+            for (WebSocketObserver webSocketObserver : webSocketObservers) {
+                Log.d(TAG, "notifyObserver: " + (webSocketObserver.getActivityName()));
+                ResponseType[] registeredFor = webSocketObserver.registerFor();
+                for (ResponseType element : registeredFor) {
+                    if (element.equalsTo(responseType)) {
+                        webSocketObserver.onWebSocketResponse(response, responseType, statusCode, message);
+                        break;
+                    }
+                }
+
+
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
+
     }
 
     private void startWebSocket() {
 
         // WebSocket
         Request request = new Request.Builder().url(APIClient.BASE_URL_WEB_SOCKET).build();
-        EchoWebSocketListener listener = new EchoWebSocketListener();
+
         OkHttpClient okHttpClient = new OkHttpClient();
-        webSocket = okHttpClient.newWebSocket(request, listener);
+        webSocket = okHttpClient.newWebSocket(request, this);
         okHttpClient.dispatcher().executorService().shutdown();
+    }
+
+    private void reconnectWebSocket() {
+
+        // WebSocket
+        Request request = new Request.Builder().url(APIClient.BASE_URL_WEB_SOCKET).build();
+
+        OkHttpClient okHttpClient = new OkHttpClient();
+        webSocket = okHttpClient.newWebSocket(request, this);
+//        okHttpClient.dispatcher().executorService().shutdown();
     }
 
 
@@ -94,53 +130,55 @@ public class WebSocketSingleton implements DownloadSubject {
         webSocket.send(command.toString());
     }
 
-    // WebSocket
-    private final class EchoWebSocketListener extends WebSocketListener {
 
-        @Override
-        public void onOpen(WebSocket webSocket, Response response) {
-            Log.d(TAG, "WebSocket connect stable");
-//            joinCommand();
-        }
+    @Override
+    public void onOpen(WebSocket webSocket, Response response) {
+        Log.d(TAG, "WebSocket connect stable");
+        joinCommand();
+    }
 
-        @Override
-        public void onMessage(WebSocket webSocket, final String text) {
-            System.out.println("received message: " + text);
-            notifyObserver(text);
+    private void joinCommand() {
+        if (PreferenceUtils.isUserLogin(AppApplication.applicationContext)) {
+            UserDetails.myDetail = PreferenceUtils.getRegisterUser(AppApplication.applicationContext);
 
-           /* Gson gson = new Gson();
-            Type type = new TypeToken<ResponseModel<FSUsersModel>>() {
-            }.getType();
+            JSONObject jsonObject = new JSONObject();
+            try {
 
+                jsonObject.put("user_id", PreferenceUtils.getRegisterUser(AppApplication.applicationContext).getId());
+                jsonObject.put("type", "create");
+                jsonObject.put(APIClient.KeyConstant.REQUEST_TYPE_KEY, APIClient.KeyConstant.REQUEST_TYPE_CREATE_CONNECTION);
 
-            ResponseModel<FSUsersModel> obj = gson.fromJson(text, type);
+                WebSocketSingleton.getInstant().sendMessage(jsonObject);
 
-
-            if (obj.getStatus_code() == 200) {
-                UserDetails.myDetail = obj.getData();
-                startActivity(new Intent(LoginActivity.this, RoomListActivity.class));
-            } else {
-                Toast.makeText(LoginActivity.this, obj.getMessage(), Toast.LENGTH_SHORT).show();
-            }*/
-
-        }
-
-        @Override
-        public void onMessage(WebSocket webSocket, ByteString bytes) {
-            System.out.println("onMessage: " + bytes.hex());
-//            Toast.makeText(LoginActivity.this, "onMessage:" + bytes.hex(), Toast.LENGTH_SHORT).show();
-        }
-
-        @Override
-        public void onClosing(WebSocket webSocket, int code, String reason) {
-            System.out.println("onClosing: " + code + " / " + reason);
-            webSocket.close(NORMAL_CLOSURE_STATUS, null);
-        }
-
-        @Override
-        public void onFailure(WebSocket webSocket, Throwable t, Response response) {
-            System.out.println("onFailure: " + t.getMessage());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
     }
 
+    @Override
+    public void onMessage(WebSocket webSocket, final String text) {
+        System.out.println("received message: " + text);
+        notifyObserver(text);
+    }
+
+
+    @Override
+    public void onClosing(WebSocket webSocket, int code, String reason) {
+        System.out.println("onClosing: " + code + " / " + reason);
+        closeConnection(webSocket);
+    }
+
+    private void closeConnection(WebSocket webSocket) {
+        if (webSocket != null)
+            webSocket.close(NORMAL_CLOSURE_STATUS, null);
+    }
+
+    @Override
+    public void onFailure(WebSocket webSocket, Throwable t, Response response) {
+        System.out.println("onFailure: " + t.getMessage());
+//        closeConnection(webSocket);
+
+        new Handler(Looper.getMainLooper()).postDelayed(this::reconnectWebSocket, 3000);
+    }
 }

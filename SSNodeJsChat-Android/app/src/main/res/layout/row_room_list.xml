@@ -45,16 +45,15 @@
                 android:id="@+id/rowChatUserPendingMessages"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
-                android:layout_marginEnd="16dp"
-                android:layout_marginRight="16dp"
                 android:background="@drawable/bg_unseen_messages"
 
                 android:gravity="center|center_vertical"
                 android:text="100"
                 android:textColor="@color/colorWhite"
                 android:textSize="12sp"
-                card_view:layout_constraintBottom_toBottomOf="parent"
-                card_view:layout_constraintEnd_toEndOf="parent"
+                card_view:layout_constraintBottom_toTopOf="@+id/rowChatUserLastMessageTime"
+                card_view:layout_constraintEnd_toEndOf="@+id/rowChatUserLastMessageTime"
+                card_view:layout_constraintStart_toStartOf="@+id/rowChatUserLastMessageTime"
                 card_view:layout_constraintTop_toTopOf="parent" />
 
             <com.cusom.views.CustomFontTextView
@@ -66,12 +65,26 @@
                 android:layout_marginStart="16dp"
                 android:layout_marginLeft="16dp"
                 android:layout_marginTop="4dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginRight="16dp"
+                android:textSize="14sp"
+                card_view:layout_constraintEnd_toStartOf="@+id/rowChatUserLastMessageTime"
+                card_view:layout_constraintStart_toEndOf="@+id/rowChatUserPic"
+                card_view:layout_constraintTop_toBottomOf="@+id/rowChatUserName"
+                tools:text="@tools:sample/date/ddmmyy" />
+
+            <com.cusom.views.CustomFontTextView
+                android:id="@+id/rowChatUserLastMessageTime"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+
+
                 android:layout_marginEnd="8dp"
                 android:layout_marginRight="8dp"
                 android:textSize="14sp"
-                card_view:layout_constraintEnd_toStartOf="@+id/rowChatUserPendingMessages"
-                card_view:layout_constraintStart_toEndOf="@+id/rowChatUserPic"
-                card_view:layout_constraintTop_toBottomOf="@+id/rowChatUserName"
+                card_view:layout_constraintBottom_toBottomOf="parent"
+                card_view:layout_constraintEnd_toEndOf="parent"
+                card_view:layout_constraintTop_toBottomOf="@+id/rowChatUserPendingMessages"
                 tools:text="@tools:sample/date/ddmmyy" />
 
             <com.cusom.views.CustomRoundRectCornerImageView
@@ -86,6 +99,7 @@
                 card_view:layout_constraintStart_toStartOf="parent"
                 card_view:layout_constraintTop_toTopOf="parent"
                 tools:srcCompat="@tools:sample/avatars" />
+
             <View
                 android:id="@+id/onlineStatusOnline"
                 android:layout_width="20dp"
@@ -93,6 +107,7 @@
                 android:background="@drawable/online_status_view_bg"
                 card_view:layout_constraintBottom_toBottomOf="@+id/rowChatUserPic"
                 card_view:layout_constraintEnd_toEndOf="@+id/rowChatUserPic" />
+
             <View
                 android:id="@+id/onlineStatusOffline"
                 android:layout_width="20dp"
