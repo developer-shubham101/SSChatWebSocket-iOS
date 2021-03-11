@@ -65,26 +65,26 @@ public class LoginActivity extends AppCompatActivity implements WebSocketObserve
         WebSocketSingleton.getInstant().register(this);
 
 
-//        if (PreferenceUtils.isUserLogin(this)){
-//            UserDetails.myDetail = PreferenceUtils.getRegisterUser(this);
-//            startActivity(new Intent(LoginActivity.this, RoomListActivity.class));
-//
-//
-//            JSONObject jsonObject = new JSONObject();
-//            try {
-//                Toast.makeText(this, PreferenceUtils.getRegisterUser(this).getId() + " User Id", Toast.LENGTH_SHORT).show();
-//                jsonObject.put("user_id", PreferenceUtils.getRegisterUser(this).getId());
-//
-//                jsonObject.put("type", "create");
-//                jsonObject.put(APIClient.KeyConstant.REQUEST_TYPE_KEY, APIClient.KeyConstant.REQUEST_TYPE_CREATE_CONNECTION);
-////            mWaitingDialog.show();
-//
-//                WebSocketSingleton.getInstant().sendMessage(jsonObject);
-//
-//            } catch (JSONException e) {
-//                e.printStackTrace();
-//            }
-//        }
+        if (PreferenceUtils.isUserLogin(this)) {
+            UserDetails.myDetail = PreferenceUtils.getRegisterUser(this);
+            startActivity(new Intent(LoginActivity.this, RoomListActivity.class));
+
+
+            JSONObject jsonObject = new JSONObject();
+            try {
+                Toast.makeText(this, PreferenceUtils.getRegisterUser(this).getId() + " User Id", Toast.LENGTH_SHORT).show();
+                jsonObject.put("user_id", PreferenceUtils.getRegisterUser(this).getId());
+
+                jsonObject.put("type", "create");
+                jsonObject.put(APIClient.KeyConstant.REQUEST_TYPE_KEY, APIClient.KeyConstant.REQUEST_TYPE_CREATE_CONNECTION);
+//            mWaitingDialog.show();
+
+                WebSocketSingleton.getInstant().sendMessage(jsonObject);
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
 
 
         loginBinding.loginUserEmail.setText(tmpUserModel.email);
@@ -136,8 +136,7 @@ public class LoginActivity extends AppCompatActivity implements WebSocketObserve
                 Gson gson = new Gson();
 
 
-                if (ResponseType.RESPONSE_TYPE_LOGIN.equalsTo(type) ||
-                        ResponseType.RESPONSE_TYPE_LOGIN_OR_CREATE.equalsTo(type)) {
+                if (ResponseType.RESPONSE_TYPE_LOGIN.equalsTo(type) || ResponseType.RESPONSE_TYPE_LOGIN_OR_CREATE.equalsTo(type)) {
 
 
                     Type type1 = new TypeToken<ResponseModel<FSUsersModel>>() {

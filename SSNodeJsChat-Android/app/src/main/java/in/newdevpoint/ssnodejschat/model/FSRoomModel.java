@@ -32,12 +32,23 @@ public class FSRoomModel {
 
     @SerializedName("type")
     private String type = "";
+
     @Nullable
     private FSUsersModel senderUserDetail;
 
+    @SerializedName("createBy")
+    private String createBy = "";
 
     @SerializedName("group_details")
     private FSGroupModel groupDetails;
+
+    public String getCreateBy() {
+        return createBy;
+    }
+
+    public void setCreateBy(String createBy) {
+        this.createBy = createBy;
+    }
 
     public FSGroupModel getGroupDetails() {
         return groupDetails;

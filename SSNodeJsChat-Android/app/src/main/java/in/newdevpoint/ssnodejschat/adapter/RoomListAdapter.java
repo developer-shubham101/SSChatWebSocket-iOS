@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import in.newdevpoint.ssnodejschat.R;
 import in.newdevpoint.ssnodejschat.databinding.RowRoomListBinding;
 import in.newdevpoint.ssnodejschat.model.FSRoomModel;
+import in.newdevpoint.ssnodejschat.model.FSUsersModel;
 import in.newdevpoint.ssnodejschat.utility.TimeShow;
 import in.newdevpoint.ssnodejschat.utility.UserDetails;
 import in.newdevpoint.ssnodejschat.utility.Utils;
@@ -115,6 +116,32 @@ public class RoomListAdapter extends RecyclerView.Adapter<RoomListAdapter.MyView
         notifyDataSetChanged();
     }
 
+
+    public void addOrUpdate(FSRoomModel item) {
+        boolean isAlreadyAdded = false;
+        for (FSRoomModel element : this.list) {
+            if (element.getRoomId().equals(item.getRoomId())) {
+                isAlreadyAdded = true;
+                break;
+            }
+        }
+        if (isAlreadyAdded) {
+            updateElement(item);
+        } else {
+            this.list.add(item);
+            notifyDataSetChanged();
+        }
+    }
+
+
+    public void updateUserElement(FSUsersModel element) {
+        for (int i = 0; i < this.list.size(); i++) {
+            if (this.list.get(i).getSenderUserDetail().getId().equals(element.getId())) {
+                this.list.get(i).setSenderUserDetail(element);
+                notifyDataSetChanged();
+            }
+        }
+    }
 
     public void updateElement(FSRoomModel element) {
         for (int i = 0; i < this.list.size(); i++) {

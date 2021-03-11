@@ -26,21 +26,29 @@ import in.newdevpoint.ssnodejschat.utility.DownloadUtility;
 public class ChatModel implements StickyMainData {
 
     private Date messageDate = new Date();
-    private String documentId;
+    private String roomId;
     private String message = "";
     private String message_on = "";
     private FSUsersModel sender_detail = new FSUsersModel();
     private Object message_content;
+    private Object real_content;
     private DownloadStatus downloadStatus = DownloadStatus.PENDING;
     private Date createdDate;
     private ChatModel.MessageType message_type;
 
-    public ChatModel(String documentId, JSONObject rawData, FSUsersModel sender_detail) throws JSONException {
-        this.documentId = documentId;
+
+    public <T> Object getContent(){
+        return real_content;
+    }
+
+    public ChatModel(  JSONObject rawData, FSUsersModel sender_detail) throws JSONException {
+
         this.sender_detail = sender_detail;
 
 
         message = rawData.getString("message");
+        roomId = rawData.getString("roomId");
+
 
         message_type = MessageType.getValueFromEnum(rawData.getString("message_type"));
 
@@ -159,12 +167,12 @@ public class ChatModel implements StickyMainData {
         this.message_type = message_type;
     }
 
-    public String getDocumentId() {
-        return documentId;
+    public String getRoomId() {
+        return roomId;
     }
 
-    public void setDocumentId(String documentId) {
-        this.documentId = documentId;
+    public void setRoomId(String roomId) {
+        this.roomId = roomId;
     }
 
     public String getMessage() {
@@ -194,8 +202,7 @@ public class ChatModel implements StickyMainData {
 
     public Object getMessage_content() {
         return message_content;
-    }
-
+    } 
     public void setMessage_content(Object message_content) {
         this.message_content = message_content;
     }
@@ -215,6 +222,7 @@ public class ChatModel implements StickyMainData {
     public void setCreatedDate(Date createdDate) {
         this.createdDate = createdDate;
     }
+
 
 
     public enum MessageType {

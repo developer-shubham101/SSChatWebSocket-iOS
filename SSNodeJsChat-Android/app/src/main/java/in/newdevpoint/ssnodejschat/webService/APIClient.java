@@ -8,7 +8,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class APIClient {
     public static final String IMAGE_URL = "https://tryste.ezxdemo.com/storage/";
-    public static final String BASE_URL_WEB_SOCKET = "ws://192.168.1.8:1337/v1";
+    public static final String BASE_URL_WEB_SOCKET = "ws://172.16.16.103:1337/v1";
     //    private static final String BASE_URL = "http://testapi.newdevpoint.in/";
     private static final String BASE_URL = "https://tryste.ezxdemo.com/api/";
     private static Retrofit retrofit = null;
@@ -38,18 +38,13 @@ public class APIClient {
     }
 
     public static class KeyConstant {
+
         public static final String REQUEST_TYPE_KEY = "request";
         public static final String REQUEST_TYPE_LOGIN = "login";
         public static final String REQUEST_TYPE_CREATE_CONNECTION = "create_connection";
-
         public static final String REQUEST_TYPE_ROOM = "room";
-
-
         public static final String REQUEST_TYPE_USERS = "users";
-
         public static final String REQUEST_TYPE_MESSAGE = "message";
-
-
-
+        public static final String REQUEST_TYPE_BLOCK_USER = "block_user";
     }
 }

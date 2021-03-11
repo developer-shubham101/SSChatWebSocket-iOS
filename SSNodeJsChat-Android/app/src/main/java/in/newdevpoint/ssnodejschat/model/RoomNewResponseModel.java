@@ -7,9 +7,9 @@ import java.util.HashMap;
 
 public class RoomNewResponseModel {
 
-
     @SerializedName("newRoom")
     private FSRoomModel newRoom;
+
     @SerializedName("userList")
     private ArrayList<FSUsersModel> userList = new ArrayList<>();
 

@@ -22,7 +22,6 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Size;
 import android.view.Display;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.PopupMenu;
@@ -64,6 +63,8 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import in.newdevpoint.ssnodejschat.AppApplication;
 import in.newdevpoint.ssnodejschat.R;
@@ -77,9 +78,11 @@ import in.newdevpoint.ssnodejschat.model.ChatModel;
 import in.newdevpoint.ssnodejschat.model.ContactModel;
 import in.newdevpoint.ssnodejschat.model.FSGroupModel;
 import in.newdevpoint.ssnodejschat.model.FSUsersModel;
+import in.newdevpoint.ssnodejschat.model.LocationModel;
 import in.newdevpoint.ssnodejschat.model.MediaMetaModel;
 import in.newdevpoint.ssnodejschat.model.MediaModel;
 import in.newdevpoint.ssnodejschat.model.UploadFileMode;
+import in.newdevpoint.ssnodejschat.model.UserBlockModel;
 import in.newdevpoint.ssnodejschat.observer.ResponseType;
 import in.newdevpoint.ssnodejschat.observer.WebSocketObserver;
 import in.newdevpoint.ssnodejschat.observer.WebSocketSingleton;
@@ -111,21 +114,18 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     private static final int REQUEST_ADD_CONTACT = 8;
     private static final String VIDEO_DIRECTORY = "/demonuts";
     private static final int REQUEST_SELECT_CONTACTS = 9;
-    private static final int CHAT_BUNCH_COUNT = 30;
+
     private static final int GALLERY = 1;
     private static final int CAMERA = 2;
 
     private static String fileName = null;
-    private final String displayName = "";
-    ///Document for pagination
 
     private final ArrayList<ChatModel> chatListTmp = new ArrayList<>();
     private final HashMap<Date, ArrayList<ChatModel>> chatList = new HashMap<>();
     private final PlayAudioFragment uploadFragment = new PlayAudioFragment();
-    private final boolean isLoadingOldMessage = false;
-    //    private final String CHAT_URL = APIClient.BASE_URL_WEB_SOCKET + "/message?key=sample";
+
     public boolean mStartRecording = true;
-    private boolean isMute = false;
+    private boolean isBlocked = false;
     private ActivityChatBinding binding;
     private PermissionClass permissionClass;
     private MediaRecorder recorder = null;
@@ -157,7 +157,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     private boolean _isGroup;
     private FSGroupModel _groupDetails;
     private FSUsersModel _senderDetails;
-
+    private int noOfNewMessages = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -190,6 +190,10 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         binding.openRecorder.setOnClickListener(this);
         binding.chatCloseRecording.setOnClickListener(this);
 
+        binding.chatGoToBottom.setOnClickListener(this);
+        binding.chatUnblockBtn.setOnClickListener(this);
+
+
         adapter = setUpRecyclerView();
 
         binding.audioPlayerFragment.setVisibility(View.GONE);
@@ -216,8 +220,9 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
             setIndividualDetails();
         }
 
-
+        WebSocketSingleton.getInstant().register(this);
         joinCommand();
+        getBlockList();
 
 
     }
@@ -228,7 +233,6 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         _groupDetails = (FSGroupModel) getIntent().getSerializableExtra(ChatActivity.INTENT_EXTRAS_KEY_GROUP_DETAILS);
         _senderDetails = (FSUsersModel) getIntent().getSerializableExtra(ChatActivity.INTENT_EXTRAS_KEY_SENDER_DETAILS);
     }
-
 
     private void setIndividualDetails() {
 
@@ -250,86 +254,98 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-
     void addChatMenu() {
         binding.chatMenu.setOnClickListener(v -> {
             PopupMenu popup = new PopupMenu(ChatActivity.this, binding.chatMenu);
             //inflating menu from xml resource
             popup.inflate(R.menu.chat_menu);
-            if (isMute) {
+            if (isBlocked) {
                 popup.getMenu().getItem(0).setTitle("Un-mute");
             } else {
                 popup.getMenu().getItem(0).setTitle("Mute");
             }
             //adding click listener
-            popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                @Override
-                public boolean onMenuItemClick(MenuItem item) {
-                    switch (item.getItemId()) {
-                        case R.id.chatMute:
-                            //IF is single user chat then check some other user details and set it
-                            if (!_isGroup) {
-                                isMute = !isMute;
-                                // TODO: 27/01/21 Block Code
-                                /*HashMap<String, Object> newValue = new HashMap<>();
-                                newValue.put(currentUser.getUid() + ".isMute", isMute);
-                                threadDocReference.update(newValue);*/
-                            }
-                            break;
-                        case R.id.changeWallpaper:
+            popup.setOnMenuItemClickListener(item -> {
+                switch (item.getItemId()) {
+                    case R.id.chatMute:
+                        //IF is single user chat then check some other user details and set it
+                        if (!_isGroup) {
+                            isBlocked = !isBlocked;
+                            // TODO: 27/01/21 Block Code
+                            /*HashMap<String, Object> newValue = new HashMap<>();
+                            newValue.put(currentUser.getUid() + ".isMute", isMute);
+                            threadDocReference.update(newValue);*/
+
+                            blockOrUnblock(isBlocked);
 
 
-                            PopupMenu popup = new PopupMenu(ChatActivity.this, binding.chatMenu);
-                            //inflating menu from xml resource
-                            popup.inflate(R.menu.change_chat_wallpaper_menu);
+                        }
+                        break;
+                    case R.id.changeWallpaper:
 
-                            //adding click listener
-                            popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                                @Override
-                                public boolean onMenuItemClick(MenuItem item) {
-                                    DisplayMetrics displayMetrics = new DisplayMetrics();
-                                    getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-                                    int height = displayMetrics.heightPixels;
-                                    int width = displayMetrics.widthPixels;
 
-                                    switch (item.getItemId()) {
-                                        case R.id.changeWallpaperDefault:
-                                            String wallpaperFilePath = DownloadUtility.createPath(getApplicationContext(), DownloadUtility.FILE_PATH_WALLPAPER) + "/wallpaper.jpg";
-                                            File wallpaperFile = new File(wallpaperFilePath);
-                                            if (wallpaperFile.exists()) {
-                                                wallpaperFile.delete();
-                                                binding.chatBgImage.setImageResource(R.drawable.bg_chat);
-                                            }
-                                            break;
-                                        case R.id.changeWallpaperWithOutBlur:
-                                            applyBlur = false;
-                                            isSetWallpaper = true;
-                                            CropImage.activity().setFixAspectRatio(true).setAspectRatio(width, height).start(ChatActivity.this);
-                                            break;
-                                        case R.id.changeWallpaperWithBlur:
-                                            applyBlur = true;
-                                            isSetWallpaper = true;
-                                            CropImage.activity().setFixAspectRatio(true).setAspectRatio(width, height).start(ChatActivity.this);
-                                            break;
+                        PopupMenu popup1 = new PopupMenu(ChatActivity.this, binding.chatMenu);
+                        //inflating menu from xml resource
+                        popup1.inflate(R.menu.change_chat_wallpaper_menu);
+
+                        //adding click listener
+                        popup1.setOnMenuItemClickListener(item1 -> {
+                            DisplayMetrics displayMetrics = new DisplayMetrics();
+                            getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+                            int height = displayMetrics.heightPixels;
+                            int width = displayMetrics.widthPixels;
+
+                            switch (item1.getItemId()) {
+                                case R.id.changeWallpaperDefault:
+                                    String wallpaperFilePath = DownloadUtility.createPath(getApplicationContext(), DownloadUtility.FILE_PATH_WALLPAPER) + "/wallpaper.jpg";
+                                    File wallpaperFile = new File(wallpaperFilePath);
+                                    if (wallpaperFile.exists()) {
+                                        wallpaperFile.delete();
+                                        binding.chatBgImage.setImageResource(R.drawable.bg_chat);
                                     }
+                                    break;
+                                case R.id.changeWallpaperWithOutBlur:
+                                    applyBlur = false;
+                                    isSetWallpaper = true;
+                                    CropImage.activity().setFixAspectRatio(true).setAspectRatio(width, height).start(ChatActivity.this);
+                                    break;
+                                case R.id.changeWallpaperWithBlur:
+                                    applyBlur = true;
+                                    isSetWallpaper = true;
+                                    CropImage.activity().setFixAspectRatio(true).setAspectRatio(width, height).start(ChatActivity.this);
+                                    break;
+                            }
 
-                                    return false;
-                                }
-                            });
-                            //displaying the popup
-                            popup.show();
+                            return false;
+                        });
+                        //displaying the popup
+                        popup1.show();
 
-                            break;
-                    }
-
-                    return false;
+                        break;
                 }
+
+                return false;
             });
             //displaying the popup
             popup.show();
         });
     }
 
+    private void blockOrUnblock(boolean isBlocked) {
+        try {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("type", "blockUser");
+
+            jsonObject.put("blockedBy", UserDetails.myDetail.getId());
+            jsonObject.put("blockedTo", _senderDetails.getId());
+            jsonObject.put("isBlock", isBlocked);
+
+            jsonObject.put(APIClient.KeyConstant.REQUEST_TYPE_KEY, APIClient.KeyConstant.REQUEST_TYPE_BLOCK_USER);
+            WebSocketSingleton.getInstant().sendMessage(jsonObject);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
 
     private void setAudioPlayer() {
         uploadFragment.setPlayAudioCallback(this);
@@ -338,44 +354,46 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         ft.commit();
     }
 
-    private void appendMessage(JSONObject chatData) throws JSONException {
-
+    private void appendMessage(JSONObject chatData, boolean showMessageCount) throws JSONException {
 
         FSUsersModel senderDetails = UserDetails.chatUsers.get(chatData.getString("sender_id"));
-//        // TODO: 28/01/21 Fix
-//        FSUsersModel senderDetails = new FSUsersModel();
-//        senderDetails.setEmail("sads@gmail.com");
-//        senderDetails.setName("Shubham");
-//        senderDetails.setId("213123123");
 
-        ChatModel chatModel = new ChatModel("asdasdasd", chatData, senderDetails);
+        ChatModel chatModel = new ChatModel(chatData, senderDetails);
+        if (chatModel.getRoomId().equals(_roomId)) {
 
-        chatListTmp.add(chatModel);
+            chatListTmp.add(chatModel);
 
-        Date tempDate = chatModel.getCreatedDate();
-        ArrayList<ChatModel> correspondingChatList = chatList.get(tempDate);
+            Date tempDate = chatModel.getCreatedDate();
+            ArrayList<ChatModel> correspondingChatList = chatList.get(tempDate);
 
 
-        if (correspondingChatList == null) {
-            correspondingChatList = new ArrayList<>();
-            chatList.put(tempDate, correspondingChatList);
-        }
-        correspondingChatList.add(chatModel);
+            if (correspondingChatList == null) {
+                correspondingChatList = new ArrayList<>();
+                chatList.put(tempDate, correspondingChatList);
+            }
+            correspondingChatList.add(chatModel);
 
 
-        Collections.sort(correspondingChatList, (o1, o2) -> o1.getMessageDate().compareTo(o2.getMessageDate()));
+            Collections.sort(correspondingChatList, (o1, o2) -> o1.getMessageDate().compareTo(o2.getMessageDate()));
 
-        ArrayList<Date> keys = new ArrayList<>(chatList.keySet());
+            ArrayList<Date> keys = new ArrayList<>(chatList.keySet());
 
-        Collections.sort(keys);
+            Collections.sort(keys);
 
 
-        adapter.clearAll();
-        for (Date key : keys) {
-            ArrayList<ChatModel> chatForThatDay = chatList.get(key);
+            adapter.clearAll();
+            for (Date key : keys) {
+                ArrayList<ChatModel> chatForThatDay = chatList.get(key);
 //										HeaderDataImpl headerData1 = new HeaderDataImpl(R.layout.header1_item_recycler, key);
-            HeaderDataImpl headerData1 = new HeaderDataImpl(R.layout.header1_item_recycler, key);
-            adapter.setHeaderAndData(chatForThatDay, headerData1);
+                HeaderDataImpl headerData1 = new HeaderDataImpl(R.layout.header1_item_recycler, key);
+                adapter.setHeaderAndData(chatForThatDay, headerData1);
+            }
+            if (showMessageCount && !chatModel.getSender_detail().getId().equals(UserDetails.myDetail.getId())) {
+                noOfNewMessages += 1;
+                binding.chatGoToBottom.setVisibility(View.VISIBLE);
+                binding.chatNewMessageCount.setText(Integer.toString(noOfNewMessages));
+            }
+
         }
 
     }
@@ -386,8 +404,26 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         ChatAdapter adapter = new ChatAdapter(this, new ChatAdapter.ChatCallbacks() {
             @Override
             public void onClickDownload(ChatModel chatModel, MediaModel messageContent, boolean stopDownloading, OnDownloadListener onDownloadListener) {
-                downloadFile(chatModel, messageContent, stopDownloading, onDownloadListener);
+                if (chatModel.getMessage_type() == ChatModel.MessageType.image) {
+
+                    Intent intent = new Intent(ChatActivity.this, ZoomImageActivity.class);
+                    intent.putExtra(ZoomImageActivity.INTENT_EXTRA_URL, messageContent.getFile_url());
+                    startActivity(intent);
+
+                } else {
+                    downloadFile(chatModel, messageContent, stopDownloading, onDownloadListener);
+                }
+
             }
+
+            @Override
+            public void onClickLocation(ChatModel chatModel, LocationModel locationModel) {
+                String geoUri = "http://maps.google.com/maps?q=loc:" + locationModel.getLatitude() + "," + locationModel.getLongitude() + " (" + locationModel.getName() + ")";
+
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(geoUri));
+                startActivity(intent);
+            }
+
 
             @Override
             public void onClickContact(ChatModel chatModel, ContactModel contactModel) {
@@ -446,7 +482,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void downloadFile(ChatModel chatModel, MediaModel appListModel, boolean stopDownloading, OnDownloadListener onDownloadListener) {
-        File downloadDir = getExternalFilesDir(null);
+
 
         String downloadUrl = appListModel.getFile_url();
         try {
@@ -514,6 +550,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     protected void onDestroy() {
         super.onDestroy();
         Log.i(TAG, "onDestroy: ");
+        WebSocketSingleton.getInstant().unregister(this);
 //        webSocket.cancel();
     }
 
@@ -522,7 +559,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         super.onStop();
         Log.i(TAG, "onStop: ");
 
-        WebSocketSingleton.getInstant().register(this);
+        WebSocketSingleton.getInstant().unregister(this);
 
 //        mUserRef.child(currentUser.getUid()).child("isOnline").setValue(false);
 
@@ -554,6 +591,22 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
+
+            case R.id.chatUnblockBtn: {
+                blockOrUnblock(false);
+                break;
+            }
+
+
+            case R.id.chatGoToBottom: {
+                binding.chatRecyclerView.smoothScrollToPosition(adapter.getItemCount() - 1);
+
+                noOfNewMessages = 0;
+                binding.chatGoToBottom.setVisibility(View.GONE);
+                binding.chatNewMessageCount.setText(Integer.toString(noOfNewMessages));
+
+                break;
+            }
             case R.id.sendButton: {
                 if (!binding.messageArea.getText().toString().isEmpty()) {
                     sendMessage(binding.messageArea.getText().toString(), ChatModel.MessageType.text, new Date(), new HashMap<>());
@@ -561,6 +614,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 break;
             }
+
             case R.id.openRecorder: {
                 binding.chatMessageWrapper.setVisibility(View.GONE);
                 binding.chatRecordingWrapper.setVisibility(View.VISIBLE);
@@ -649,6 +703,22 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
 //        chatReference.add(messageMap);
 
         WebSocketSingleton.getInstant().sendMessage(new JSONObject(messageMap));
+
+
+        new Timer().schedule(
+                new TimerTask() {
+                    @Override
+                    public void run() {
+                        binding.chatRecyclerView.smoothScrollToPosition(adapter.getItemCount() - 1);
+                        // your code here
+                    }
+                },
+                500
+        );
+
+
+//        binding.chatRecyclerView.getLayoutManager().scrollToPosition(adapter.getItemCount() - 1);
+//        binding.chatRecyclerView.setHasFixedSize(true);
     }
 
     private void chooseVideoFromGallery() {
@@ -735,8 +805,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
             thumbnailFile.exists();
             Bitmap bitmap;
             if (android.os.Build.VERSION.SDK_INT <= 29) {
-                bitmap = ThumbnailUtils.createImageThumbnail(imagePath,
-                        MediaStore.Images.Thumbnails.MINI_KIND);
+                bitmap = ThumbnailUtils.createImageThumbnail(imagePath, MediaStore.Images.Thumbnails.MINI_KIND);
             } else {
                 // TODO: 4/17/2020 here we will do code for crete thumnail for latest api version 29 bcoz createVideoThumbnail is depricate for this version
                 CancellationSignal signal = new CancellationSignal();
@@ -758,7 +827,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
 
                     HashMap<String, Object> fileMeta = new HashMap<>();
                     fileMeta.put(MediaMetaModel.KEY_FILE_TYPE, MediaMetaModel.MediaType.imageJPG.toString());
-                    addFragment(file, null, ChatModel.MessageType.image, fileMeta);
+                    addFragment(file, thumbnailFile, ChatModel.MessageType.image, fileMeta);
 
                     Log.d(TAG, "onActivityResult: " + file);
                 }
@@ -766,16 +835,14 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
-            try {
-                if (fos != null) {
-                    fos.write(bitmapData);
-                    fos.flush();
-                    fos.close();
-                }
 
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (fos != null) {
+                fos.write(bitmapData);
+                fos.flush();
+                fos.close();
             }
+
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -853,6 +920,8 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                     File file = new File(selectedVideoPath);
                     bitmap = ThumbnailUtils.createVideoThumbnail(file,
                             size, signal);
+
+
                 }
 //                }
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -1115,6 +1184,32 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         WebSocketSingleton.getInstant().sendMessage(jsonObject);
     }
 
+
+    private void getBlockList() {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("type", "allBlockUser");
+            jsonObject.put("user", UserDetails.myDetail.getId());
+
+            jsonObject.put(APIClient.KeyConstant.REQUEST_TYPE_KEY, APIClient.KeyConstant.REQUEST_TYPE_BLOCK_USER);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        WebSocketSingleton.getInstant().sendMessage(jsonObject);
+    }
+
+    private void setRead() {
+
+        HashMap<String, Object> messageMap = new HashMap<>();
+        messageMap.put("type", "roomsModify");
+        messageMap.put("roomId", _roomId);
+        messageMap.put("unread", UserDetails.myDetail.getId());
+
+        messageMap.put(APIClient.KeyConstant.REQUEST_TYPE_KEY, APIClient.KeyConstant.REQUEST_TYPE_ROOM);
+
+        WebSocketSingleton.getInstant().sendMessage(new JSONObject(messageMap));
+    }
+
     @Override
     public void onWebSocketResponse(String response, String type, int statusCode, String message) {
         Log.d(TAG, "received message: " + response);
@@ -1130,11 +1225,16 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                         JSONArray jsonObject = responseData.getJSONArray("data");
                         for (int i = 0; i < jsonObject.length(); i++) {
                             JSONObject nthObject = jsonObject.getJSONObject(i);
-                            appendMessage(nthObject);
+                            appendMessage(nthObject, false);
                         }
+                        setRead();
+
+                        ///Move to bottom if user open chat first time
+                        binding.chatRecyclerView.smoothScrollToPosition(adapter.getItemCount() - 1);
                     } else if (responseCode == 201) {
-                        // TODO: 17/02/21 Fix if room id is same only then add the message
-                        appendMessage(responseData.getJSONObject("data"));
+                        appendMessage(responseData.getJSONObject("data"), true);
+//                        binding.chatNewMessageCount
+                        setRead();
                     } else {
                         Toast.makeText(ChatActivity.this, responseData.getString("message"), Toast.LENGTH_SHORT).show();
                     }
@@ -1165,6 +1265,48 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
 //                otherUser = UserDetails.chatUsers.get(id);
 //
 //                setOtherDetails();
+                } else if (ResponseType.RESPONSE_TYPE_USER_BLOCK_MODIFIED.equalsTo(type)) {
+                    Log.d(TAG, "received message: " + response);
+
+                    Type type1 = new TypeToken<ResponseModel<UserBlockModel>>() {
+                    }.getType();
+
+                    ResponseModel<UserBlockModel> userBlockModelResponseModel = new Gson().fromJson(response, type1);
+                    UserBlockModel element = userBlockModelResponseModel.getData();
+                    if (element.getBlockedTo().equals(UserDetails.myDetail.getId()) &&
+                            element.getBlockedBy().equals(_senderDetails.getId()) && element.isBlock()) {
+                        blockedByOtherUser();
+                    }
+
+                    if (element.getBlockedTo().equals(UserDetails.myDetail.getId()) &&
+                            element.getBlockedBy().equals(_senderDetails.getId()) && !element.isBlock()) {
+                        unBlockedByOtherUser();
+                    }
+
+                } else if (ResponseType.RESPONSE_TYPE_USER_ALL_BLOCK.equalsTo(type)) {
+                    Log.d(TAG, "received message: " + response);
+
+                    if (!_isGroup) {
+                        Type type1 = new TypeToken<ResponseModel<ArrayList<UserBlockModel>>>() {
+                        }.getType();
+
+                        ResponseModel<ArrayList<UserBlockModel>> userBlockModelResponseModel = new Gson().fromJson(response, type1);
+
+                        for (UserBlockModel element : userBlockModelResponseModel.getData()) {
+                            if (element.getBlockedTo().equals(UserDetails.myDetail.getId()) &&
+                                    element.getBlockedBy().equals(_senderDetails.getId()) && element.isBlock()) {
+
+                                blockedByOtherUser();
+                                break;
+                            }
+
+                            if (element.getBlockedTo().equals(UserDetails.myDetail.getId()) &&
+                                    element.getBlockedBy().equals(_senderDetails.getId()) && !element.isBlock()) {
+                                unBlockedByOtherUser();
+                                break;
+                            }
+                        }
+                    }
                 } else {
                     Log.d(TAG, "onWebSocketResponse: " + type);
                 }
@@ -1176,6 +1318,17 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         });
     }
 
+    private void blockedByOtherUser() {
+        isBlocked = true;
+        binding.blockedWrapper.setVisibility(View.VISIBLE);
+        binding.chatMessageWrapper.setVisibility(View.GONE);
+    }
+
+    private void unBlockedByOtherUser() {
+        binding.blockedWrapper.setVisibility(View.GONE);
+        binding.chatMessageWrapper.setVisibility(View.VISIBLE);
+    }
+
     @Override
     public String getActivityName() {
         return ChatActivity.class.getName();
@@ -1185,7 +1338,9 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     public ResponseType[] registerFor() {
         return new ResponseType[]{
                 ResponseType.RESPONSE_TYPE_MESSAGES,
-                ResponseType.RESPONSE_TYPE_USER_MODIFIED
+                ResponseType.RESPONSE_TYPE_USER_MODIFIED,
+                ResponseType.RESPONSE_TYPE_USER_BLOCK_MODIFIED,
+                ResponseType.RESPONSE_TYPE_USER_ALL_BLOCK
         };
     }
 

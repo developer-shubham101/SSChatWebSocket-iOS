@@ -26,7 +26,7 @@ var loginUsers = {}
 
 
 var dbUrl = 'mongodb://127.0.0.1:27017/ReactChat';
-// var dbUrl = 'mongodb://127.0.0.1:27017/Tryste-Tmp';
+// var dbUrl = 'mongodb://127.0.0.1:27017/Tryste';
 
 var UsersModel = mongoose.model('Users', {
 
@@ -69,7 +69,16 @@ var RoomModel = mongoose.model('Room', {
 	users_meta: Object,
 	userList: Array,
 
+	createBy: String,
+
 	unread: Object,
+});
+
+
+var BlockModel = mongoose.model('Blook', {
+	blockedBy: String,
+	blockedTo: String,
+	isBlock: Boolean
 });
 
 
@@ -246,7 +255,6 @@ function chatRequest(request) {
 function getLastMessage(message, type) {
 	switch (type) {
 		case "TEXT":
-
 			return message.substring(0, 100);
 		case "IMAGE":
 			return "📷";
@@ -271,15 +279,16 @@ function updateOnlineStatus(userId, online) {
 	let dataToUpdate = { last_seen: new Date(), is_online: online };
 
 	UsersModel.findOneAndUpdate({ userId: userId }, dataToUpdate, { new: false, useFindAndModify: false }, (err, updated_user) => {
-		console.log("On Update Online Status:: ", err, updated_user);
+		if (updated_user) {
+			console.log("On Update Online Status:: ", err, updated_user);
 
-		updated_user["is_online"] = online;
+			updated_user["is_online"] = online;
 
-		/// Notify to all active user about that user status
-		Object.keys(cons).forEach((element) => {
-			cons[element].sendUTF(responseSuccess(200, "userModified", updated_user, "Online/Offline Status Changed", true));
-		});
-
+			/// Notify to all active user about that user status
+			Object.keys(cons).forEach((element) => {
+				cons[element].sendUTF(responseSuccess(200, "userModified", updated_user, "Online/Offline Status Changed", true));
+			});
+		}
 	});
 }
 function createNewRoomNotify(savedMessage) {
@@ -398,6 +407,57 @@ async function roomRequest(requestData, connection) {
 	} else if (requestData.type == 'createRoom') {
 
 		var userList = requestData.userList;
+		var createBy = requestData.createBy;
+
+		if (userList.length <= 1) {
+			connection.sendUTF(responseError(400, "createRoom", "Please add users list.", true));
+		} else if (!isFine(createBy)) {
+			connection.sendUTF(responseError(400, "createRoom", "Please createBy id not found.", true));
+		} else {
+			// var roomType = requestData.roomType;
+			let findObject = {};
+			userList.forEach((element) => {
+				findObject[`users.${element}`] = true;
+			});
+			if (requestData.room_type == "group") {
+				findObject["type"] = "group";
+				let groupDetails = Object.assign({}, {
+					group_name: "untitled group",
+				}, requestData.group_details);
+				findObject["group_details"] = groupDetails;
+				findObject["type"] = "group";
+			} else {
+				findObject["type"] = "individual";
+			}
+
+			findObject['last_message_time'] = new Date();
+			findObject['userList'] = userList;
+			findObject['createBy'] = createBy;
+
+			if (userList.length == 2) {
+
+				let group = await RoomModel.find({ userList: { $all: userList, $size: userList.length } });
+				// let group = await RoomModel.find({ 'users.anil' : true,  'users.shubhum' : true , userList: {$size : 2}});
+				// let group = await RoomModel.find({ 'users.anil' : true,  'users.shubhum' : true });
+				if (group.length) {
+					console.log('Group already exists');
+
+					createNewRoomNotify(group[0]);
+
+					// connection.sendUTF(responseSuccess(200, "createRoom", group[0], "New Room Created", true));
+				} else {
+					createNewRoom(findObject, connection);
+				}
+			} else {
+				createNewRoom(findObject, connection);
+			}
+
+		}
+
+
+	} else if (requestData.type == 'checkRoom') {
+
+		var userList = requestData.userList;
 
 
 		// var roomType = requestData.roomType;
@@ -406,51 +466,44 @@ async function roomRequest(requestData, connection) {
 			findObject[`users.${element}`] = true;
 		});
 
-		/* 
-		
-		users: Object,
 
-	type: String, //group/individual
-	last_message: Object,
-	message_info: Object,
-	users_meta: Object,
-	userList: Array,
-
-	unread: Object,
-	*/
-		if (requestData.room_type == "group") {
-			findObject["type"] = "group";
-			let groupDetails = Object.assign({}, {
-				group_name: "untitled group",
-			}, requestData.group_details);
-			findObject["group_details"] = groupDetails;
-			findObject["type"] = "group";
+		let group = await RoomModel.find({ userList: { $all: userList, $size: userList.length } });
+		// let group = await RoomModel.find({ 'users.anil' : true,  'users.shubhum' : true , userList: {$size : 2}});
+		// let group = await RoomModel.find({ 'users.anil' : true,  'users.shubhum' : true });
+		if (group.length) {
+			// console.log('Group already exists');
+			connection.sendUTF(responseSuccess(200, "checkRoom", group[0], "Room already exist", true));
 		} else {
-			findObject["type"] = "individual";
+			// console.log('Group not already exists');
+			connection.sendUTF(responseSuccess(404, "checkRoom", {}, "Room not exist", true));
 		}
+	} else if (requestData.type == 'roomsModify') {
 
-		findObject['last_message_time'] = new Date();
-		findObject['userList'] = userList;
-		if (userList.length == 2) {
 
-			let group = await RoomModel.find({ userList: { $all: userList, $size: userList.length } });
-			// let group = await RoomModel.find({ 'users.anil' : true,  'users.shubhum' : true , userList: {$size : 2}});
-			// let group = await RoomModel.find({ 'users.anil' : true,  'users.shubhum' : true });
-			if (group.length) {
-				console.log('Group already exists');
+		var roomId = requestData.roomId;
 
-				createNewRoomNotify(group[0]);
-
-				// connection.sendUTF(responseSuccess(200, "createRoom", group[0], "New Room Created", true));
-			} else {
-				createNewRoom(findObject, connection);
+		if (!isFine(roomId)) {
+			connection.sendUTF(responseError(400, "roomsModified", "Please add room id.", true));
+		} else {
+			let dataToUpdate = {};
+			if (isFine(requestData.unread)) {
+				dataToUpdate[`unread.${requestData.unread}`] = 0;
 			}
-		} else {
-			createNewRoom(findObject, connection);
+
+			RoomModel.findOneAndUpdate({ _id: mongoose.Types.ObjectId(roomId) }, dataToUpdate, { new: false, useFindAndModify: false }, (err, updatedRoom) => {
+				console.log("updatedRoom:::", updatedRoom);
+
+
+				if (err) {
+					connection.sendUTF(responseError(500, "roomsModified", "Internal Server Error.", true));
+				} else {
+					updatedRoom[`unread`][requestData.unread] = 0;
+					connection.sendUTF(responseSuccess(200, "roomsModified", updatedRoom, "Data updated successfully.", true));
+				}
+
+			});
 		}
-
 	}
-
 }
 async function allUser(requestData, connection) {
 	if (requestData.type == 'allUsers') {
@@ -767,11 +820,11 @@ async function messageRequest(requestData, connection) {
 		});
 		// try {
 		user.save().then((savedMessage) => {
-			console.log(`Message Saved.`, savedMessage);
+			// console.log(`Message Saved.`, savedMessage);
 
 
 			RoomModel.findById(mongoose.Types.ObjectId(messageData.roomId)).then((room, err) => {
-				console.log('messageRequest Room list::::', room);
+				// console.log('messageRequest Room list::::', room);
 				// console.log('room list::::', cons);
 
 				let newMessageInfo = {};
@@ -830,7 +883,7 @@ async function messageRequest(requestData, connection) {
 					} else {
 						room.userList.forEach(user => {
 							if (cons.hasOwnProperty(user)) {
-								cons[user].sendUTF(responseSuccess(200, "allRoomsModified", updatedRoom, "Modified", true));
+								cons[user].sendUTF(responseSuccess(200, "roomsModified", updatedRoom, "Modified", true));
 							} else {
 								console.log('user is not login', user);
 							}
@@ -924,7 +977,7 @@ function createConnection(requestData, connection) {
 			connection['uId'] = userId;
 			cons[userId] = connection;
 
-			console.log("Connection Updated", cons);
+			// console.log("Connection Updated", cons);
 			connection.sendUTF(responseSuccess(200, "create_connection", {}, "Connection Established.", true));
 		} else {
 			connection.sendUTF(responseError(404, "create_connection", "Action/Path not found.", true));
@@ -932,6 +985,81 @@ function createConnection(requestData, connection) {
 	}
 
 }
+
+async function blockUser(requestData, connection) {
+
+	if (requestData.type == 'allBlockUser') {
+		if (!isFine(requestData.user)) {
+			connection.sendUTF(responseError(400, "allBlockUser", "user is required.", true));
+		} else {
+
+			let dataToUpdate = [{
+				"blockedBy": requestData.user,
+			}, {
+				"blockedTo": requestData.user
+			}];
+
+			BlockModel.find({
+				$or: dataToUpdate
+			}, (err, data) => {
+				console.warn("allBlockUser", err, data);
+				if (data) {
+					console.log("allBlockUser", data);
+					/// Notify to all active user about that user status
+					connection.sendUTF(responseSuccess(200, "allBlockUser", data, "Block Status Changed", true));
+				}
+			});
+		}
+	} else if (requestData.type == 'blockUser') {
+		console.log(requestData);
+
+		// blockedBy: String,
+		// blockedTo: String,
+
+		// login validation
+		if (!isFine(requestData.blockedBy) || !isFine(requestData.blockedTo)) {
+			connection.sendUTF(responseError(400, "blockUser", "BlockedBy and BlockedTo is required.", true));
+		} else {
+
+			let dataToUpdate = {
+				"blockedBy": requestData.blockedBy,
+				"blockedTo": requestData.blockedTo,
+				"isBlock": requestData.isBlock,
+
+			};
+
+			BlockModel.updateOne({
+				"blockedBy": requestData.blockedBy,
+				"blockedTo": requestData.blockedTo
+			}, dataToUpdate, { upsert: true }, (err, data) => {
+				console.warn(err, data);
+				if (data) {
+
+					BlockModel.find({
+						"blockedBy": requestData.blockedBy,
+						"blockedTo": requestData.blockedTo
+					}, (err, data) => {
+						console.warn("allBlockUser", err, data);
+						if (data) {
+							console.log("allBlockUser", data);
+							// Notify to all active user about that user status
+							cons[requestData.blockedBy].sendUTF(responseSuccess(200, "blockUser", data[0], "Block Status Changed", true));
+							cons[requestData.blockedTo].sendUTF(responseSuccess(200, "blockUser", data[0], "Block Status Changed", true));
+
+						}
+					});
+
+					
+				}
+			});
+		}
+
+
+	} else {
+		connection.sendUTF(responseError(404, "noActionInBlockUser", "Action/Path not found.", true));
+	}
+}
+
 function acceptRequest(request) {
 
 	var connection = request.accept(null, request.origin);
@@ -941,7 +1069,7 @@ function acceptRequest(request) {
 
 	// user sent some message
 	connection.on('message', async function (message) {
-		console.log("On Message on login" + message.utf8Data);
+		console.log("On new request receved" + message.utf8Data);
 
 		try {
 			let requestData = JSON.parse(message.utf8Data);
@@ -955,6 +1083,8 @@ function acceptRequest(request) {
 				messageRequest(requestData, connection);
 			} else if (requestData.request == 'create_connection') {
 				createConnection(requestData, connection);
+			} else if (requestData.request == 'block_user') {
+				blockUser(requestData, connection);
 			} else {
 				connection.sendUTF(responseError(404, "unknown", "No route found", true));
 			}

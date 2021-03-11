@@ -47,10 +47,10 @@ public class WebSocketSingleton extends WebSocketListener implements DownloadSub
     @Override
     public void register(WebSocketObserver newWebSocketObserver) {
         int observerIndex = webSocketObservers.indexOf(newWebSocketObserver);
-        if (observerIndex == -1){
+        if (observerIndex == -1) {
             // Adds a new observer to the ArrayList
             webSocketObservers.add(newWebSocketObserver);
-        }else{
+        } else {
             Log.d(TAG, "Subscriber is already registered");
         }
 
@@ -69,8 +69,8 @@ public class WebSocketSingleton extends WebSocketListener implements DownloadSub
         System.out.println("Observer " + (observerIndex + 1) + " deleted");
 
         // Removes observer from the ArrayList
-
-        webSocketObservers.remove(observerIndex);
+        if (observerIndex != -1)
+            webSocketObservers.remove(observerIndex);
 
     }
 

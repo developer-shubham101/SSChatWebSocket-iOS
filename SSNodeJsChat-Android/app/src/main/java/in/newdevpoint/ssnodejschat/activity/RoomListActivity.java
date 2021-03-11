@@ -157,7 +157,7 @@ public class RoomListActivity extends AppCompatActivity implements WebSocketObse
                         Toast.makeText(RoomListActivity.this, message, Toast.LENGTH_SHORT).show();
 
                     }
-                }else if (ResponseType.RESPONSE_TYPE_CREATE_ROOM.equalsTo(type)) {
+                } else if (ResponseType.RESPONSE_TYPE_CREATE_ROOM.equalsTo(type)) {
                     if (statusCode == 200) {
 
                         Type type1 = new TypeToken<ResponseModel<RoomNewResponseModel>>() {
@@ -178,8 +178,19 @@ public class RoomListActivity extends AppCompatActivity implements WebSocketObse
                             }
                         }
 
+                        adapter.addOrUpdate(element);
 
-                        adapter.add(element);
+                    } else if (ResponseType.RESPONSE_TYPE_USER_MODIFIED.equalsTo(type)) {
+                        Log.d(TAG, "received message: " + response);
+
+                        Type type1 = new TypeToken<ResponseModel<FSUsersModel>>() {
+                        }.getType();
+
+                        ResponseModel<FSUsersModel> fsUsersModelResponseModel = new Gson().fromJson(response, type1);
+
+                        adapter.updateUserElement(fsUsersModelResponseModel.getData());
+
+
 
                     } else {
                         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
@@ -208,7 +219,8 @@ public class RoomListActivity extends AppCompatActivity implements WebSocketObse
         return new ResponseType[]{
                 ResponseType.RESPONSE_TYPE_ROOM,
                 ResponseType.RESPONSE_TYPE_ROOM_MODIFIED,
-                ResponseType.RESPONSE_TYPE_CREATE_ROOM
+                ResponseType.RESPONSE_TYPE_CREATE_ROOM,
+                ResponseType.RESPONSE_TYPE_USER_MODIFIED
 
         };
     }

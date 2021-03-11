@@ -33,24 +33,19 @@ public class ZoomImageActivity extends AppCompatActivity {
         conBackBtn = findViewById(R.id.conBackBtn);
 
         String imageUrl = getIntent().getStringExtra(INTENT_EXTRA_URL);
-        Glide.with(this).load(imageUrl).into(zoomImage);
+        Glide.with(this).load(imageUrl).transform( ).into(zoomImage);
 
-        try {
-            URL uRl = new URL(imageUrl);
-            String replaceStr = ".200x200_q100." + FilenameUtils.getExtension(uRl.getPath());
-            imageUrl.replace(replaceStr, "");
-
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            URL uRl = new URL(imageUrl);
+//            String replaceStr = ".200x200_q100." + FilenameUtils.getExtension(uRl.getPath());
+//            imageUrl.replace(replaceStr, "");
+//
+//        } catch (MalformedURLException e) {
+//            e.printStackTrace();
+//        }
         zoomImage.setOnTouchListener(new ImageMatrixTouchHandler(this));
 
-        conBackBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        conBackBtn.setOnClickListener(v -> finish());
     }
 
     public void onClick(View v) {

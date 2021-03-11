@@ -9,13 +9,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
+import in.newdevpoint.ssnodejschat.adapter.ChatAdapterBase;
 import in.newdevpoint.ssnodejschat.adapter.HeaderDataImpl;
 import in.newdevpoint.ssnodejschat.model.ChatModel;
 import in.newdevpoint.ssnodejschat.model.StickyMainData;
 import in.newdevpoint.ssnodejschat.stickyheader.stickyData.HeaderData;
 import in.newdevpoint.ssnodejschat.utility.UserDetails;
 
-public abstract class StickHeaderRecyclerView<D extends ChatModel, H extends HeaderDataImpl> extends RecyclerView.Adapter implements StickHeaderItemDecoration.StickyHeaderInterface {
+public abstract class StickHeaderRecyclerView<D extends ChatModel, H extends HeaderDataImpl> extends ChatAdapterBase implements StickHeaderItemDecoration.StickyHeaderInterface {
 
 	public static final int ROW_TYPE_HEADER = 1;
 	public static final int ROW_TYPE_LEFT_TEXT = 2;
