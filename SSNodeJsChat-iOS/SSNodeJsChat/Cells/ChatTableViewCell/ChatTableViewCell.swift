@@ -10,10 +10,12 @@ import UIKit
 import SDWebImage
 
 class ChatTableViewCell: UITableViewCell {
+    
     @IBOutlet weak var profilePic: UIImageView!
     @IBOutlet weak var username: UILabel!
     @IBOutlet weak var lastMessage: UILabel!
     @IBOutlet weak var messageTime: UILabel!
+    @IBOutlet weak var rootVIew: UIView!
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -26,12 +28,13 @@ class ChatTableViewCell: UITableViewCell {
         // Configure the view for the selected state
     }
     func configData(obj: ChatRoomModel) {
-        if let individualDetail = obj.individualDetail, let userDetails: UserDetailsModel = individualDetail.userData {
-            username.text = userDetails.userName
+        if let individualDetail: UserDetailsModel = RoomListViewController.userDetailsList[obj.individualUserId] {
+            username.text = "\(individualDetail.firstName) \(individualDetail.userName)"
+            rootVIew.backgroundColor = individualDetail.is_online ? .systemGreen : .systemRed
         }
         
-//        lastMessage.text = obj.last_message
-//        messageTime.text = obj.last_message_at
+        lastMessage.text = obj.last_message
+        messageTime.text = obj.last_message_time
 //
 //        profilePic.sd_setImage(with: URL(string:obj.receiver_detail.profile_picture), completed: { (image, error, cache, url) in
 //

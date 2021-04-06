@@ -19,6 +19,8 @@ target 'SSNodeJsChat' do
   pod 'Toast-Swift' 
   pod 'DKImagePickerController'
   pod 'CropViewController'
+  
+  #pod 'SSExtensions', :path => '/Users/ajitjain/Documents/Max/iOS/MyPod/SSExtensions/'
 
 
   target 'SSNodeJsChatTests' do
@@ -31,3 +33,4 @@ target 'SSNodeJsChat' do
   end
 
 end
+

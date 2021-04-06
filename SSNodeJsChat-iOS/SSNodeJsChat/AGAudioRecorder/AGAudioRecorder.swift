@@ -52,6 +52,19 @@ class AGAudioRecorder: NSObject {
         self.check_record_permission()
     }
     
+    
+    func releaseMemory() {
+        delegate = nil
+        if self.audioPlayer != nil {
+            audioPlayer?.pause()
+            audioPlayer = nil
+        }
+        if self.audioRecorder != nil {
+            audioRecorder = nil
+        }
+
+    }
+    
     private func check_record_permission() {
         
 		switch AVAudioSession.sharedInstance().recordPermission {
@@ -69,6 +82,8 @@ class AGAudioRecorder: NSObject {
                     self.isAudioRecordingGranted = false
                 }
             })
+            break
+        @unknown default:
             break
         }
     }
@@ -98,6 +113,9 @@ class AGAudioRecorder: NSObject {
             setupRecorder()
         }
     }
+    
+    
+   
     
     private func setupRecorder() {
         

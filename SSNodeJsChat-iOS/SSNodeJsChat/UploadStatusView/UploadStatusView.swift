@@ -183,7 +183,7 @@ class UploadStatusView: UIView {
 						
 						
 					}
-				case .failure(let encodingError):
+                case .failure( _):
 					selfStrong.fileUploaded(response: .failed("Something went wrong!!"), messageType: selfStrong.messageType, fileMeta: selfStrong.fileMeta, date: selfStrong.date)
 				}
 			}

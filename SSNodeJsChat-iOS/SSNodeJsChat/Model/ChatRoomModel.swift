@@ -7,37 +7,56 @@
 //
 
 import Foundation
-@objcMembers
-class ChatRoomModel: NSObject {
+
+class ChatRoomModel {
     
     var id: String = ""
     var isGroup: Bool = false
-    var groupDetail: GroupModel?
-    var individualDetail: IndividualModel?
     
-    static func giveList(list: [[String:Any]], userId: String) -> [ChatRoomModel] {
+    var last_message: String = ""
+    var last_message_time: String = ""
+    
+    var groupDetail: GroupModel?
+//    var individualDetail: UserDetailsModel?
+    var individualUserId: String = ""
+    
+    static func giveList(list: [[String:Any]]) -> [ChatRoomModel] {
         var couponsArray = [ChatRoomModel]()
         for cdic in list {
-            couponsArray.append(ChatRoomModel(disc: cdic, userId: userId))
+            couponsArray.append(ChatRoomModel(disc: cdic))
         }
         return couponsArray
     }
-    init(disc: [String: Any], userId: String) {
+    init(disc: [String: Any]) {
         id = disc["_id"] as? String ?? ""
         
         let tmpUsers = disc["users"] as? [String: Bool] ?? [:]
         
+        last_message = disc["last_message"] as? String ?? ""
+        last_message_time = disc["last_message_time"] as? String ?? ""
+        
         let users: [String] = Array(tmpUsers.keys)
         
-        individualDetail = IndividualModel(disc: [:])
-        let user: [String] = users.filter({ (element) -> Bool in
-            return element != userId
-        })
-        
-        let name = RoomListViewController.userDetailsList.first { (element) -> Bool in
-            return user[0] == element.id
+//        individualDetail = IndividualModel(disc: [:])
+//        let user: [String] = users.filter({ (element) -> Bool in
+//            return element != userId
+//        })
+        if let user: String = (users.first { (element) -> Bool in
+            return element != UsernameViewController.tmpUserLogin.userId
+        }) {
+//            let userModel: UserDetailsModel? = RoomListViewController.userDetailsList.first { (element) -> Bool in
+//                return user == element.userId
+//            }
+            
+//            if let userDetails = RoomListViewController.userDetailsList[user]{
+//                individualDetail = userDetails
+//            }
+//
+            individualUserId = user
+           
         }
-        individualDetail?.userData = name
+        
+       
     }
     
     
@@ -57,6 +76,8 @@ class GroupModel: NSObject {
 class IndividualModel: NSObject {
     
     var userData: UserDetailsModel?
+    
+    
     
     init(disc: [String:Any]) {
         
@@ -99,9 +120,16 @@ class ReceiverDetail: NSObject {
 
 
 @objcMembers
-class UserDetailsModel: NSObject {
+public class UserDetailsModel: NSObject {
     var userName: String = ""
     var id: String = ""
+    var userId: String = ""
+    var firstName: String = ""
+    var email: String = ""
+    var profile_pic: String = ""
+    var last_seen: String = ""
+    var is_online: Bool = false
+    
      
     static func giveList(list: [[String:Any]]) -> [UserDetailsModel] {
         var couponsArray = [UserDetailsModel]()
@@ -113,9 +141,18 @@ class UserDetailsModel: NSObject {
     static func giveObj(cdic:[String:Any]) -> UserDetailsModel {
         let resObj = UserDetailsModel()
         
-        resObj.id = cdic["_id"] as? String ?? ""
-        
         resObj.userName = cdic["userName"] as? String ?? ""
+        
+        resObj.id = cdic["_id"] as? String ?? ""
+        resObj.userId = "\(cdic["userId"] as? Int ?? 0)"
+        resObj.firstName = cdic["firstName"] as? String ?? ""
+        resObj.email = cdic["email"] as? String ?? ""
+        resObj.profile_pic = cdic["profile_pic"] as? String ?? ""
+        resObj.last_seen = cdic["last_seen"] as? String ?? ""
+        
+        resObj.is_online = cdic["is_online"] as? Bool ?? false
+        
+        
         
         return resObj
     }

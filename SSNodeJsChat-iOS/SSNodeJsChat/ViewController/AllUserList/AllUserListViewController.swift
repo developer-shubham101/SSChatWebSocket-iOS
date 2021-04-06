@@ -8,80 +8,70 @@
 import UIKit
 import Starscream
 
-class AllUserListViewController: UIViewController {
+class AllUserListViewController: UIViewController{
+    
+    
     @IBOutlet weak var tableView: UITableView!
     
-    fileprivate var tableItems: [UserModel] = []
-//    fileprivate var viewloader:UIView?
-    
-    
-    fileprivate var socket = WebSocket(url: URL(string: "ws://localhost:1337/users")!, protocols: ["chat"])
-    fileprivate var socketRoom = WebSocket(url: URL(string: "ws://localhost:1337/room")!, protocols: ["chat"])
-    
-    
-    var userName: String = ""
+    fileprivate var tableItems: [UserDetailsModel] = []
     
     override func viewWillAppear(_ animated: Bool) {
-//        self.navigationController?.isNavigationBarHidden = true
-//        self.navigationController?.interactivePopGestureRecognizer?.isEnabled = true
-//        self.navigationController?.interactivePopGestureRecognizer?.delegate = self
-        
+        initCollection()
+        let json: [String: Any] = ["request":"users","type": "allUsers"]
+        if let jsonString: NSString = JsonOperation.toJsonStringFrom(dictionary: json) {
+            SocketManager.shared.sendMessageToSocket(message: jsonString as String, observer: self)
+        }
     }
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        initCollection()
         
-//        viewloader = getActivityIndicator("Loading...")
-//        view.addSubview(viewloader!)
-        
-        
-        socket.delegate = self
-        socket.connect()
-        
-        
-        socketRoom.delegate = self
-        socketRoom.connect()
-        
+        SocketManager.shared.registerToScoket(observer: self )
     }
-    fileprivate func initCollection() {
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        SocketManager.shared.unregisterToSocket(observer: self)
+    }
+    
+    func initCollection() {
         tableView.delegate = self
         tableView.dataSource = self
     }
-    fileprivate func getChatRoomList() {
-//        NetworkManager.getChatRoomList() { (success, res) in
-//            self.viewloader?.removeFromSuperview()
-//            if let response:[String:Any] = res as? [String:Any]{
-//                let isSuccess:Int = response["code"] as! Int
-//                if(isSuccess == 200){
-//                    let data = response["data"] as! [[String:Any]]
-//                    self.tableItems = ChatRomModel.giveList(list: data )
-//                    self.tableView.reloadData()
-//
-//                } else if(isSuccess == 500){
-//                    self.showAlertWithMessage(message: response["message"] as! String)
-//                }
-//            }else if let response: String  = res as? String {
-//                self.showAlertWithMessage(message: response)
-//            }
-//        }
-    }
-    @IBAction func notification(_ sender: Any) {
-//        let vc = self.storyboard?.instantiateViewController(withIdentifier: "NotificationViewController") as! NotificationViewController
-//        self.navigationController?.pushViewController(vc, animated: true)
-    }
     
     deinit {
-        socket.disconnect(forceTimeout: 0)
-        socket.delegate = nil
-        
-        socketRoom.disconnect(forceTimeout: 0)
-        socketRoom.delegate = nil
+        print("deinit Called:: AllUserListViewController ")
     }
+    
+    fileprivate func getChatRoomList() {
+        //        NetworkManager.getChatRoomList() { (success, res) in
+        //            self.viewloader?.removeFromSuperview()
+        //            if let response:[String:Any] = res as? [String:Any]{
+        //                let isSuccess:Int = response["code"] as! Int
+        //                if(isSuccess == 200){
+        //                    let data = response["data"] as! [[String:Any]]
+        //                    self.tableItems = ChatRomModel.giveList(list: data )
+        //                    self.tableView.reloadData()
+        //
+        //                } else if(isSuccess == 500){
+        //                    self.showAlertWithMessage(message: response["message"] as! String)
+        //                }
+        //            }else if let response: String  = res as? String {
+        //                self.showAlertWithMessage(message: response)
+        //            }
+        //        }
+    }
+    @IBAction func notification(_ sender: Any) {
+        //        let vc = self.storyboard?.instantiateViewController(withIdentifier: "NotificationViewController") as! NotificationViewController
+        //        self.navigationController?.pushViewController(vc, animated: true)
+    }
+    
 }
 extension AllUserListViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        print("rowwww count", tableItems.count)
         return tableItems.count
     }
     
@@ -100,22 +90,28 @@ extension AllUserListViewController: UITableViewDelegate, UITableViewDataSource 
         return cell
     }
     
+    
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
-        let json: [String: Any] = ["type": "createRoom", "users": [userName, tableItems[indexPath.row].id]]
+        let json: [String: Any] = ["type": "createRoom",
+                                   "userList": [UsernameViewController.tmpUserLogin.userId, tableItems[indexPath.row].userId],
+                                   "createBy": UsernameViewController.tmpUserLogin.userId,
+                                   "request":"room"]
         if let jsonString: NSString = JsonOperation.toJsonStringFrom(dictionary: json) {
-            self.socketRoom.write(string: jsonString as String)
+            SocketManager.shared.sendMessageToSocket(message: jsonString as String, observer: self)
         }
         
-        
-//        let vc:SingleChatViewController = self.storyboard?.instantiateViewController(withIdentifier: "SingleChatViewController") as! SingleChatViewController
-//        vc.roomId = tableItems[indexPath.row].room_number
-//
-//        vc.recName = tableItems[indexPath.row].receiver_detail.username
-//        vc.recImage = tableItems[indexPath.row].receiver_detail.profile_picture
-//
-//
-//        self.navigationController?.pushViewController(vc, animated: true)
+        //
+        //      let vc:SingleChatViewController = self.storyboard?.instantiateViewController(withIdentifier: "SingleChatViewController") as! SingleChatViewController
+        //
+        //      vc.roomId = tableItems[indexPath.row].room_number
+        //
+        //      vc.recName = tableItems[indexPath.row].receiver_detail.username
+        //      vc.recImage = tableItems[indexPath.row].receiver_detail.profile_picture
+        //
+        //
+        //    self.navigationController?.pushViewController(vc, animated: true)
+        //
         
     }
 }
@@ -123,51 +119,30 @@ extension AllUserListViewController: UITableViewDelegate, UITableViewDataSource 
 
 
 // MARK: - WebSocketDelegate
-extension AllUserListViewController: WebSocketDelegate {
-    func websocketDidConnect(socket: WebSocketClient) {
-        print("Web socket connected");
-        let json: [String: Any] = ["type": "listUser"]
-        if let jsonString: NSString = JsonOperation.toJsonStringFrom(dictionary: json) {
-            self.socket.write(string: jsonString as String)
+extension AllUserListViewController:SocketObserver {
+    func registerFor() -> [ResponseType] {
+        return [.allUsers]
+    }
+    
+    func brodcastSocketMessage(to observerWithIdentifire: ResponseType, statusCode: Int, data: [String : Any], message: String) {
+        print(data)
+        
+        if observerWithIdentifire == .allUsers {
+            if let data = data["data"] as? [[String: Any]] {
+                
+                tableItems = UserDetailsModel.giveList(list: data)
+                ///Exclude Login user
+                tableItems = tableItems.filter({ (element) -> Bool in
+                    return element.userId != UsernameViewController.tmpUserLogin.userId
+                })
+                self.tableView.reloadData()
+            }
         }
         
     }
     
-    func websocketDidDisconnect(socket: WebSocketClient, error: Error?) {
-//        performSegue(withIdentifier: "websocketDisconnected", sender: self)
+    func socketConnection(status: SocketConectionStatus) {
+        
     }
     
-    func websocketDidReceiveMessage(socket: WebSocketClient, text: String) {
-        /* Message format:
-         * {"type":"message","data":{"time":1472513071731,"text":"😍","author":"iPhone Simulator","color":"orange"}}
-         */
-        print("Message Receved")
-        print(text)
-        
-        
-         
-        
-        guard let data = text.data(using: .utf16),
-              let jsonData = try? JSONSerialization.jsonObject(with: data),
-              let jsonDict: [[String : Any]] = jsonData as? [[String: Any]] else { return }
-        
-        
-        tableItems = UserModel.giveList(list: jsonDict)
-        tableView.reloadData()
-        
-        
-        
-        
-//        if messageType == "message",
-//           let messageData = jsonDict["data"] as? [String: Any],
-//           let messageAuthor = messageData["author"] as? String,
-//           let messageText = messageData["text"] as? String {
-//
-//
-//        }
-    }
-    
-    func websocketDidReceiveData(socket: WebSocketClient, data: Data) {
-        print(data)
-    }
 }

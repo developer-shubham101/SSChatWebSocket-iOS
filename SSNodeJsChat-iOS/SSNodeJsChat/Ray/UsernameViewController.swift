@@ -1,5 +1,12 @@
 import UIKit
-import Starscream
+
+
+struct TmpUsers {
+    var email = ""
+    var password = ""
+    var userId = ""
+    var name = ""
+}
 
 final class UsernameViewController: UIViewController {
     
@@ -12,23 +19,32 @@ final class UsernameViewController: UIViewController {
     @IBOutlet weak var userNameField: UITextField!
     @IBOutlet weak var passwordField: UITextField!
     
-    var socket = WebSocket(url: URL(string: "ws://localhost:1337/login")!, protocols: ["chat"])
     
     
+    fileprivate let tmpUserList: [TmpUsers] = [TmpUsers(email: "anil@yopmail.com", password: "123456", userId: "1", name: "Anil"),
+                                TmpUsers(email: "amit@yopmail.com", password: "123456", userId: "2", name: "Amit"),
+                                TmpUsers(email: "shubham@yopmail.com", password: "123456", userId: "3", name: "Shubham"),
+                                TmpUsers(email: "ali@yopmail.com", password: "123456", userId: "4", name: "Ali"),
+                                TmpUsers(email: "samreen@yopmail.com", password: "123456", userId: "5", name: "Samreen")
+    ]
+    
+    public static var tmpUserLogin: TmpUsers!
     
     // MARK: - View Life Cycle
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        UsernameViewController.tmpUserLogin = tmpUserList[3]
         
-        userNameField.text = "shubham@yopmail.com"
-        passwordField.text = "123456"
-        
+        userNameField.text = UsernameViewController.tmpUserLogin.email
+        passwordField.text = UsernameViewController.tmpUserLogin.password
+        SocketManager.shared.connectSocket(notify: true)
+        SocketManager.shared.registerToScoket(observer: self )
         
 //        nextButtonItem.isEnabled = true
         
         
-        socket.delegate = self
-        socket.connect()
+        
         
         navigationItem.hidesBackButton = true
     }
@@ -47,7 +63,10 @@ final class UsernameViewController: UIViewController {
     @IBAction func didTapNext(_ sender: Any) {
         
         let messageDictionary = [
-            "type": "login",
+            "request": "login",
+            "userId": UsernameViewController.tmpUserLogin.userId,
+            "type": "loginOrCreate",
+            "fcm_token": "qasdfghfds",
             "userName": userNameField.text ?? "",
             "password": passwordField.text ?? "",
             ] as [String : Any]
@@ -56,7 +75,8 @@ final class UsernameViewController: UIViewController {
         let jsonString = NSString(data: jsonData, encoding: String.Encoding.utf8.rawValue)
         if let message:String = jsonString as String?{
             print(message)
-            socket.write(string: message) //write some Data over the socket!
+            SocketManager.shared.sendMessageToSocket(message: message, observer: self)
+//            socket.write(string: message) //write some Data over the socket!
         }
         
         
@@ -64,34 +84,55 @@ final class UsernameViewController: UIViewController {
     
     @IBAction func didTapRegister(_ sender: Any) {
         
-        let messageDictionary = [
-            "type": "register",
-            "userName": userNameField.text ?? "",
-            "password": passwordField.text ?? "",
-            ] as [String : Any]
-        
-        let jsonData = try! JSONSerialization.data(withJSONObject: messageDictionary)
-        let jsonString = NSString(data: jsonData, encoding: String.Encoding.utf8.rawValue)
-        if let message:String = jsonString as String?{
-            print(message)
-            socket.write(string: message) //write some Data over the socket!
-        }
+//        let messageDictionary = [
+//            "type": "register",
+//            "userId":"12",
+//            "fcm_token":"qasdfghfds",
+//            "userName": userNameField.text ?? "",
+//            "password": passwordField.text ?? "",
+//            ] as [String : Any]
+//        
+//        let jsonData = try! JSONSerialization.data(withJSONObject: messageDictionary)
+//        let jsonString = NSString(data: jsonData, encoding: String.Encoding.utf8.rawValue)
+//        if let message:String = jsonString as String?{
+//            print(message)
+//           // socket.write(string: message) //write some Data over the socket!
+//        }
         
         
     }
     
-    deinit {
-        socket.disconnect(forceTimeout: 0)
-        socket.delegate = nil
+    
+}
+extension UsernameViewController: SocketObserver {
+    func registerFor() -> [ResponseType] {
+        return [.loginOrCreate]
     }
+    
+    func brodcastSocketMessage(to observerWithIdentifire: ResponseType, statusCode: Int, data: [String : Any], message: String) {
+        print("observer ",{observerWithIdentifire})
+        guard let dat = data["data"] as? [String : Any] else {
+            return
+        }
+        let vc = RoomListViewController()
+     
+        self.navigationController?.show(vc, sender: nil)
+    }
+    
+    
+    func socketConnection(status: SocketConectionStatus) {
+        print(status)
+    }
+     
+    
 }
 
+
+/*
 // MARK: - WebSocketDelegate
 extension UsernameViewController : WebSocketDelegate {
     func websocketDidConnect(socket: WebSocketClient) {
-        
-        print("Web socket connected");
-        
+         print("Web socket connected");
     }
     
     func websocketDidDisconnect(socket: WebSocketClient, error: Error?) {
@@ -113,8 +154,6 @@ extension UsernameViewController : WebSocketDelegate {
         vc.userName = userName
         self.navigationController?.pushViewController(vc, animated: true)
         
-        
-        
 //        if messageType == "message",
 //           let messageData = jsonDict["data"] as? [String: Any],
 //           let messageAuthor = messageData["author"] as? String,
@@ -129,23 +168,4 @@ extension UsernameViewController : WebSocketDelegate {
     }
 }
 
-
-//// MARK: - IBActions
-//extension UsernameViewController {
-//
-//    @IBAction func usernameDidChange(textField: UITextField) {
-//        guard let text = textField.text else {
-//            nextButtonItem.isEnabled = false
-//            username = ""
-//            return
-//        }
-//
-//        nextButtonItem.isEnabled = text.count > 0
-//        username = text
-//    }
-//
-//    @IBAction func websocketDisconnectedUnwind(unwindSegue: UIStoryboardSegue) {
-//        username = ""
-//        nextButtonItem.isEnabled = false
-//    }
-//}
+*/

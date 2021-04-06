@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import UIKit
+import UIKit 
  
 
 enum DownloadStart {
@@ -17,12 +17,12 @@ enum DownloadStart {
 }
 
 
-public struct UserElement {
-    public var email: String = ""
-    public var userID: String = ""
-    public var name: String = ""
-    public var profile_image: String = ""
-}
+//public struct UserElement {
+//    public var email: String = ""
+//    public var userID: String = ""
+//    public var name: String = ""
+//    public var profile_image: String = ""
+//}
 
 public class ChatModel {
 	
@@ -31,7 +31,7 @@ public class ChatModel {
 	var message_type: MessageType = .text
 	var message_on: String = ""
 	//    var receiver_detail:CharUser = CharUser()
-	var sender_detail: UserElement = UserElement()
+	var sender_detail: UserDetailsModel = UserDetailsModel()
 	
 	var tableCellWidth: CGFloat = 0
 	var tableCellHeight: CGFloat = 0
@@ -51,7 +51,7 @@ public class ChatModel {
 	
 	required public init() {}
 	
-	required public init(documentId: String, data: [String: Any], senderDetail: UserElement, frame: CGRect) {
+	required public init(documentId: String, data: [String: Any], senderDetail: UserDetailsModel, frame: CGRect) {
  
 		self.documentId = documentId
 		message = data["message"] as! String
@@ -135,16 +135,13 @@ public class ChatModel {
 		 
 		self.sender_detail = senderDetail
 		
-//		let t: Timestamp = data["time"] as! Timestamp
-//		let date = t.dateValue()
-//		createdDate = date.noon
-//		message_on = date.toString(format: "HH:mm:ss")//Utils.dayDifference(from: date)
-//
-//
-		
-		
- 
-		
+		let t = data["time"] as! String
+
+       
+        if let date = t.toDate(format: "yyyy-MM-dd'T'HH:mm:ss.SSSX"){
+            createdDate = date.noon
+            message_on = date.toString(format: "HH:mm:ss")//Utils.dayDifference(from: date)
+        }
 	}
 }
 

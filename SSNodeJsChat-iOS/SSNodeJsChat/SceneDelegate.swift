@@ -18,24 +18,24 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
         guard let _ = (scene as? UIWindowScene) else { return }
         
-        
-        if let windowScene = scene as? UIWindowScene {
-
-            self.window = UIWindow(windowScene: windowScene)
-            //            let storyboard = UIStoryboard(name: "Main", bundle: nil)
-
-            let nav1 = UINavigationController()
-            nav1.isNavigationBarHidden = true
-
-
-            let mainView = ChatViewController()//RoomListViewController()//ChatViewController()
-            nav1.viewControllers = [mainView]
-            self.window!.rootViewController = nav1
-            self.window?.makeKeyAndVisible()
-
-
-
-        }
+//        
+//        if let windowScene = scene as? UIWindowScene {
+//
+//            self.window = UIWindow(windowScene: windowScene)
+//            //            let storyboard = UIStoryboard(name: "Main", bundle: nil)
+//
+//            let nav1 = UINavigationController()
+//            nav1.isNavigationBarHidden = true
+//
+//
+//            let mainView = ChatViewController()//RoomListViewController()//ChatViewController()
+//            nav1.viewControllers = [mainView]
+//            self.window!.rootViewController = nav1
+//            self.window?.makeKeyAndVisible()
+//
+//
+//
+//        }
     }
     
     func sceneDidDisconnect(_ scene: UIScene) {

@@ -60,7 +60,7 @@ class DocDetailViewController: UIViewController, WKNavigationDelegate, WKScriptM
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         activity.stopAnimating()
         // This must be valid javascript!  Critically don't forget to terminate statements with either a newline or semicolon!
-        let javascript =
+        _ =
             "var outerHTML = document.documentElement.outerHTML.toString()\n" +
                 "var message = {\"type\": \"outerHTML\", \"outerHTML\": outerHTML }\n" +
         "window.webkit.messageHandlers.paymentResponse.postMessage(message)\n"

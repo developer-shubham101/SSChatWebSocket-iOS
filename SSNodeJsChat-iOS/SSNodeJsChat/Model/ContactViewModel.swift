@@ -84,14 +84,16 @@ class ContactViewModel {
 				}
 			}
 			break
-		}
+        @unknown default:
+            completionHandler(true)
+        }
 	}
 	
 	func fetchContact(completion: @escaping (_ isSuccess: Bool) -> Void) {
 		
 		//		var contacts = [CNContact]()
 		var myContacts = [MyContact]()
-		var mobileContacts:[String: [String: Any]] = [:]
+        var _:[String: [String: Any]] = [:]
 		
 		let keys = [
 			CNContactFormatter.descriptorForRequiredKeys(for: .fullName),

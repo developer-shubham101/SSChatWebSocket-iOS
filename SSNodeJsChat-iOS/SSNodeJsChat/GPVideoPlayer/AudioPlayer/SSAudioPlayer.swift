@@ -45,6 +45,7 @@ class SSAudioPlayer: UIView {
 	private var playerLayer: AVPlayerLayer?
 	private var player: AVQueuePlayer?
 	private var playerItems: [AVPlayerItem]?
+     
 	private enum Constants {
 		static let nibName = "SSAudioPlayer"
 		static let rewindForwardDuration: Float64 = 10 //in seconds
@@ -56,8 +57,22 @@ class SSAudioPlayer: UIView {
 //		self.playerLayer?.frame = self.videoView.bounds
 	}
 	
+    func releaseMemory() {
+        delegate = nil
+        if self.player != nil {
+            
+            self.player?.pause()
+            self.player = nil
+            
+//            NotificationCenter.default.removeObserver(notificationObserver)
+//            notificationObserver = nil
+            
+        }
+//        NotificationCenter.default.removeObserver(self)
+    }
+    
 	deinit {
-		NotificationCenter.default.removeObserver(self)
+		print("deinit callled:: SSAudioPlayer")
 	}
 	
 	override public func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
@@ -144,7 +159,7 @@ class SSAudioPlayer: UIView {
 		self.pauseVideo()
 		let controller = AVPlayerViewController()
 		controller.player = player
-		NotificationCenter.default.addObserver(self, selector: #selector(avPlayerDidDismiss), name: Notification.Name("avPlayerDidDismiss"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(avPlayerDidDismiss), name: Notification.Name("avPlayerDidDismiss"), object: nil)
 		self.parentViewController()?.present(controller, animated: true) {[weak self] in
 			DispatchQueue.main.async {
 //				self?.isMuted = false

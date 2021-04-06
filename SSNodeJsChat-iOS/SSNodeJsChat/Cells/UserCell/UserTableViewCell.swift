@@ -24,8 +24,8 @@ class UserTableViewCell: UITableViewCell {
 
         // Configure the view for the selected state
     }
-    func configData(obj: UserModel) {
-        username.text = obj.userName
+    func configData(obj: UserDetailsModel) {
+        username.text = "\(obj.firstName) (\(obj.userName))"
 //        otherData.text = obj.last_message
         
 //        profilePic.sd_setImage(with: URL(string:obj.receiver_detail.profile_picture), completed: { (image, error, cache, url) in

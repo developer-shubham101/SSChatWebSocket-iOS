@@ -17,7 +17,7 @@ import ContactsUI
 import AVFoundation
 import AVKit
 import DKImagePickerController
-import Photos
+import Photos 
 
 enum MessageType: String {
     case text = "TEXT"
@@ -82,13 +82,13 @@ class ChatViewController: AppViewController, CNContactViewControllerDelegate, UI
     
     // 1- Init bottomSheetVC
     
-    fileprivate var viewloader:UIView?
+    fileprivate var viewloader: UIView?
     
     
     fileprivate var userLocation: CLLocation?
     
    
-    fileprivate let audioRecorder = AGAudioRecorder(withFileName: "worldAlbumAudio")
+    fileprivate let audioRecorder = AGAudioRecorder(withFileName: "AudioPath")
     //fileprivate var objPlayer: AVAudioPlayer?
     fileprivate let placeHolderString = "Enter message..."
     fileprivate enum TouchState {
@@ -101,19 +101,15 @@ class ChatViewController: AppViewController, CNContactViewControllerDelegate, UI
     fileprivate var audioPlayer: SSAudioPlayer?
     
     ///if it is not group
-    fileprivate var otherUser: UserElement?
+    var individualDetail: UserDetailsModel?
     fileprivate var isMute: Bool = false
     
     
     ///Chat list
     fileprivate var chatListTmp: [ChatModel] = []
     
-    
-    
     ///Document for pagination
     fileprivate var currentBunch: Int = CHAT_BUNCH_COUNT
-     
-    
     
     // we set a variable to hold the contentOffSet before scroll view scrolls
     var lastContentOffset: CGFloat = 0
@@ -129,17 +125,13 @@ class ChatViewController: AppViewController, CNContactViewControllerDelegate, UI
     
     //MARK:- from previous controller
     var roomId: String = ""
-    var chatUsers: [String: UserElement] = [:]
-    
-    ///fix it
-    var myDetail: UserElement = UserElement()
     var isGroup: Bool = false
     
     
 //    fileprivate var viewloader:UIView?
     
     
-    var socket = WebSocket(url: URL(string: "ws://localhost:1337/message?key=sample")!, protocols: ["chat"])
+     
     
     
     
@@ -168,11 +160,78 @@ class ChatViewController: AppViewController, CNContactViewControllerDelegate, UI
         self.tableView.reloadData()
         self.showBottomButton()
     }*/
+    
+    
+    fileprivate func appendMessageDaa(_ document: [String: Any]) {
+//        print("data: \(diff.document.data())")
+        
+        let data: [String : Any] = document
+        
+        //TODO: handle if user is not in list
+        let chatUserDetails: UserDetailsModel = RoomListViewController.userDetailsList[data["sender_id"] as! String]!
+        
+        let element = ChatModel(documentId: "TODO: Document Id", data: data, senderDetail: chatUserDetails, frame: self.view!.frame )
+        
+        chatListTmp.append(element)
+        print("Chat message: \(element.message)")
+        
+        let groupList: [Date : [ChatModel]] = Dictionary.init(grouping: chatListTmp) { (element) -> Date in
+            return element.createdDate
+        }
+        
+        let groupedKey: [Date] = groupList.keys.sorted()
+        self.tableList.removeAll()
+        groupedKey.forEach { (element) in
+            self.tableList.append(groupList[element] ?? [])
+        }
+        
+        self.tableView.reloadData()
+        self.showBottomButton()
+    }
+    
     var lpgr: UILongPressGestureRecognizer!
+    
+    
+    fileprivate func setUpName(){
+        if (isGroup){
+            
+        } else {
+            if let tmpIndividualDetail = individualDetail{
+                chatUserName.text = tmpIndividualDetail.firstName
+                chatUserOnlineStatus.text = tmpIndividualDetail.is_online ? "Online" : tmpIndividualDetail.last_seen
+                
+                
+//                chatUserProfile.sd_setImage(with: NetworkManager.URL_ABOUT_US, completed: { (image, error, cache, url) in
+//
+//                })
+            }
+            
+        }
+        
+    }
+    fileprivate func blockedByOtherUser() {
+        ///Check that other user muted you or not
+        
+            self.attatchmentWrapperView.isHidden = true
+            self.blockedWrapper.isHidden = false
+            self.recordingWrapper.isHidden = true
+            self.messageComponentWrapper.isHidden = true
+       
+    }
+    
+    
+    fileprivate func unBlockedByOtherUser() {
+        ///Check that other user muted you or not
+        
+            self.attatchmentWrapperView.isHidden = true
+            self.blockedWrapper.isHidden = true
+            self.recordingWrapper.isHidden = true
+            self.messageComponentWrapper.isHidden = false
+         
+    }
+    
     fileprivate func initViews() {
         //PlacePicker.configure(googleMapsAPIKey: "AIzaSyDttGN_V5875mq-jsXlT49Sp22aj4o1Wik", placesAPIKey: "AIzaSyDttGN_V5875mq-jsXlT49Sp22aj4o1Wik")
-        
-        
         
         //MARK:Setup initial UI
         ///Hide All The Input view so we can show leter base on are we muted or not
@@ -199,25 +258,25 @@ class ChatViewController: AppViewController, CNContactViewControllerDelegate, UI
         viewloader = getActivityIndicator("Loading..." )
         
         
-        ///Setup loang press Recognizer for table cell
-          lpgr = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress))
-        lpgr.minimumPressDuration = 0.05
-        
-        //        lpgr.delaysTouchesBegan = false
-        lpgr.delegate = self
-        lpgr.cancelsTouchesInView = false
-        self.tableView.addGestureRecognizer(lpgr)
+//        ///Setup loang press Recognizer for table cell
+//        lpgr = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress))
+//        lpgr.minimumPressDuration = 0.05
+//
+//        //        lpgr.delaysTouchesBegan = false
+//        lpgr.delegate = self
+//        lpgr.cancelsTouchesInView = false
+//        self.tableView.addGestureRecognizer(lpgr)
         
         
         
         ///Setup Observer for move up when keyboard open
-        NotificationCenter.default.addObserver(self, selector: #selector( keyboardFrameChangeNotification(notification:)), name: UIResponder.keyboardWillShowNotification, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector( keyboardFrameChangeNotification(notification:)), name: UIResponder.keyboardWillHideNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardFrameChangeNotification(notification:)), name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardFrameChangeNotification(notification:)), name: UIResponder.keyboardWillHideNotification, object: nil)
         
         
         
         
-        ///Setup Add AudioPlayer
+        //Setup Add AudioPlayer
         if let player: SSAudioPlayer = SSAudioPlayer.initialize(with: self.audioPlayerWrapper.bounds) {
             
             player.delegate = self
@@ -229,6 +288,11 @@ class ChatViewController: AppViewController, CNContactViewControllerDelegate, UI
             //            player.playVideo()
             
         }
+        
+        
+        //Set Group Name or user name
+        setUpName()
+//        setMuteView()
     }
     
     
@@ -240,6 +304,50 @@ class ChatViewController: AppViewController, CNContactViewControllerDelegate, UI
         
     }
     
+    fileprivate func allMessage() {
+        let json: [String: Any] = ["request": "message",
+                                   "type": "allMessage",
+                                   "room": roomId]
+        if let jsonString: NSString = JsonOperation.toJsonStringFrom(dictionary: json) {
+            SocketManager.shared.sendMessageToSocket(message: jsonString as String, observer: self)
+        }
+    }
+    
+    
+    fileprivate func allBlockList() {
+        let json: [String: Any] = ["request": "block_user",
+                                   "type": "allBlockUser",
+                                   "user": UsernameViewController.tmpUserLogin.userId]
+        if let jsonString: NSString = JsonOperation.toJsonStringFrom(dictionary: json) {
+            SocketManager.shared.sendMessageToSocket(message: jsonString as String, observer: self)
+        }
+    }
+    
+    fileprivate func blockOrUnblock(isBlock: Bool) {
+        let json: [String: Any] = ["request": "block_user",
+                                   "type": "blockUser",
+                                   "blockedBy": UsernameViewController.tmpUserLogin.userId,
+                                   "blockedTo": individualDetail?.userId,
+                                   "isBlock": isBlock,
+        
+        
+        ]
+        if let jsonString: NSString = JsonOperation.toJsonStringFrom(dictionary: json) {
+            SocketManager.shared.sendMessageToSocket(message: jsonString as String, observer: self)
+        }
+    }
+    
+    
+    fileprivate func getRoomInfo() {
+        let json: [String: Any] = ["request": "room",
+                                   "type": "roomsDetails",
+                                   "roomId": roomId
+        ]
+        if let jsonString: NSString = JsonOperation.toJsonStringFrom(dictionary: json) {
+            SocketManager.shared.sendMessageToSocket(message: jsonString as String, observer: self)
+        }
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         initCollection()
@@ -248,14 +356,17 @@ class ChatViewController: AppViewController, CNContactViewControllerDelegate, UI
 //        view.addSubview(viewloader!)
         
         
-        socket.delegate = self
-        socket.connect()
+        SocketManager.shared.registerToScoket(observer: self )
         
-        
-        
+        allMessage()
 //        PlacePicker.configure(googleMapsAPIKey: "AIzaSyAfvqQWoCMn0gkhAhFEPvPSe-YZu4lXJNY", placesAPIKey: "AIzaSyAfvqQWoCMn0gkhAhFEPvPSe-YZu4lXJNY")
-        
+         
         initViews()
+        
+        
+        if individualDetail == nil {
+            getRoomInfo()
+        }
         
 //        initFirebaseInstances()
 //
@@ -299,13 +410,15 @@ class ChatViewController: AppViewController, CNContactViewControllerDelegate, UI
 //        let vc = self.storyboard?.instantiateViewController(withIdentifier: "NotificationViewController") as! NotificationViewController
 //        self.navigationController?.pushViewController(vc, animated: true)
     }
-    
-    deinit {
-        socket.disconnect(forceTimeout: 0)
-        socket.delegate = nil
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        audioPlayer?.releaseMemory()
+        audioRecorder.releaseMemory()
+        SocketManager.shared.unregisterToSocket(observer: self)
     }
-    
-    
+    deinit {
+        print("deinit Called:: ChatViewController ")
+    }
     
     @IBAction func didTapCancelReplay(_ sender: Any) {
         replayIndicatorWrapper.isHidden = true
@@ -331,6 +444,7 @@ class ChatViewController: AppViewController, CNContactViewControllerDelegate, UI
 //                }
                 
                 self.isMute = !self.isMute
+                self.blockOrUnblock(isBlock: self.isMute);
                 ///Fix it
 //                self.threadDocReference.updateData([self.currentUser.uid + ".isMute": self.isMute])
             }
@@ -391,7 +505,7 @@ class ChatViewController: AppViewController, CNContactViewControllerDelegate, UI
     }
     
     @IBAction func didTapContact(_ sender: Any) {
-        let vc = AppStoryboard.Chat.viewController(viewControllerClass: PickContactViewController.self)
+        let vc = PickContactViewController()
         vc.delegateContact = self
         self.navigationController?.pushViewController(vc, animated: true)
         attatchmentWrapperView.isHidden = true
@@ -472,11 +586,11 @@ extension ChatViewController {
     @objc fileprivate func keyboardFrameChangeNotification(notification: Notification) {
         attatchmentWrapperView.isHidden = true
         if let userInfo = notification.userInfo {
-            let endFrame = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect
+            _ = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect
             let animationDuration = userInfo[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double ?? 0
             let animationCurveRawValue = (userInfo[UIResponder.keyboardAnimationCurveUserInfoKey] as? Int) ?? Int(UIView.AnimationOptions.curveEaseInOut.rawValue)
             let animationCurve = UIView.AnimationOptions(rawValue: UInt(animationCurveRawValue))
-            let isKeyboardShowing = notification.name == UIResponder.keyboardWillShowNotification
+            _ = notification.name == UIResponder.keyboardWillShowNotification
             
             
             ///Fix it
@@ -659,12 +773,20 @@ extension ChatViewController {
     }
     fileprivate func sendMessage(message: String, type: MessageType, messageContent: [String: Any] = [:], date: Date = Date()) {
         
-        let json: [String: Any] = ["type": "addMessage",
-                                   "message": "asdasd",
-                                   "roomId": "1231231",
-                                   "messageData": ["message": "asdasd", "roomId": "1231231"]]
+        let json: [String: Any] = [
+            "request": Constants.Request.REQUEST_TYPE_MESSAGE,
+            "type": "addMessage",
+            "roomId": roomId,
+            "room": roomId,
+            "message": message,
+            "message_type": type.rawValue,
+            "sender_id": UsernameViewController.tmpUserLogin.userId,
+            "receiver_id": "123456",
+            
+            "message_content": messageContent
+        ]
         if let jsonString: NSString = JsonOperation.toJsonStringFrom(dictionary: json) {
-            self.socket.write(string: jsonString as String)
+            SocketManager.shared.sendMessageToSocket(message: jsonString as String, observer: self)
         }
         
         
@@ -714,7 +836,7 @@ extension ChatViewController: PlacesPickerDelegate {
     func placePickerController(controller: PlacePickerController, didSelectPlace place: GMSPlace) {
         controller.navigationController?.dismiss(animated: true, completion: nil)
         
-        let messageDictionary = [
+        _ = [
             "name": place.name ?? "",
             "address": place.formattedAddress ?? "",
             "latitude": String(place.coordinate.latitude),
@@ -864,9 +986,11 @@ extension ChatViewController: UITableViewDelegate, UITableViewDataSource {
         let label = DateHeaderLabel()
         label.backgroundColor = UIColor.AppBlack
         label.font = UIFont.appFont(size: 13)
-        if let element = self.tableList[section].first {
+        if let element: ChatModel = self.tableList[section].first {
 //            label.text = element.createdDate.toString(format: "yyyy-MM-dd")
-        }else{
+            
+            label.text = element.message_on
+        } else{
             label.text = "Title \(section)"
         }
         
@@ -936,7 +1060,7 @@ extension ChatViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let element: ChatModel = self.tableList[indexPath.section][indexPath.row]
-        if(element.sender_detail.userID == myDetail.userID) {
+        if(element.sender_detail.userId == UsernameViewController.tmpUserLogin.userId) {
             if(element.message_type == MessageType.text || element.message_type == MessageType.replay ) {
                 let identifier = "RightTextTableViewCell"
                 var cell: RightTextTableViewCell! = tableView.dequeueReusableCell(withIdentifier: identifier) as? RightTextTableViewCell
@@ -1448,7 +1572,7 @@ extension ChatViewController: UITableViewDelegate, UITableViewDataSource {
             //            vc.__video = url
             //            self.navigationController?.pushViewController(vc, animated: true)
         } else{
-            let vc: DocDetailViewController = AppStoryboard.Chat.viewController(viewControllerClass: DocDetailViewController.self)
+            let vc: DocDetailViewController = DocDetailViewController()
             if let link:URL = URL(string: media.file_url) {
                 vc.docUrlDetail = link
             }
@@ -1580,7 +1704,7 @@ extension ChatViewController:UIImagePickerControllerDelegate, UINavigationContro
                     
                     break
                 case .photo:
-                    let size = asset.fileSize
+                    _ = asset.fileSize
                     //                    asset.fetchImageData { (imageData, info) in
                     //                        print(imageData)
                     //                    }
@@ -1603,7 +1727,7 @@ extension ChatViewController:UIImagePickerControllerDelegate, UINavigationContro
         dismiss(animated: true, completion: nil)
         print(info)
         
-        if let pickedImage = info[UIImagePickerController.InfoKey.originalImage] as? UIImage {
+        if (info[UIImagePickerController.InfoKey.originalImage] as? UIImage) != nil {
             //            waitTextLabel.text = "Please wait file uploading..."
 //            NetworkManager.uploadChatFile( image: pickedImage  ) { (success, res) in
 //                self.waitTextLabel.text = ""
@@ -1996,7 +2120,7 @@ extension ChatViewController: UploadStatusDelegate {
             //                self.viewloader?.removeFromSuperview()
             
             switch response {
-            case .failed(let errorMessage ):
+            case .failed( _ ):
                 //                    self.showToast(message: errorMessage)
                 break
             case .success(let response ):
@@ -2029,55 +2153,143 @@ extension ChatViewController: UploadStatusDelegate {
 
 
 // MARK: - WebSocketDelegate
-extension ChatViewController: WebSocketDelegate {
-    func websocketDidConnect(socket: WebSocketClient) {
-        print("Web socket connected");
-        let json: [String: Any] = ["type": "allMessage"]
-        if let jsonString: NSString = JsonOperation.toJsonStringFrom(dictionary: json) {
-            self.socket.write(string: jsonString as String)
+extension ChatViewController: SocketObserver {
+    func registerFor() -> [ResponseType] {
+        return [.message,
+                .userModified,
+                .allBlockUser,
+                .blockUserModified,
+                .roomsDetails
+        ]
+    }
+    
+    func brodcastSocketMessage(to observerWithIdentifire: ResponseType, statusCode: Int, data: [String : Any], message: String) {
+        
+        print(message)
+        if observerWithIdentifire == .message {
+            if (statusCode == 200){
+                if let data: [[String : Any]] = data["data"] as? [[String: Any]] {
+//                    tableList = [data.map {(element) -> ChatModel in
+//                        return ChatModel(documentId: "asdasd", data: element, senderDetail: UserElement(), frame: self.view.frame)
+//                    }]
+//                    tableView.reloadData()
+                    
+                    
+                    data.forEach {(element) in
+                        appendMessageDaa(element)
+                    }
+                }
+            } else if (statusCode == 201){
+                
+                if let data: [String : Any] = data["data"] as? [String: Any] {
+                    appendMessageDaa(data)
+//                    tableList[0].append(ChatModel(documentId: "asdasd", data: data, senderDetail: UserElement(), frame: self.view.frame) )
+//                    tableView.reloadData()
+                }
+                
+               
+            }
+           
+        } else if observerWithIdentifire == .userModified {
+            print("ChatViewController", observerWithIdentifire, message)
+            if (statusCode == 200){
+                if let data: [String : Any] = data["data"] as? [String: Any] {
+                    let updatedUserInfo = UserDetailsModel.giveObj(cdic: data)
+                    RoomListViewController.userDetailsList[updatedUserInfo.userId] = updatedUserInfo
+                    if (individualDetail?.userId == updatedUserInfo.userId){
+                        individualDetail = updatedUserInfo
+                        setUpName()
+                    }
+                }
+            }
+        } else if observerWithIdentifire == .blockUserModified {
+            print("ChatViewController", observerWithIdentifire, message)
+            if (statusCode == 200){
+                if !isGroup {
+                    if let data: [String : Any] = data["data"] as? [String: Any] {
+                        let blockItem = BlockUserModel(cdic: data)
+                        
+                        if blockItem.blockedTo == UsernameViewController.tmpUserLogin.userId &&
+                            blockItem.blockedBy == individualDetail?.userId && blockItem.isBlock {
+                            blockedByOtherUser();
+                             
+                        }
+                        
+                        if blockItem.blockedTo == UsernameViewController.tmpUserLogin.userId &&
+                            blockItem.blockedBy == individualDetail?.userId && !blockItem.isBlock {
+                            unBlockedByOtherUser();
+                            
+                        }
+                        
+                        if blockItem.blockedTo == individualDetail?.userId &&
+                            blockItem.blockedBy == UsernameViewController.tmpUserLogin.userId && blockItem.isBlock {
+                            isMute = true;
+                             
+                        }
+                    }
+                }
+            }
+        } else if observerWithIdentifire == .allBlockUser {
+            print("ChatViewController", observerWithIdentifire, message)
+            if (statusCode == 200){
+                if !isGroup {
+                    if let data: [[String : Any]] = data["data"] as? [[String: Any]] {
+                        let blockUserList = BlockUserModel.giveList(list: data)
+                        for blockItem in blockUserList {
+                            if blockItem.blockedTo == UsernameViewController.tmpUserLogin.userId &&
+                                blockItem.blockedBy == individualDetail?.userId && blockItem.isBlock {
+                                blockedByOtherUser();
+                                break;
+                            }
+                            
+                            if blockItem.blockedTo == UsernameViewController.tmpUserLogin.userId &&
+                                blockItem.blockedBy == individualDetail?.userId && !blockItem.isBlock {
+                                unBlockedByOtherUser();
+                                break;
+                            }
+                            
+                            if blockItem.blockedTo == individualDetail?.userId &&
+                                blockItem.blockedBy == UsernameViewController.tmpUserLogin.userId && blockItem.isBlock {
+                                isMute = true;
+                                break;
+                            }
+                            
+                        }
+                        
+                    }
+                }
+            }
+        } else if observerWithIdentifire == .roomsDetails {
+            print("ChatViewController", observerWithIdentifire, message)
+            if (statusCode == 200){
+                if let data: [String : Any] = data["data"] as? [String: Any] {
+                    
+                    
+                    let tmpUserList = UserDetailsModel.giveList(list: data["userList"] as? [[String: Any]] ?? [])
+                    
+                    tmpUserList.forEach { (element) in
+                        RoomListViewController.userDetailsList[element.userId] = element
+                    }
+                    
+                    
+                    let roomList = ChatRoomModel.giveList(list: data["roomList"] as? [[String: Any]] ?? [])
+                    if (roomList.count > 0 ){
+                       individualDetail = RoomListViewController.userDetailsList[roomList[0].individualUserId]
+                    }
+                    
+                    
+                    setUpName()
+                    ///TODO:-
+                    
+                }
+                
+            }
         }
-        
+        //        chatListTmp = ChatModel.giveList(list: jsonDict, userId: "")
     }
     
-    func websocketDidDisconnect(socket: WebSocketClient, error: Error?) {
-//        performSegue(withIdentifier: "websocketDisconnected", sender: self)
-    }
     
-    func websocketDidReceiveMessage(socket: WebSocketClient, text: String) {
-        /* Message format:
-         * {"type":"message","data":{"time":1472513071731,"text":"😍","author":"iPhone Simulator","color":"orange"}}
-         */
-        print("Message Receved")
-        print(text)
-        
-        
-         
-        
-        guard let data = text.data(using: .utf16),
-              let jsonData = try? JSONSerialization.jsonObject(with: data),
-              let jsonDict = jsonData as? [[String: Any]] else { return }
-        
-        
-        tableList = [jsonDict.map {(element) -> ChatModel in
-            return ChatModel(documentId: "asdasd", data: element, senderDetail: UserElement(), frame: self.view.frame)
-        }]
-        
-//        chatListTmp = ChatModel.giveList(list: jsonDict, userId: "")
-        tableView.reloadData()
-        
-        
-        
-        
-//        if messageType == "message",
-//           let messageData = jsonDict["data"] as? [String: Any],
-//           let messageAuthor = messageData["author"] as? String,
-//           let messageText = messageData["text"] as? String {
-//
-//
-//        }
-    }
-    
-    func websocketDidReceiveData(socket: WebSocketClient, data: Data) {
-        print(data)
+    func socketConnection(status: SocketConectionStatus) {
+        print("websocket connected!!")
     }
 }

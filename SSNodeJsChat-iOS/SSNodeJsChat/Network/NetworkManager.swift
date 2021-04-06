@@ -912,7 +912,7 @@ class NetworkManager {
 						completion(.failed("Something went wrong!!"))
 					}
 				}
-			case .failure(let encodingError):
+            case .failure( _):
 				completion(.failed("Something went wrong!!"))
 			}
 		}
@@ -997,7 +997,7 @@ class NetworkManager {
 						completion(.failed("Something went wrong!!"))
 					}
 				}
-			case .failure(let encodingError):
+            case .failure( _):
 				completion(.failed("Something went wrong!!"))
 			}
 		}
@@ -1049,7 +1049,7 @@ class NetworkManager {
 						completion(.failed("Something went wrong!!"))
 					}
 				}
-			case .failure(let encodingError):
+            case .failure( _):
 				completion(.failed("Something went wrong!!"))
 			}
 		}

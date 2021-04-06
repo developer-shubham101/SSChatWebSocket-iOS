@@ -89,15 +89,6 @@ class Utils {
 }
 
 extension String {
-    var isEmail:Bool {
-        get {
-            let regex = try! NSRegularExpression(pattern: "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$")
-            let range = NSRange(location: 0, length: self.utf16.count)
-            return regex.firstMatch(in: self, range: range) != nil
-        }
-        
-    }
-    
     var getMediaUrl: URL? {
         get {
             if (self == ""){
@@ -106,22 +97,8 @@ extension String {
             return URL(string: "\(NetworkManager.STORAGE_URL)\(self)")
         }
     }
-    
-    func toMD5() -> String {
-        let messageData = self.data(using:.utf8)!
-        var digestData = Data(count: Int(CC_MD5_DIGEST_LENGTH))
-        
-        _ = digestData.withUnsafeMutableBytes {digestBytes in
-            messageData.withUnsafeBytes {messageBytes in
-                CC_MD5(messageBytes, CC_LONG(messageData.count), digestBytes)
-            }
-        }
-        
-        return digestData.map { String(format: "%02hhx", $0 as CVarArg) }.joined()
-    }
 }
-
-
+ 
 
 class ThumbNail {
 //    static func getThumbnailFromUrl(_ url: String, defaultImage: Bool = true, _ completion: @escaping ((_ image: UIImage?)->Void)) {
@@ -182,7 +159,7 @@ class ThumbNail {
             
             return thumbnail
             
-        } catch (let error) {
+        } catch ( _) {
             return nil
         }
     }

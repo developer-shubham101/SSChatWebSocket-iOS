@@ -89,6 +89,10 @@
 		<string>Roboto-ThinItalic</string>
 	</array>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>App require </string>
+	<string>$(PRODUCT_NAME) require </string>
+	<key>NSContactsUsageDescription</key>
+	<string>$(PRODUCT_NAME) contact use</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>$(PRODUCT_NAME) Photo Library</string>
 </dict>
 </plist>

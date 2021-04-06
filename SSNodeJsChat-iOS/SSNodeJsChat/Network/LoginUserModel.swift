@@ -85,7 +85,7 @@ class LoginUserModel{
 	}
 	
 	func update(userData: [String: Any])  {
-		if var oldData = UserDefaults.standard.value(forKey: UserDefaultKey.USER_INFO) as? [String:Any] {
+        if let oldData = UserDefaults.standard.value(forKey: UserDefaultKey.USER_INFO) as? [String:Any] {
 //			oldData.merge(dictionaries: userData)
 			print(oldData)
 			UserDefaults.standard.set(oldData, forKey: UserDefaultKey.USER_INFO)
