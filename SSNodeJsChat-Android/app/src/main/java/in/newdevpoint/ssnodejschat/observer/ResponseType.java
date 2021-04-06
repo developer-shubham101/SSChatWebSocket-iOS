@@ -10,6 +10,7 @@ public enum ResponseType {
     RESPONSE_TYPE_LOGIN("login"),
     RESPONSE_TYPE_LOGIN_OR_CREATE("loginOrCreate"),
     RESPONSE_TYPE_USER_MODIFIED("userModified"),
+    RESPONSE_TYPE_ROOM_DETAILS("roomsDetails"),
     RESPONSE_TYPE_USER_BLOCK_MODIFIED("blockUser"),
     RESPONSE_TYPE_USER_ALL_BLOCK("allBlockUser");
 

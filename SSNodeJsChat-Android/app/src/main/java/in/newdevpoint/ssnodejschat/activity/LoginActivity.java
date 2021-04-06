@@ -33,11 +33,13 @@ class TmpUserModel {
     String email;
     String password;
     String userId;
+    String name;
 
-    public TmpUserModel(String email, String password, String userId) {
+    public TmpUserModel(String email, String password, String userId, String name) {
         this.email = email;
         this.password = password;
         this.userId = userId;
+        this.name = name;
     }
 }
 
@@ -45,13 +47,13 @@ public class LoginActivity extends AppCompatActivity implements WebSocketObserve
     private static final String EMAIL = "email";
     private static final String TAG = "LoginActivity";
     private final TmpUserModel[] listOfTmpUsers = {
-            new TmpUserModel("anil@yopmail.com", "123456", "1"),
-            new TmpUserModel("amit@yopmail.com", "123456", "2"),
-            new TmpUserModel("shubham@yopmail.com", "123456", "3"),
-            new TmpUserModel("ali@yopmail.com", "123456", "4"),
-            new TmpUserModel("samreen@yopmail.com", "123456", "5")
+            new TmpUserModel("anil@yopmail.com", "123456", "1", "Anil"),
+            new TmpUserModel("amit@yopmail.com", "123456", "2", "Amit"),
+            new TmpUserModel("shubham@yopmail.com", "123456", "3", "Shubham"),
+            new TmpUserModel("ali@yopmail.com", "123456", "4", "Ali"),
+            new TmpUserModel("samreen@yopmail.com", "123456", "5", "Samreen")
     };
-    private final TmpUserModel tmpUserModel = listOfTmpUsers[2];
+    private final TmpUserModel tmpUserModel = listOfTmpUsers[1];
     //    private Waiting mWaitingDialog;
     private ActivityLoginBinding loginBinding;
 
@@ -65,26 +67,7 @@ public class LoginActivity extends AppCompatActivity implements WebSocketObserve
         WebSocketSingleton.getInstant().register(this);
 
 
-        if (PreferenceUtils.isUserLogin(this)) {
-            UserDetails.myDetail = PreferenceUtils.getRegisterUser(this);
-            startActivity(new Intent(LoginActivity.this, RoomListActivity.class));
 
-
-            JSONObject jsonObject = new JSONObject();
-            try {
-                Toast.makeText(this, PreferenceUtils.getRegisterUser(this).getId() + " User Id", Toast.LENGTH_SHORT).show();
-                jsonObject.put("user_id", PreferenceUtils.getRegisterUser(this).getId());
-
-                jsonObject.put("type", "create");
-                jsonObject.put(APIClient.KeyConstant.REQUEST_TYPE_KEY, APIClient.KeyConstant.REQUEST_TYPE_CREATE_CONNECTION);
-//            mWaitingDialog.show();
-
-                WebSocketSingleton.getInstant().sendMessage(jsonObject);
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
 
 
         loginBinding.loginUserEmail.setText(tmpUserModel.email);
@@ -116,6 +99,7 @@ public class LoginActivity extends AppCompatActivity implements WebSocketObserve
         try {
             jsonObject.put("userId", tmpUserModel.userId);
             jsonObject.put("userName", loginBinding.loginUserEmail.getText().toString());
+            jsonObject.put("firstName", tmpUserModel.name);
             jsonObject.put("password", loginBinding.loginPassword.getText().toString());
             jsonObject.put("fcm_token", PreferenceUtils.getDeviceToken(this));
             jsonObject.put("type", "loginOrCreate");

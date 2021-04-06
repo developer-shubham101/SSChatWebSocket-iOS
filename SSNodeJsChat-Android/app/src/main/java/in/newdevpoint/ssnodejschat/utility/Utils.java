@@ -20,25 +20,6 @@ public class Utils {
 		return APIClient.IMAGE_URL + imageUrl;
 	}
 
-	public static boolean isImage(String fileUrl) {
-		String lowerCaseFileUrl = fileUrl.toLowerCase();
-		return lowerCaseFileUrl.endsWith("jpg") || lowerCaseFileUrl.endsWith("png") || lowerCaseFileUrl.endsWith("gif") || lowerCaseFileUrl.endsWith("PDF") || lowerCaseFileUrl.endsWith("jpeg");
-
-	}
-
-	public static boolean isVideo(String fileUrl) {
-		String lowerCaseFileUrl = fileUrl.toLowerCase();
-		return lowerCaseFileUrl.endsWith("mov") ||
-				fileUrl.endsWith("ogg") ||
-				fileUrl.endsWith("MP2") ||
-				fileUrl.endsWith("mpeg") ||
-				fileUrl.endsWith("mpe") ||
-				fileUrl.endsWith("mpv") ||
-				fileUrl.endsWith("mp4") ||
-				fileUrl.endsWith("wmv") ||
-				fileUrl.endsWith("m4p") ||
-				fileUrl.endsWith("mpg");
-	}
 
 	@RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
 	public static Bitmap blurRenderScript(Context context, Bitmap srcBitmap, int radius) {

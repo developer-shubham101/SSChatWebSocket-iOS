@@ -16,6 +16,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.databinding.DataBindingUtil;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.downloader.Error;
@@ -163,8 +164,9 @@ public class ChatAdapter extends StickHeaderRecyclerView<ChatModel, HeaderDataIm
     @Override
     public void bindHeaderData(View header, int headerPosition) {
 
-        /*TextView tv = header.findViewById(R.id.tvHeader);
-        tv.setText(String.valueOf(headerPosition / 5));*/
+        TextView tv = header.findViewById(R.id.tvHeader);
+        HeaderDataImpl object = getHeaderDataInPosition(headerPosition);
+        tv.setText(object.getTitle());
     }
 
     public interface ChatCallbacks {
@@ -605,6 +607,7 @@ public class ChatAdapter extends StickHeaderRecyclerView<ChatModel, HeaderDataIm
     }
 
     abstract class MediaViewHolder extends BaseViewHolder implements HolderCallback {
+
 
         private static final String TAG = "MediaViewHolder";
 

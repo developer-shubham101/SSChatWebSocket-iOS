@@ -6,6 +6,7 @@ import androidx.annotation.LayoutRes;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 import in.newdevpoint.ssnodejschat.stickyheader.stickyData.HeaderData;
 
@@ -19,7 +20,7 @@ public class HeaderDataImpl implements HeaderData {
 
 	public HeaderDataImpl(@LayoutRes int layoutResource, Date date) {
 		this.layoutResource = layoutResource;
-		this.title = new SimpleDateFormat("yyyy-MM-dd").format(date);
+		this.title = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(date);
 	}
 
 	public String getTitle() {

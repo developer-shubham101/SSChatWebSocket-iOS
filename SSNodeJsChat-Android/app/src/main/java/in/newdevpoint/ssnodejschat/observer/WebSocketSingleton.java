@@ -21,7 +21,7 @@ import okhttp3.WebSocketListener;
 
 // Uses the Subject interface to update all Observers
 
-public class WebSocketSingleton extends WebSocketListener implements DownloadSubject {
+public class WebSocketSingleton extends WebSocketListener implements WebSocketSubject {
     private static final int NORMAL_CLOSURE_STATUS = 10000;
 
     private static final String TAG = "DownloadUtility";

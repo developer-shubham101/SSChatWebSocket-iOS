@@ -13,7 +13,6 @@ import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.CancellationSignal;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.ContactsContract;
@@ -34,6 +33,7 @@ import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.downloader.OnDownloadListener;
@@ -49,17 +49,14 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -77,10 +74,12 @@ import in.newdevpoint.ssnodejschat.fragment.UploadFileProgressFragment;
 import in.newdevpoint.ssnodejschat.model.ChatModel;
 import in.newdevpoint.ssnodejschat.model.ContactModel;
 import in.newdevpoint.ssnodejschat.model.FSGroupModel;
+import in.newdevpoint.ssnodejschat.model.FSRoomModel;
 import in.newdevpoint.ssnodejschat.model.FSUsersModel;
 import in.newdevpoint.ssnodejschat.model.LocationModel;
 import in.newdevpoint.ssnodejschat.model.MediaMetaModel;
 import in.newdevpoint.ssnodejschat.model.MediaModel;
+import in.newdevpoint.ssnodejschat.model.RoomResponseModel;
 import in.newdevpoint.ssnodejschat.model.UploadFileMode;
 import in.newdevpoint.ssnodejschat.model.UserBlockModel;
 import in.newdevpoint.ssnodejschat.observer.ResponseType;
@@ -89,8 +88,10 @@ import in.newdevpoint.ssnodejschat.observer.WebSocketSingleton;
 import in.newdevpoint.ssnodejschat.stickyheader.stickyView.StickHeaderItemDecoration;
 import in.newdevpoint.ssnodejschat.utility.DownloadUtility;
 import in.newdevpoint.ssnodejschat.utility.FileOpenUtility;
+import in.newdevpoint.ssnodejschat.utility.FileUtils;
 import in.newdevpoint.ssnodejschat.utility.MD5;
 import in.newdevpoint.ssnodejschat.utility.PermissionClass;
+import in.newdevpoint.ssnodejschat.utility.StringUtilities;
 import in.newdevpoint.ssnodejschat.utility.UserDetails;
 import in.newdevpoint.ssnodejschat.utility.Utils;
 import in.newdevpoint.ssnodejschat.webService.APIClient;
@@ -112,7 +113,6 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     private static final int REQUEST_READ_STORAGE_FOR_UPLOAD_VIDEO = 4;
     private static final int REQUEST_RECORD_AUDIO_PERMISSION = 5;
     private static final int REQUEST_ADD_CONTACT = 8;
-    private static final String VIDEO_DIRECTORY = "/demonuts";
     private static final int REQUEST_SELECT_CONTACTS = 9;
 
     private static final int GALLERY = 1;
@@ -198,6 +198,8 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
 
         binding.audioPlayerFragment.setVisibility(View.GONE);
 
+        binding.chatGoToBottom.setVisibility(View.GONE);
+
 
         setAudioPlayer();
 
@@ -214,16 +216,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
 
         parseExtras();
 
-        if (_isGroup) {
-            setGroupDetails();
-        } else {
-            setIndividualDetails();
-        }
-
         WebSocketSingleton.getInstant().register(this);
-        joinCommand();
-        getBlockList();
-
 
     }
 
@@ -231,7 +224,30 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         _roomId = getIntent().getStringExtra(ChatActivity.INTENT_EXTRAS_KEY_ROOM_ID);
         _isGroup = getIntent().getBooleanExtra(ChatActivity.INTENT_EXTRAS_KEY_IS_GROUP, false);
         _groupDetails = (FSGroupModel) getIntent().getSerializableExtra(ChatActivity.INTENT_EXTRAS_KEY_GROUP_DETAILS);
-        _senderDetails = (FSUsersModel) getIntent().getSerializableExtra(ChatActivity.INTENT_EXTRAS_KEY_SENDER_DETAILS);
+//        _senderDetails = (FSUsersModel) getIntent().getSerializableExtra(ChatActivity.INTENT_EXTRAS_KEY_SENDER_DETAILS);
+
+
+        Serializable tmpSenderDetails = getIntent().getSerializableExtra(ChatActivity.INTENT_EXTRAS_KEY_SENDER_DETAILS);
+        if (tmpSenderDetails != null) {
+            _senderDetails = (FSUsersModel) tmpSenderDetails;
+
+            addChatMenu();
+
+
+            if (_isGroup) {
+                setGroupDetails();
+            } else {
+                setIndividualDetails();
+            }
+
+            joinCommand();
+            getBlockList();
+
+        } else {
+            getRoomInfo();
+        }
+
+
     }
 
     private void setIndividualDetails() {
@@ -254,6 +270,17 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
+    private void getRoomInfo() {
+
+        HashMap<String, Object> messageMap = new HashMap<>();
+        messageMap.put("type", "roomsDetails");
+        messageMap.put("roomId", _roomId);
+        messageMap.put(APIClient.KeyConstant.REQUEST_TYPE_KEY, APIClient.KeyConstant.REQUEST_TYPE_ROOM);
+
+        WebSocketSingleton.getInstant().sendMessage(new JSONObject(messageMap));
+    }
+
+
     void addChatMenu() {
         binding.chatMenu.setOnClickListener(v -> {
             PopupMenu popup = new PopupMenu(ChatActivity.this, binding.chatMenu);
@@ -272,9 +299,6 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                         if (!_isGroup) {
                             isBlocked = !isBlocked;
                             // TODO: 27/01/21 Block Code
-                            /*HashMap<String, Object> newValue = new HashMap<>();
-                            newValue.put(currentUser.getUid() + ".isMute", isMute);
-                            threadDocReference.update(newValue);*/
 
                             blockOrUnblock(isBlocked);
 
@@ -392,10 +416,35 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                 noOfNewMessages += 1;
                 binding.chatGoToBottom.setVisibility(View.VISIBLE);
                 binding.chatNewMessageCount.setText(Integer.toString(noOfNewMessages));
+
+                if (noOfNewMessages <= 1) {
+                    LinearLayoutManager layout = ((LinearLayoutManager) binding.chatRecyclerView.getLayoutManager());
+                    layout.scrollToPosition(layout.findLastVisibleItemPosition() + 1);
+                }
+            }
+
+
+            if (chatModel.getSender_detail().getId().equals(UserDetails.myDetail.getId())) {
+                binding.chatRecyclerView.scrollToPosition(adapter.getItemCount() - 1);
+
+
+               /* int offset = binding.chatRecyclerView.computeVerticalScrollOffset();
+                int extent = binding.chatRecyclerView.computeVerticalScrollExtent();
+                int range = binding.chatRecyclerView.computeVerticalScrollRange();
+
+                float percentage = (100.0f * offset / (float)(range - extent));
+                Log.d(TAG, "appendMessage: " + percentage);*/
+//                ((LinearLayoutManager) binding.chatRecyclerView.getLayoutManager()).scrollToPositionWithOffset(2, 20);
             }
 
         }
 
+    }
+
+    private void resetNewMessageCount() {
+        noOfNewMessages = 0;
+        binding.chatGoToBottom.setVisibility(View.GONE);
+        binding.chatNewMessageCount.setText(Integer.toString(noOfNewMessages));
     }
 
     private ChatAdapter setUpRecyclerView() {
@@ -478,6 +527,25 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         binding.chatRecyclerView.setAdapter(adapter);
         binding.chatRecyclerView.setLayoutManager(layoutManager);
         binding.chatRecyclerView.addItemDecoration(new StickHeaderItemDecoration(adapter));
+        binding.chatRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+//                Log.d(TAG, "onScrolled: " + dx + " " + dy);
+//                if (dy > 0) { //check for scroll down
+                LinearLayoutManager layout = ((LinearLayoutManager) binding.chatRecyclerView.getLayoutManager());
+                if (layout.findLastVisibleItemPosition() == adapter.getItemCount() - 1) {
+                    resetNewMessageCount();
+                }
+
+
+//                layout.scrollToPosition();
+
+//                Log.d(TAG, "onScrolled: " + layout.findLastVisibleItemPosition() + " " + adapter.getItemCount());
+
+//                }
+            }
+        });
+
         return adapter;
     }
 
@@ -601,15 +669,16 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.chatGoToBottom: {
                 binding.chatRecyclerView.smoothScrollToPosition(adapter.getItemCount() - 1);
 
-                noOfNewMessages = 0;
-                binding.chatGoToBottom.setVisibility(View.GONE);
-                binding.chatNewMessageCount.setText(Integer.toString(noOfNewMessages));
+                resetNewMessageCount();
 
                 break;
             }
             case R.id.sendButton: {
                 if (!binding.messageArea.getText().toString().isEmpty()) {
-                    sendMessage(binding.messageArea.getText().toString(), ChatModel.MessageType.text, new Date(), new HashMap<>());
+                    String message = binding.messageArea.getText().toString();
+                    String emailFilteredString = StringUtilities.replaceEmailAddressWithStarsInString(message);
+                    String mobileFilteredString = StringUtilities.replaceMobileWithStarsInString(emailFilteredString);
+                    sendMessage(mobileFilteredString, ChatModel.MessageType.text, new HashMap<>());
                     binding.messageArea.setText("");
                 }
                 break;
@@ -680,7 +749,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void sendMessage(String message, ChatModel.MessageType messageType, Date time, HashMap<String, Object> messageContent) {
+    private void sendMessage(String message, ChatModel.MessageType messageType, HashMap<String, Object> messageContent) {
         HashMap<String, Object> messageMap = new HashMap<>();
 
 
@@ -785,7 +854,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                     ArrayList<ContactModel> contactList = gson.fromJson(contacts, type);
 
                     for (ContactModel element : contactList) {
-                        sendMessage("", ChatModel.MessageType.contact, new Date(), element.getList());
+                        sendMessage("", ChatModel.MessageType.contact, element.getList());
                     }
 
 
@@ -899,7 +968,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     private void uploadVideoFormUri(Uri contentURI) {
         String selectedVideoPath = getPath(contentURI);
         Log.d("path", selectedVideoPath);
-        saveVideoToInternalStorage(selectedVideoPath);
+        FileUtils.saveVideoToInternalStorage(selectedVideoPath);
 
         try {
             File thumbnailFile = new File(getCacheDir(), "image.jpg");
@@ -909,21 +978,16 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
             //Convert bitmap to byte array
             try {
                 Bitmap bitmap = null;
-//                if (android.os.Build.VERSION.SDK_INT <= 29) {
-//                    bitmap = ThumbnailUtils.createVideoThumbnail(selectedVideoPath,
-//                            MediaStore.Images.Thumbnails.MINI_KIND);
-//                } else {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                if (android.os.Build.VERSION.SDK_INT <= 29) {
+                    bitmap = ThumbnailUtils.createVideoThumbnail(selectedVideoPath,
+                            MediaStore.Images.Thumbnails.MINI_KIND);
+                } else {
                     // TODO: 4/17/2020 here we will do code for crete thumbnail for latest api version 29 because createVideoThumbnail is deprecated for this version
                     CancellationSignal signal = new CancellationSignal();
                     Size size = new Size(100, 100);
                     File file = new File(selectedVideoPath);
-                    bitmap = ThumbnailUtils.createVideoThumbnail(file,
-                            size, signal);
-
-
+                    bitmap = ThumbnailUtils.createVideoThumbnail(file, size, signal);
                 }
-//                }
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 if (bitmap != null) {
                     bitmap.compress(Bitmap.CompressFormat.PNG, 100 /*ignored for PNG*/, bos);
@@ -975,37 +1039,6 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         uploadFragment.uploadFiles(file, thumb, messageType, messageMeta, this);
     }
 
-    private void saveVideoToInternalStorage(String filePath) {
-        File newFile;
-        try {
-            File currentFile = new File(filePath);
-            File wallpaperDirectory = new File(Environment.getExternalStorageDirectory() + VIDEO_DIRECTORY);
-            newFile = new File(wallpaperDirectory, Calendar.getInstance().getTimeInMillis() + ".mp4");
-
-            if (!wallpaperDirectory.exists()) {
-                wallpaperDirectory.mkdirs();
-            }
-            if (currentFile.exists()) {
-                InputStream in = new FileInputStream(currentFile);
-                OutputStream out = new FileOutputStream(newFile);
-
-                // Copy the bits from instream to outstream
-                byte[] buf = new byte[1024];
-                int len;
-
-                while ((len = in.read(buf)) > 0) {
-                    out.write(buf, 0, len);
-                }
-                in.close();
-                out.close();
-                Log.v("vii", "Video file saved successfully.");
-            } else {
-                Log.v("vii", "Video saving failed. Source file missing.");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     private String getPath(Uri uri) {
         String[] projection = {MediaStore.Video.Media.DATA};
@@ -1157,7 +1190,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                 messageContent.put("file_meta", messageData);
 
 
-                sendMessage("", messageType, date, messageContent);
+                sendMessage("", messageType, messageContent);
 
             }
         }
@@ -1230,7 +1263,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                         setRead();
 
                         ///Move to bottom if user open chat first time
-                        binding.chatRecyclerView.smoothScrollToPosition(adapter.getItemCount() - 1);
+                        binding.chatRecyclerView.scrollToPosition(adapter.getItemCount() - 1);
                     } else if (responseCode == 201) {
                         appendMessage(responseData.getJSONObject("data"), true);
 //                        binding.chatNewMessageCount
@@ -1247,6 +1280,35 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
 //                            binding.chatRecyclerView.scrollToPosition(chattingAdapter.items.size() - 1);
 //                        }
 
+                } else if (ResponseType.RESPONSE_TYPE_ROOM_DETAILS.equalsTo(type)) {
+                    if (statusCode == 200) {
+                        Type type1 = new TypeToken<ResponseModel<RoomResponseModel>>() {
+                        }.getType();
+                        ResponseModel<RoomResponseModel> roomResponseModelResponseModel = new Gson().fromJson(response, type1);
+
+                        for (FSUsersModel element : roomResponseModelResponseModel.getData().getUserList()) {
+                            UserDetails.chatUsers.put(element.getId(), element);
+                        }
+
+
+                        FSRoomModel roomDetails = roomResponseModelResponseModel.getData().getRoomList().get(0);
+
+                        _senderDetails = roomDetails.getSenderUserDetail();
+                        /*for (FSRoomModel elemen  t : roomResponseModelResponseModel.getData().getRoomList()) {
+                            for (String userId : element.getUserList()) {
+                                if (!userId.equals(UserDetails.myDetail.getId())) {
+                                    element.setSenderUserDetail(UserDetails.chatUsers.get(userId));
+                                    break;
+                                }
+                            }
+                        }*/
+
+                        joinCommand();
+                        getBlockList();
+
+                    } else {
+                        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+                    }
                 } else if (ResponseType.RESPONSE_TYPE_USER_MODIFIED.equalsTo(type)) {
                     Log.d(TAG, "received message: " + response);
 
@@ -1283,6 +1345,13 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                         unBlockedByOtherUser();
                     }
 
+                    if (element.getBlockedTo().equals(_senderDetails.getId()) &&
+                            element.getBlockedBy().equals(UserDetails.myDetail.getId()) && element.isBlock()) {
+
+                        isBlocked = true;
+
+                    }
+
                 } else if (ResponseType.RESPONSE_TYPE_USER_ALL_BLOCK.equalsTo(type)) {
                     Log.d(TAG, "received message: " + response);
 
@@ -1305,6 +1374,16 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                                 unBlockedByOtherUser();
                                 break;
                             }
+
+
+                            if (element.getBlockedTo().equals(_senderDetails.getId()) &&
+                                    element.getBlockedBy().equals(UserDetails.myDetail.getId()) && element.isBlock()) {
+
+                                isBlocked = true;
+
+                            }
+
+
                         }
                     }
                 } else {
@@ -1319,7 +1398,6 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void blockedByOtherUser() {
-        isBlocked = true;
         binding.blockedWrapper.setVisibility(View.VISIBLE);
         binding.chatMessageWrapper.setVisibility(View.GONE);
     }
@@ -1340,7 +1418,8 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                 ResponseType.RESPONSE_TYPE_MESSAGES,
                 ResponseType.RESPONSE_TYPE_USER_MODIFIED,
                 ResponseType.RESPONSE_TYPE_USER_BLOCK_MODIFIED,
-                ResponseType.RESPONSE_TYPE_USER_ALL_BLOCK
+                ResponseType.RESPONSE_TYPE_USER_ALL_BLOCK,
+                ResponseType.RESPONSE_TYPE_ROOM_DETAILS
         };
     }
 

@@ -3,10 +3,18 @@ package in.newdevpoint.ssnodejschat.activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import in.newdevpoint.ssnodejschat.R;
+import in.newdevpoint.ssnodejschat.observer.WebSocketSingleton;
+import in.newdevpoint.ssnodejschat.utility.PreferenceUtils;
+import in.newdevpoint.ssnodejschat.utility.UserDetails;
+import in.newdevpoint.ssnodejschat.webService.APIClient;
 
 
 public class SplashActivity extends AppCompatActivity {
@@ -21,10 +29,32 @@ public class SplashActivity extends AppCompatActivity {
             Intent intent = getIntent();
 
             Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
+            handler.postDelayed(() -> {
+
+                if (PreferenceUtils.isUserLogin(this)) {
+                    UserDetails.myDetail = PreferenceUtils.getRegisterUser(this);
+                    startActivity(new Intent(SplashActivity.this, RoomListActivity.class));
+
+
+                    JSONObject jsonObject = new JSONObject();
+                    try {
+                        Toast.makeText(this, PreferenceUtils.getRegisterUser(this).getId() + " User Id", Toast.LENGTH_SHORT).show();
+                        jsonObject.put("user_id", PreferenceUtils.getRegisterUser(this).getId());
+
+                        jsonObject.put("type", "create");
+                        jsonObject.put(APIClient.KeyConstant.REQUEST_TYPE_KEY, APIClient.KeyConstant.REQUEST_TYPE_CREATE_CONNECTION);
+//            mWaitingDialog.show();
+
+                        WebSocketSingleton.getInstant().sendMessage(jsonObject);
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                } else {
                     startActivity(new Intent(SplashActivity.this, LoginActivity.class));
+                }
+
+
 //                    if (PreferenceUtils.getRegisterUser(SplashActivity.this) != null) {
 //                        boolean isLogin = PreferenceUtils.isPrefIsUserLogin(SplashActivity.this);
 //                        int userStatus = PreferenceUtils.getRegisterUser(SplashActivity.this).getStatus();
@@ -44,8 +74,7 @@ public class SplashActivity extends AppCompatActivity {
 //                        startActivity(new Intent(SplashActivity.this, LoginActivity.class));
 //                    }
 //                startActivity(new Intent(SplashActivity.this, LoginActivity.class));
-                    finish();
-                }
+                finish();
             }, SPLASH_DURATION);
 
         }
