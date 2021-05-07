@@ -16,6 +16,7 @@ import java.io.IOException;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
 import okio.BufferedSink;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -75,9 +76,7 @@ public class FileUploader {
     }
 
     private void uploadNext() {
-
         uploadSingleFile();
-
     }
 
     private void uploadSingleFile() {
@@ -101,7 +100,7 @@ public class FileUploader {
         builder.addFormDataPart("room_id", "sample");
         builder.addPart(filePart);
 
-        Call<JsonElement> call;
+        Call<ResponseBody> call;
 
         MultipartBody requestBody = builder.build();
 
@@ -111,14 +110,21 @@ public class FileUploader {
             call = uploadInterface.uploadFile(requestBody, auth_token);
         }
 
-        call.enqueue(new Callback<JsonElement>() {
+        call.enqueue(new Callback<ResponseBody>() {
             @Override
-            public void onResponse(Call<JsonElement> call, retrofit2.Response<JsonElement> response) {
+            public void onResponse(Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
                 if (response.isSuccessful()) {
-                    JsonElement jsonElement = response.body();
-                    Log.d(TAG, "onResponse: " + jsonElement.toString());
-                    String responses = jsonElement.toString();
-                    fileUploaderCallback.onFinish(responses);
+
+
+                    try {
+                        String jsonElement = response.body().string();
+                        Log.d(TAG, "onResponse: " + jsonElement);
+
+                        fileUploaderCallback.onFinish(jsonElement);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
                 } else {
                     fileUploaderCallback.onError();
                 }
@@ -126,7 +132,8 @@ public class FileUploader {
             }
 
             @Override
-            public void onFailure(Call<JsonElement> call, Throwable t) {
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                t.printStackTrace();
                 fileUploaderCallback.onError();
             }
         });
@@ -134,12 +141,20 @@ public class FileUploader {
 
     private interface UploadInterface {
         // @POST("upload")
-        @POST("user-tryster-chat-file")
-        Call<JsonElement> uploadFile(@Body MultipartBody requestBody, @Header("Authorization") String authorization);
+//        @POST("user-tryster-chat-file")
+//        Call<JsonElement> uploadFile(@Body MultipartBody requestBody, @Header("Authorization") String authorization);
+//
+//        //@POST("upload")
+//        @POST("user-tryster-chat-file")
+//        Call<JsonElement> uploadFile(@Body MultipartBody requestBody);
+
+
+        @POST("?url=upload")
+        Call<ResponseBody> uploadFile(@Body MultipartBody requestBody, @Header("Authorization") String authorization);
 
         //@POST("upload")
-        @POST("user-tryster-chat-file")
-        Call<JsonElement> uploadFile(@Body MultipartBody requestBody);
+        @POST("?url=upload")
+        Call<ResponseBody> uploadFile(@Body MultipartBody requestBody);
     }
 
     public interface FileUploaderCallback {
@@ -156,7 +171,6 @@ public class FileUploader {
 
         public PRRequestBody(final File file) {
             mFile = file;
-
         }
 
         @Override
@@ -178,10 +192,9 @@ public class FileUploader {
         public void writeTo(BufferedSink sink) throws IOException {
             long fileLength = mFile.length();
             byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
-            FileInputStream in = new FileInputStream(mFile);
-            long uploaded = 0;
 
-            try {
+            try (FileInputStream in = new FileInputStream(mFile)) {
+                long uploaded = 0;
                 int read;
                 Handler handler = new Handler(Looper.getMainLooper());
                 while ((read = in.read(buffer)) != -1) {
@@ -191,8 +204,6 @@ public class FileUploader {
                     uploaded += read;
                     sink.write(buffer, 0, read);
                 }
-            } finally {
-                in.close();
             }
         }
     }

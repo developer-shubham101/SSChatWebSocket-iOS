@@ -14,19 +14,19 @@ var mongoose = require('mongoose');
 
 var FCM = require('fcm-node');
 
-//SSChat React
-// var serverKey = 'AAAA5sgZE7o: APA91bGdnxQsMAvPjrHmEdcjIWseqPMJA_89mq3Y - Wu9EZXiAtzUjGJx1ldPzEvu2YunT6xeFbzP2sEJkoZYP7Zqip0 - bkzS3YX1KD8yVPm - DGL0RRHUso2Yrd1Rdjxc_B_sH56pnb4d';
+// SSChat React
+var serverKey = 'AAAA5sgZE7o: APA91bGdnxQsMAvPjrHmEdcjIWseqPMJA_89mq3Y - Wu9EZXiAtzUjGJx1ldPzEvu2YunT6xeFbzP2sEJkoZYP7Zqip0 - bkzS3YX1KD8yVPm - DGL0RRHUso2Yrd1Rdjxc_B_sH56pnb4d';
 
 //Tryst
-var serverKey = 'AAAAP4u6PVI:APA91bEWx0iGiQT4_4RYXd5sW3eeQ3ThQwGfA2scuWWqrvObMs0OMiIpsPhBvcrXlW_oSJAJHw_qjq0ZDOeD1gI84Dd_5kLLJ1OM0XHwexvtdj5tsWftCLEb_dsQf0cZqFNQfZSUhati'; //put your server key here
-var fcm = new FCM(serverKey);
+// var serverKey = 'AAAAP4u6PVI:APA91bEWx0iGiQT4_4RYXd5sW3eeQ3ThQwGfA2scuWWqrvObMs0OMiIpsPhBvcrXlW_oSJAJHw_qjq0ZDOeD1gI84Dd_5kLLJ1OM0XHwexvtdj5tsWftCLEb_dsQf0cZqFNQfZSUhati'; //put your server key here
+// var fcm = new FCM(serverKey);
 
 var cons = {};
 var loginUsers = {}
 
 
 var dbUrl = 'mongodb://127.0.0.1:27017/ReactChat';
-// var dbUrl = 'mongodb://127.0.0.1:27017/Tryste';
+// var dbUrl = 'mongodb://127.0.0.1:27017/Tryste-Tmp';
 
 var UsersModel = mongoose.model('Users', {
 
@@ -75,7 +75,7 @@ var RoomModel = mongoose.model('Room', {
 });
 
 
-var BlockModel = mongoose.model('Blook', {
+var BlockModel = mongoose.model('Block', {
 	blockedBy: String,
 	blockedTo: String,
 	isBlock: Boolean
@@ -101,7 +101,9 @@ function htmlEntities(str) {
 // Array with some colors
 var colors = ['red', 'green', 'blue', 'magenta', 'purple', 'plum', 'orange'];
 // ... in random order
-colors.sort(function (a, b) { return Math.random() > 0.5; });
+colors.sort(function (a, b) {
+	return Math.random() > 0.5;
+});
 
 /**
  * HTTP server
@@ -121,7 +123,6 @@ var wsServer = new webSocketServer({
 	// an enhanced HTTP request. For more info http://tools.ietf.org/html/rfc6455#page-6
 	httpServer: server
 });
-
 
 
 var responseError = (code, type, message, toString) => {
@@ -278,7 +279,10 @@ function updateOnlineStatus(userId, online) {
 	///Create new object to update online and lst seen status
 	let dataToUpdate = { last_seen: new Date(), is_online: online };
 
-	UsersModel.findOneAndUpdate({ userId: userId }, dataToUpdate, { new: false, useFindAndModify: false }, (err, updated_user) => {
+	UsersModel.findOneAndUpdate({ userId: userId }, dataToUpdate, {
+		new: false,
+		useFindAndModify: false
+	}, (err, updated_user) => {
 		if (updated_user) {
 			console.log("On Update Online Status:: ", err, updated_user);
 
@@ -291,6 +295,7 @@ function updateOnlineStatus(userId, online) {
 		}
 	});
 }
+
 function createNewRoomNotify(savedMessage) {
 	let fondData = { userId: { $in: savedMessage.userList } };
 	// { "userName": requestData.userName, "password": requestData.password };
@@ -324,6 +329,7 @@ function createNewRoomNotify(savedMessage) {
 		});
 	});
 }
+
 function createNewRoom(findObject, connection) {
 
 	var room = new RoomModel(findObject);
@@ -345,22 +351,17 @@ function createNewRoom(findObject, connection) {
 
 
 }
+
 //MARK:- Oprations
 async function roomRequest(requestData, connection) {
 
-	if (requestData.type == 'allRooms') {
-		if (!requestData.userList) {
-			connection.sendUTF(responseError(400, "allRooms", "Please enter user id", true));
+	if (requestData.type == 'roomsDetails') {
+		if (!requestData.roomId) {
+			connection.sendUTF(responseError(400, "roomsDetails", "Please enter room id", true));
 		}
-		let userList = requestData.userList;
+		let roomId = requestData.roomId;
 
-		let findObject = {};
-		userList.forEach((element) => {
-			findObject[`users.${element}`] = true;
-		});
-
-		console.log(findObject);
-		RoomModel.find(findObject).sort({ last_message_time: -1 }).exec((err, messages) => {
+		RoomModel.find({ _id: mongoose.Types.ObjectId(roomId) }).exec((err, messages) => {
 			//res.send(messages);
 			// console.log(`On connect Error:::${err} data:::`, messages);
 			// connection.sendUTF(`user login successfully ${messages}`);
@@ -397,8 +398,68 @@ async function roomRequest(requestData, connection) {
 
 					let responseData = { roomList: messages, userList: userList };
 					// console.log(`responseData::: `, responseData);
-					connection.sendUTF(responseSuccess(200, "allRooms", responseData, "Data Found", true));
+					connection.sendUTF(responseSuccess(200, "roomsDetails", responseData, "Data Found", true));
 					// userList
+				});
+			} else {
+				connection.sendUTF(responseError(404, "roomsDetails", "Not Found", true));
+			}
+		});
+	} else if (requestData.type == 'allRooms') {
+		if (!requestData.userList) {
+			connection.sendUTF(responseError(400, "allRooms", "Please enter user id", true));
+		}
+		let userList = requestData.userList;
+
+		let findObject = {};
+		userList.forEach((element) => {
+			findObject[`users.${element}`] = true;
+		});
+
+		console.log(findObject);
+		RoomModel.find(findObject).sort({ last_message_time: -1 }).exec((err, messages) => {
+			//res.send(messages);
+			// console.log(`On connect Error:::${err} data:::`, messages);
+			// connection.sendUTF(`user login successfully ${messages}`);
+
+			if (messages && messages.length > 0) {
+				console.log(`Room Data Found....`, messages);
+				let usersList = [];
+				messages.forEach((element) => {
+					usersList = usersList.concat(Object.keys(element.users));
+				});
+
+				usersList = [...new Set(usersList)];
+
+				let fondData = { userId: { $in: usersList } };
+				// { "userName": requestData.userName, "password": requestData.password };
+				UsersModel.find(fondData, (err, userList) => {
+					// console.log("userList", userList);
+					if (err) {
+						connection.sendUTF(responseError(500, "allRooms", "Some technical error", true));
+					} else {
+						userList = userList.map((element) => {
+							let x = Object.assign({}, {
+								"_id": "",
+								"userName": "",
+								"password": "",
+								"userId": 0,
+								"fcm_token": "",
+								"device_id": "",
+								"is_online": false,
+								"last_seen": "",
+								"firstName": "",
+								"profile_pic": ""
+							}, JSON.parse(JSON.stringify(element)))
+							// console.log(x);
+							return x;
+						})
+
+						let responseData = { roomList: messages, userList: userList };
+						// console.log(`responseData::: `, responseData);
+						connection.sendUTF(responseSuccess(200, "allRooms", responseData, "Data Found", true));
+						// userList
+					}
 				});
 			} else {
 				connection.sendUTF(responseError(404, "allRooms", "Not Found", true));
@@ -490,7 +551,10 @@ async function roomRequest(requestData, connection) {
 				dataToUpdate[`unread.${requestData.unread}`] = 0;
 			}
 
-			RoomModel.findOneAndUpdate({ _id: mongoose.Types.ObjectId(roomId) }, dataToUpdate, { new: false, useFindAndModify: false }, (err, updatedRoom) => {
+			RoomModel.findOneAndUpdate({ _id: mongoose.Types.ObjectId(roomId) }, dataToUpdate, {
+				new: false,
+				useFindAndModify: false
+			}, (err, updatedRoom) => {
 				console.log("updatedRoom:::", updatedRoom);
 
 
@@ -505,6 +569,7 @@ async function roomRequest(requestData, connection) {
 		}
 	}
 }
+
 async function allUser(requestData, connection) {
 	if (requestData.type == 'allUsers') {
 		UsersModel.find({}, (err, messages) => {
@@ -521,6 +586,7 @@ async function allUser(requestData, connection) {
 	}
 
 }
+
 async function loginRequest(requestData, connection) {
 
 	if (requestData.type == 'login') {
@@ -605,6 +671,7 @@ async function loginRequest(requestData, connection) {
 
 					fondData.fcm_token = isFine(requestData.fcm_token) ? requestData.fcm_token : '';
 					fondData.device_id = isFine(requestData.device_id) ? requestData.device_id : '';
+					isFine(requestData.firstName) && (fondData.firstName = requestData.firstName);
 
 					fondData.is_online = true;
 					fondData.last_seen = new Date();
@@ -627,11 +694,14 @@ async function loginRequest(requestData, connection) {
 
 					loginUsers[userId] = userData;
 
+					isFine(requestData.firstName) && (fondData.firstName = requestData.firstName);
+					// userData.lastName = isFine(requestData.lastName) ? requestData.lastName : "";
+
 					userData.fcm_token = isFine(requestData.fcm_token) ? requestData.fcm_token : '';
 					userData.device_id = isFine(requestData.device_id) ? requestData.device_id : '';
 					await userData.save();
 
-					connection.sendUTF(responseSuccess(200, "login", userData, "Login Success", true));
+					connection.sendUTF(responseSuccess(200, "loginOrCreate", userData, "Login Success", true));
 
 					updateOnlineStatus(userId, true);
 				}
@@ -687,7 +757,8 @@ async function loginRequest(requestData, connection) {
 
 		/* if (!isFine(requestData._id)) {
 			connection.sendUTF(responseError(400, "updateProfile", "ObjectId is not provided.", true));
-		} else */ if (!isFine(requestData.userId)) {
+		} else */
+		if (!isFine(requestData.userId)) {
 			connection.sendUTF(responseError(400, "updateProfile", "userId is required.", true));
 		} else {
 			var dataToUpdate = {};
@@ -727,7 +798,9 @@ async function loginRequest(requestData, connection) {
 				dataToUpdate['device_id'] = requestData.device_id;
 			}
 
-			UsersModel.findOneAndUpdate({ /* _id: requestData._id,  */userId: requestData.userId }, dataToUpdate, { new: false, useFindAndModify: false }, (err, updated_user) => {
+			UsersModel.findOneAndUpdate({ /* _id: requestData._id,  */
+				userId: requestData.userId
+			}, dataToUpdate, { new: false, useFindAndModify: false }, (err, updated_user) => {
 				if (err) {
 					connection.sendUTF(responseError(500, "updateProfile", "Internal Server Error.", true));
 				}
@@ -737,8 +810,6 @@ async function loginRequest(requestData, connection) {
 				}
 
 				connection.sendUTF(responseSuccess(200, "updateProfile", updated_user, "Data updated successfully.", true));
-
-
 
 
 				UsersModel.find({ _id: mongoose.Types.ObjectId(updated_user._id) }, (err, findUser) => {
@@ -771,20 +842,24 @@ function formatTheMessages(message) {
 
 async function messageRequest(requestData, connection) {
 
-	var key = requestData.room
+	const key = requestData.room;
 	console.log('key-----', key);
 
+	if (!isFine(key)) {
+		connection.sendUTF(responseError(400, "message", "Room id is required {room}.", true));
+	}
+
 	console.log("MsgModel:::", MsgModel);
-	if (MsgModel[`message_${key}`] == undefined) {
-		MsgModel[`message_${key}`] = mongoose.model(`message_${key}`, MessageSchema);
+	if (MsgModel[`chat_${key}`] === undefined) {
+		MsgModel[`chat_${key}`] = mongoose.model(`chat_${key}`, MessageSchema);
 	}
 
 
-	if (requestData.type == 'allMessage') {
+	if (requestData.type === 'allMessage') {
 
 		let findObject = {};
 
-		MsgModel[`message_${key}`].find(findObject, (err, messages) => {
+		MsgModel[`chat_${key}`].find(findObject, (err, messages) => {
 			//res.send(messages);
 			console.log(`On connect Error:::${err} data:::`, messages);
 
@@ -800,11 +875,11 @@ async function messageRequest(requestData, connection) {
 			}
 		});
 
-	} else if (requestData.type == 'addMessage') {
+	} else if (requestData.type === 'addMessage') {
 
 		let messageData = requestData;
 		console.log("Message Data" + messageData.roomId);
-		var user = new MsgModel[`message_${key}`]({
+		const messageModel = new MsgModel[`chat_${key}`]({
 			roomId: mongoose.Types.ObjectId(messageData.roomId),
 
 			message: messageData.message,
@@ -819,7 +894,7 @@ async function messageRequest(requestData, connection) {
 			message_content: messageData.message_content
 		});
 		// try {
-		user.save().then((savedMessage) => {
+		messageModel.save().then((savedMessage) => {
 			// console.log(`Message Saved.`, savedMessage);
 
 
@@ -827,8 +902,8 @@ async function messageRequest(requestData, connection) {
 				// console.log('messageRequest Room list::::', room);
 				// console.log('room list::::', cons);
 
-				let newMessageInfo = {};
-				if (room["unread"] != undefined) {
+				let newMessageInfo;
+				if (room["unread"] !== undefined) {
 					let unreadObject = room.users;
 					let userIdOfUnreadMessges = Object.keys(unreadObject);
 
@@ -837,7 +912,7 @@ async function messageRequest(requestData, connection) {
 					userIdOfUnreadMessges.forEach((userId) => {
 						let oldCount = unread[userId];
 						let newUnreadMessage = oldCount ? oldCount + 1 : 1;
-						if (userId == messageData.sender_id) {
+						if (userId === messageData.sender_id) {
 							unread[userId] = 0;
 						} else {
 							unread[userId] = newUnreadMessage;
@@ -847,12 +922,12 @@ async function messageRequest(requestData, connection) {
 
 				} else {
 					let unreadObject = room.users;
-					let userIdOfUnreadMessges = Object.keys(unreadObject);
+					let userIdOfUnreadMessages = Object.keys(unreadObject);
 
 					let unread = {};
-					userIdOfUnreadMessges.forEach((userId) => {
+					userIdOfUnreadMessages.forEach((userId) => {
 						let newUnreadMessage = 1;
-						if (userId == messageData.sender_id) {
+						if (userId === messageData.sender_id) {
 							unread[userId] = 0;
 						} else {
 							unread[userId] = newUnreadMessage;
@@ -876,7 +951,10 @@ async function messageRequest(requestData, connection) {
 	message_info: Object,
 	users_meta: Object,
 	userList: Array */
-				RoomModel.findOneAndUpdate({ _id: mongoose.Types.ObjectId(room._id) }, newMessageInfo, { new: true, useFindAndModify: false }, (err, updatedRoom) => {
+				RoomModel.findOneAndUpdate({ _id: mongoose.Types.ObjectId(room._id) }, newMessageInfo, {
+					new: true,
+					useFindAndModify: false
+				}, (err, updatedRoom) => {
 					// console.log("RoomModel::: update", err, updatedRoom);
 					if (err) {
 
@@ -892,11 +970,13 @@ async function messageRequest(requestData, connection) {
 
 				});
 
+				let formattedMessages = formatTheMessages(savedMessage);
+
 				room.userList.forEach(user => {
 					if (cons.hasOwnProperty(user)) {
 						console.log('user is login', user);
 
-						cons[user].sendUTF(responseSuccess(201, "message", formatTheMessages(savedMessage), "Data Found", true));
+						cons[user].sendUTF(responseSuccess(201, "message", formattedMessages, "Data Found", true));
 
 					} else {
 
@@ -904,23 +984,23 @@ async function messageRequest(requestData, connection) {
 					}
 				});
 
-				let receverUserListId = room.userList.filter((element) => {
-					return element != messageData.sender_id;
-				});
+				// let receverUserListId = room.userList.filter((element) => {
+				// 	return element != messageData.sender_id;
+				// });
 
 
 				let fondData = { userId: { $in: room.userList } };
 				// { "userName": requestData.userName, "password": requestData.password };
 				UsersModel.find(fondData, (err, userList) => {
 
-					let receverUserList = userList.filter((element) => {
+					let receiverUserList = userList.filter((element) => {
 						return element.userId != messageData.sender_id;
 					});
 					let senderUserDetail = userList.find((element) => {
 						return element.userId == messageData.sender_id;
 					});
 
-					let fcmTokens = receverUserList.map((element) => {
+					let fcmTokens = receiverUserList.map((element) => {
 						return element.fcm_token;
 					});
 					console.log(`fcmTokens::: `, fcmTokens);
@@ -929,16 +1009,18 @@ async function messageRequest(requestData, connection) {
 						// to: 'dmR-mgKqSuGymuJNQ5CsSR:APA91bFkMkphaI-La1rfnNOX1P8ND8aAzy5hjt4qRN4wqpGjWgfHLB3TbkSEhrQsf9v7_dDwlpv7l8fqwTiPOiHAEItKKS0gePF9hTN5nSfNqzBu1BlRGJC04W9BVXPaNEgjJS3ouBzV',
 
 						"registration_ids": fcmTokens,
-						collapse_key: 'your_collapse_key',
+						// collapse_key: 'your_collapse_key',
 
 						notification: {
-							title: `New message from ${senderUserDetail.userName}`,
-							body: 'Body of your push notification'
+							title: `New message from ${senderUserDetail.firstName}`,
+							body: getLastMessage(messageData.message, messageData.message_type)
 						},
 
-						data: {  //you can send only notification or only data(or include both)
-							my_key: 'my value',
-							my_another_key: 'my another value'
+						data: {
+							payload: {
+								payload: "17",
+								id: messageData.roomId
+							},
 						}
 					};
 
@@ -953,21 +1035,38 @@ async function messageRequest(requestData, connection) {
 				});
 
 
-
-
 			});
 		}).catch((ex) => {
 			console.error(`Message Failed to Saved.`, ex);
-			connection.sendUTF(responseSuccess(500, "message", savedMessage, "message All list", true));
+			connection.sendUTF(responseError(500, "message", "message All list", true));
 		});
 		// }catch(ex){
 		// 	console.log("Save message error:: ",ex);
 		// }
 
+	} else if (requestData.type === 'updateMessage') {
+
+		let dataToUpdate = {
+			message_content: requestData.message_content
+			// receiver_id: "shubham"
+		};
+
+
+
+		MsgModel[`chat_${key}`].findOneAndUpdate({ _id: mongoose.Types.ObjectId(requestData.messageId) }, dataToUpdate, {
+			new: false,
+			useFindAndModify: false
+		}, (err, data) => {
+			console.warn("updateMessage", err, data);
+			if (data) {
+
+			}
+		});
 	}
 
 
 }
+
 function createConnection(requestData, connection) {
 	// console.log("createConnection::", requestData);
 	if (requestData.type == "create") {
@@ -1043,13 +1142,13 @@ async function blockUser(requestData, connection) {
 						if (data) {
 							console.log("allBlockUser", data);
 							// Notify to all active user about that user status
-							cons[requestData.blockedBy].sendUTF(responseSuccess(200, "blockUser", data[0], "Block Status Changed", true));
-							cons[requestData.blockedTo].sendUTF(responseSuccess(200, "blockUser", data[0], "Block Status Changed", true));
+							cons[requestData.blockedBy] && cons[requestData.blockedBy].sendUTF(responseSuccess(200, "blockUser", data[0], "Block Status Changed", true));
+							cons[requestData.blockedTo] && cons[requestData.blockedTo].sendUTF(responseSuccess(200, "blockUser", data[0], "Block Status Changed", true));
 
 						}
 					});
 
-					
+
 				}
 			});
 		}
@@ -1104,6 +1203,7 @@ function acceptRequest(request) {
 		}
 	});
 }
+
 function originIsAllowed(request) {
 	// put logic here to detect whether the specified origin is allowed.
 	console.log(`origin:::   ${request.resourceURL.pathname}`);
@@ -1133,6 +1233,7 @@ function originIsAllowed(request) {
 	return true
 
 }
+
 // This callback function is called every time someone
 // tries to connect to the WebSocket server
 wsServer.on('request', function (request) {
@@ -1143,7 +1244,7 @@ wsServer.on('request', function (request) {
 		// Make sure we only accept requests from an allowed origin
 		request.reject();
 		console.log((new Date()) + ' Connection from origin ' + request.origin + ' rejected.');
-		return;
+
 	}
 	// chatRequest(request);
 });

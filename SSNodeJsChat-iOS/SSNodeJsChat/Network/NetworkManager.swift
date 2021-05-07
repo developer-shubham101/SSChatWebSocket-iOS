@@ -94,16 +94,17 @@ class MultipartImage {
 class NetworkManager {
 	 
 	static let PROTOCOL:String = "http://";
-	static let SUB_DOMAIN:String =  "";
+	static let SUB_DOMAIN:String =  "testapi.";
 	
-	static let DOMAIN:String = "103.207.168.164:8005/";//Production Service End http://rewards.arkasoftwares.co/
+	static let DOMAIN:String = "newdevpoint.in/";
  
 	static let API_DIR:String = "api/";
 	
 	static let SITE_URL = PROTOCOL + SUB_DOMAIN + DOMAIN;
 	static let API_URL = SITE_URL + API_DIR;
 	
-	static let STORAGE_URL = SITE_URL + "storage/";
+//	static let STORAGE_URL = SITE_URL + "storage/";
+    static let STORAGE_URL = "http://192.168.1.6:8000/";
 	
 	
 	
@@ -117,6 +118,9 @@ class NetworkManager {
 	
 	
 	//-------------
+//    static let URL_FILE_UPLOAD = "\(SITE_URL)upload"
+    static let URL_FILE_UPLOAD = "http://192.168.1.6:8000/?url=upload"
+    
 	static let URL_TRAVELER_FOLLOWER_LIST = "\(API_URL)user-follower-list"
 	static let URL_TRAVELER_FOLLOWING_LIST = "\(API_URL)user-following-list"
 	

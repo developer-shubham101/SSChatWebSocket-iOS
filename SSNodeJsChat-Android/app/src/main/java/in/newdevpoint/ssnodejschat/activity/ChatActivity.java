@@ -166,8 +166,11 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
 
 
         // Record to the external cache directory for visibility
-        fileName = getExternalCacheDir().getAbsolutePath();
-        fileName += "/audiorecordtest.m4a";
+        if (getExternalCacheDir() != null) {
+            fileName = getExternalCacheDir().getAbsolutePath();
+            fileName += "/audiorecordtest.m4a";
+        }
+
 
         handler = new Handler(Looper.getMainLooper());
 
@@ -206,12 +209,12 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         addChatMenu();
 
 
-        String wallpaperFilePath = DownloadUtility.createPath(getApplicationContext(), DownloadUtility.FILE_PATH_WALLPAPER) + "/wallpaper.jpg";
+       /* String wallpaperFilePath = DownloadUtility.createPath(getApplicationContext(), DownloadUtility.FILE_PATH_WALLPAPER) + "/wallpaper.jpg";
         File wallpaperFile = new File(wallpaperFilePath);
         if (wallpaperFile.exists()) {
             Bitmap myBitmap = BitmapFactory.decodeFile(wallpaperFilePath);
             binding.chatBgImage.setImageBitmap(myBitmap);
-        }
+        }*/
 
 
         parseExtras();
@@ -770,6 +773,8 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
 
         // TODO: 27/01/21 SendMessage
 //        chatReference.add(messageMap);
+
+        Log.d(TAG, "sendMessage: " + new JSONObject(messageMap).toString());
 
         WebSocketSingleton.getInstant().sendMessage(new JSONObject(messageMap));
 

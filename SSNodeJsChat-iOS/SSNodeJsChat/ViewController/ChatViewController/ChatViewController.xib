@@ -142,7 +142,7 @@
                             <rect key="frame" x="0.0" y="758" width="414" height="60"/>
                             <subviews>
                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Other teaveler mute you" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="e2J-TF-dEb">
-                                    <rect key="frame" x="133" y="22" width="148" height="16.5"/>
+                                    <rect key="frame" x="132" y="22" width="150.5" height="16.5"/>
                                     <fontDescription key="fontDescription" name="Roboto-Regular" family="Roboto" pointSize="14"/>
                                     <color key="textColor" name="AppBrownishGrey"/>
                                     <nil key="highlightedColor"/>
@@ -274,12 +274,15 @@
                                                         <constraint firstAttribute="height" constant="1" id="jNZ-i5-4iU"/>
                                                     </constraints>
                                                 </view>
-                                                <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="gH3-fp-DXi">
+                                                <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="gH3-fp-DXi" customClass="KMPlaceholderTextView" customModule="SSNodeJsChat" customModuleProvider="target">
                                                     <rect key="frame" x="0.0" y="0.0" width="254" height="59"/>
                                                     <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                     <color key="textColor" name="AppBlack"/>
                                                     <fontDescription key="fontDescription" name="Roboto-Regular" family="Roboto" pointSize="17"/>
                                                     <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                                                    <userDefinedRuntimeAttributes>
+                                                        <userDefinedRuntimeAttribute type="string" keyPath="placeholder" value="Enter message..."/>
+                                                    </userDefinedRuntimeAttributes>
                                                 </textView>
                                             </subviews>
                                             <color key="backgroundColor" name="AppWhite"/>
@@ -559,11 +562,6 @@
                         <constraint firstItem="Bqg-hO-Rg4" firstAttribute="leading" secondItem="RVj-IW-DWX" secondAttribute="leading" id="z63-ux-66C"/>
                         <constraint firstItem="Bqg-hO-Rg4" firstAttribute="top" secondItem="YQZ-Tu-CUH" secondAttribute="bottom" constant="8" id="zTQ-xa-Dnr"/>
                     </constraints>
-                    <variation key="default">
-                        <mask key="subviews">
-                            <exclude reference="HXS-5V-gc2"/>
-                        </mask>
-                    </variation>
                 </view>
                 <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="598-aD-ayc">
                     <rect key="frame" x="0.0" y="44" width="414" height="818"/>
@@ -589,6 +587,11 @@
             <point key="canvasLocation" x="137.68115942028987" y="122.54464285714285"/>
         </view>
     </objects>
+    <designables>
+        <designable name="BF1-KN-XgJ">
+            <size key="intrinsicContentSize" width="336" height="336"/>
+        </designable>
+    </designables>
     <resources>
         <image name="ic_back" width="46" height="48"/>
         <image name="ic_chat_camera" width="512" height="512"/>

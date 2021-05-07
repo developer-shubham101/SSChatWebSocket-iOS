@@ -10,7 +10,7 @@ import Foundation
 
 
 class LoginUserModel{
-	var id:NSNumber = 0
+	var userId:String = ""
 	var name:String = ""
 	var email:String = ""
 	var gender:String = ""
@@ -60,10 +60,18 @@ class LoginUserModel{
 	
 	func refresh() {
 		if let userID = UserDefaults.standard.value(forKey: UserDefaultKey.USER_INFO) as? [String:Any] {
-			self.id = userID["id"] as? NSNumber ?? 0
-			self.name = userID["name"] as? String ?? ""
-			self.email  = userID["email"] as? String ?? ""
-			self.gender  = userID["gender"] as? String ?? ""
+            if let tmpId = userID["userId"] as? NSNumber {
+                self.userId = tmpId.stringValue
+            } else if let tmpId = userID["userId"] as? NSString {
+                self.userId = String(tmpId.integerValue)
+            }
+			
+			self.name = userID["firstName"] as? String ?? ""
+			self.email  = userID["userName"] as? String ?? ""
+			
+            
+            
+            self.gender  = userID["gender"] as? String ?? ""
 			self.status  = userID["status"] as? String ?? ""
 			self.phone_number  = userID["phone_number"] as? String ?? ""
 			
@@ -75,7 +83,7 @@ class LoginUserModel{
 			
 			
 		}else{
-			self.id = 0
+			self.userId = ""
 			self._access_token = ""
 		}
 	}
@@ -101,12 +109,12 @@ class LoginUserModel{
     }
 	var isTmpLogin: Bool {
 		get {
-			return id != 0
+			return userId != ""
 		}
 	}
 	var isLogin:Bool {
 		get {
-			return id != 0
+			return userId != ""
 			
 		}
 	}

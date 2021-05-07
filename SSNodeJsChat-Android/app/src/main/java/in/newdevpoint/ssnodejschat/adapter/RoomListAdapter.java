@@ -54,9 +54,10 @@ public class RoomListAdapter extends RecyclerView.Adapter<RoomListAdapter.MyView
             holder.binding.rowChatUserName.setText(item.getGroupDetails().getGroup_name());
 
         } else {
-            holder.binding.rowChatUserName.setText(item.getSenderUserDetail().getName());
+
 
             if (item.getSenderUserDetail() != null) {
+                holder.binding.rowChatUserName.setText(item.getSenderUserDetail().getName());
 //            holder.binding.rowChatUserPic
                 Glide.with(context).load(Utils.getImageString(item.getSenderUserDetail().getProfile_image())).into(holder.binding.rowChatUserPic);
             }

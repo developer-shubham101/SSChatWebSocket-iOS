@@ -12,5 +12,5 @@ protocol SocketMessage {
     func connectSocket(notify: Bool)
     func registerToScoket(observer: SocketObserver)
     func unregisterToSocket(observer: SocketObserver)
-    func sendMessageToSocket(message:String, observer: SocketObserver)
+    func sendMessageToSocket(message:String)
 }

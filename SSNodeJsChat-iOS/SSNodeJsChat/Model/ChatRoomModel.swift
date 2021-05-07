@@ -42,7 +42,7 @@ class ChatRoomModel {
 //            return element != userId
 //        })
         if let user: String = (users.first { (element) -> Bool in
-            return element != UsernameViewController.tmpUserLogin.userId
+            return element != LoginUserModel.shared.userId
         }) {
 //            let userModel: UserDetailsModel? = RoomListViewController.userDetailsList.first { (element) -> Bool in
 //                return user == element.userId
@@ -129,6 +129,9 @@ public class UserDetailsModel: NSObject {
     var profile_pic: String = ""
     var last_seen: String = ""
     var is_online: Bool = false
+    
+    
+    
     
      
     static func giveList(list: [[String:Any]]) -> [UserDetailsModel] {

@@ -29,7 +29,7 @@ class SocketManager: SocketMessage {
     fileprivate var observersList = Array<SocketObserver>()
     fileprivate var isNotify : Bool = false
     
-    var socket = WebSocket(url: URL(string: "ws://172.16.16.103:1337/")!, protocols: ["chat"])
+    var socket = WebSocket(url: URL(string: "ws://sschat-react.herokuapp.com/V1")!, protocols: ["chat"])
     
     func connectSocket(notify: Bool) {
         self.isNotify =  notify
@@ -52,7 +52,8 @@ class SocketManager: SocketMessage {
        
     }
     
-    func sendMessageToSocket(message: String, observer: SocketObserver) {
+    func sendMessageToSocket(message: String) {
+        print("SocketManager:: SendMessage", message)
         socket.write(string: message)
     }
     
@@ -85,28 +86,44 @@ class SocketManager: SocketMessage {
 
 //  MARK: - WebSocket Delegate
 extension SocketManager:WebSocketDelegate {
+    fileprivate func connectUserId() {
+        let messageDictionary = [
+            "request": "create_connection",
+            "user_id": LoginUserModel.shared.userId,
+            "type": "create",
+            
+        ] as [String : Any]
+        
+        let jsonData = try! JSONSerialization.data(withJSONObject: messageDictionary)
+        let jsonString = NSString(data: jsonData, encoding: String.Encoding.utf8.rawValue)
+        if let message:String = jsonString as String? {
+            SocketManager.shared.sendMessageToSocket(message: message)
+        }
+    }
+    
     func websocketDidConnect(socket: WebSocketClient) {
-        print("Web socket connected");
-        if isNotify{
+        print("SocketManager:: Web socket connected");
+        if isNotify {
             notifyWebSocketConnectionStatus(status: true)
         }
+        connectUserId()
     }
     
     func websocketDidDisconnect(socket: WebSocketClient, error: Error?) {
        // socket.connect()
-        print("Web socket disconnected");
+        print("SocketManager:: Web socket disconnected");
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
             self.socket.connect()
         }
         
-        if isNotify{
+        if isNotify {
             notifyWebSocketConnectionStatus(status: false)
         }
     }
     
     func websocketDidReceiveMessage(socket: WebSocketClient, text: String) {
-        print(text)
+        print("SocketManager:: websocketDidReceiveMessage => \(text)")
         guard let data = text.data(using: .utf8), let jsonData = try? JSONSerialization.jsonObject(with: data), let jsonDict = jsonData as? [String: Any] else { return }
         notifyObserver(message: jsonDict)
     }

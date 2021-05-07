@@ -7,10 +7,13 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class APIClient {
-    public static final String IMAGE_URL = "https://tryste.ezxdemo.com/storage/";
-    public static final String BASE_URL_WEB_SOCKET = "ws://172.16.16.103:1337/v1";
+//    public static final String IMAGE_URL = "https://tryste.ezxdemo.com/storage/";
+    public static final String IMAGE_URL = "http://192.168.1.2:3000/";
+//    public static final String BASE_URL_WEB_SOCKET = "ws://192.168.1.2:1337/V1";
+    public static final String BASE_URL_WEB_SOCKET = "ws://sschat-react.herokuapp.com/V1";
     //    private static final String BASE_URL = "http://testapi.newdevpoint.in/";
-    private static final String BASE_URL = "https://tryste.ezxdemo.com/api/";
+//    private static final String BASE_URL = "https://tryste.ezxdemo.com/api/";
+    private static final String BASE_URL = "http://192.168.1.2:3000/";
     private static Retrofit retrofit = null;
 
 

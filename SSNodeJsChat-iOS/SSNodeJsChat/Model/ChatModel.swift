@@ -235,6 +235,7 @@ enum MediaType: String {
 	case imageJPG = "jpg"
 	case imagePNG = "png"
 	case audioM4A = "m4a"
-	case videoMP4 = "mp4"
+    case videoMP4 = "mp4"
+    case filePDF = "pdf"
 	case none = ""
 }

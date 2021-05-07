@@ -20,6 +20,7 @@ import java.lang.reflect.Type;
 import in.newdevpoint.ssnodejschat.R;
 import in.newdevpoint.ssnodejschat.databinding.ActivityLoginBinding;
 import in.newdevpoint.ssnodejschat.model.FSUsersModel;
+import in.newdevpoint.ssnodejschat.model.TmpUserModel;
 import in.newdevpoint.ssnodejschat.observer.ResponseType;
 import in.newdevpoint.ssnodejschat.observer.WebSocketObserver;
 import in.newdevpoint.ssnodejschat.observer.WebSocketSingleton;
@@ -29,19 +30,7 @@ import in.newdevpoint.ssnodejschat.utility.Validate;
 import in.newdevpoint.ssnodejschat.webService.APIClient;
 import in.newdevpoint.ssnodejschat.webService.ResponseModel;
 
-class TmpUserModel {
-    String email;
-    String password;
-    String userId;
-    String name;
 
-    public TmpUserModel(String email, String password, String userId, String name) {
-        this.email = email;
-        this.password = password;
-        this.userId = userId;
-        this.name = name;
-    }
-}
 
 public class LoginActivity extends AppCompatActivity implements WebSocketObserver {
     private static final String EMAIL = "email";
@@ -53,7 +42,7 @@ public class LoginActivity extends AppCompatActivity implements WebSocketObserve
             new TmpUserModel("ali@yopmail.com", "123456", "4", "Ali"),
             new TmpUserModel("samreen@yopmail.com", "123456", "5", "Samreen")
     };
-    private final TmpUserModel tmpUserModel = listOfTmpUsers[1];
+    private final TmpUserModel tmpUserModel = listOfTmpUsers[2];
     //    private Waiting mWaitingDialog;
     private ActivityLoginBinding loginBinding;
 
@@ -70,7 +59,7 @@ public class LoginActivity extends AppCompatActivity implements WebSocketObserve
 
 
 
-        loginBinding.loginUserEmail.setText(tmpUserModel.email);
+        loginBinding.loginUserEmail.setText(tmpUserModel.getEmail());
 
 
         loginBinding.loginBtn.setOnClickListener(new View.OnClickListener() {
@@ -79,6 +68,8 @@ public class LoginActivity extends AppCompatActivity implements WebSocketObserve
                 fetchLoginApi();
             }
         });
+
+
 
 
     }
@@ -97,9 +88,9 @@ public class LoginActivity extends AppCompatActivity implements WebSocketObserve
 //        mWaitingDialog.show();
         JSONObject jsonObject = new JSONObject();
         try {
-            jsonObject.put("userId", tmpUserModel.userId);
+            jsonObject.put("userId", tmpUserModel.getUserId());
             jsonObject.put("userName", loginBinding.loginUserEmail.getText().toString());
-            jsonObject.put("firstName", tmpUserModel.name);
+            jsonObject.put("firstName", tmpUserModel.getName());
             jsonObject.put("password", loginBinding.loginPassword.getText().toString());
             jsonObject.put("fcm_token", PreferenceUtils.getDeviceToken(this));
             jsonObject.put("type", "loginOrCreate");

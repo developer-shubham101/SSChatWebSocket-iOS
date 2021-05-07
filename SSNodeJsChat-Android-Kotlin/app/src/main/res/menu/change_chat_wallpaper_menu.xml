@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/changeWallpaperWithOutBlur"
+        android:title="Without Blur"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/changeWallpaperWithBlur"
+        android:title="With Blur"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/changeWallpaperDefault"
+        android:title="Default"
+        app:showAsAction="never" />
+
+</menu>

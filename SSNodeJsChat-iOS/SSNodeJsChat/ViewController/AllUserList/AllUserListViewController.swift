@@ -19,7 +19,7 @@ class AllUserListViewController: UIViewController{
         initCollection()
         let json: [String: Any] = ["request":"users","type": "allUsers"]
         if let jsonString: NSString = JsonOperation.toJsonStringFrom(dictionary: json) {
-            SocketManager.shared.sendMessageToSocket(message: jsonString as String, observer: self)
+            SocketManager.shared.sendMessageToSocket(message: jsonString as String)
         }
     }
     
@@ -94,11 +94,11 @@ extension AllUserListViewController: UITableViewDelegate, UITableViewDataSource 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
         let json: [String: Any] = ["type": "createRoom",
-                                   "userList": [UsernameViewController.tmpUserLogin.userId, tableItems[indexPath.row].userId],
-                                   "createBy": UsernameViewController.tmpUserLogin.userId,
+                                   "userList": [LoginUserModel.shared.userId, tableItems[indexPath.row].userId],
+                                   "createBy": LoginUserModel.shared.userId,
                                    "request":"room"]
         if let jsonString: NSString = JsonOperation.toJsonStringFrom(dictionary: json) {
-            SocketManager.shared.sendMessageToSocket(message: jsonString as String, observer: self)
+            SocketManager.shared.sendMessageToSocket(message: jsonString as String)
         }
         
         //
@@ -133,7 +133,7 @@ extension AllUserListViewController:SocketObserver {
                 tableItems = UserDetailsModel.giveList(list: data)
                 ///Exclude Login user
                 tableItems = tableItems.filter({ (element) -> Bool in
-                    return element.userId != UsernameViewController.tmpUserLogin.userId
+                    return element.userId != LoginUserModel.shared.userId
                 })
                 self.tableView.reloadData()
             }

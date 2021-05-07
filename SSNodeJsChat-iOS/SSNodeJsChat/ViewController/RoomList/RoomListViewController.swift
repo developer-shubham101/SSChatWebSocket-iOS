@@ -22,17 +22,39 @@ class RoomListViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         initCollection()
-       
+        
+        let editImage    = UIImage(named: "ic_edit")
+//        let searchImage  = UIImage(named: "search")
+        
+        let editButton   = UIBarButtonItem(image: editImage, style: .plain, target: self, action: #selector(didTapEditButton(sender:)))
+//        let searchButton = UIBarButtonItem(image: searchImage, style: .plain, target: self, action: #selector(didTapSearchButton(sender:)))
+        
+        
+        navigationItem.rightBarButtonItems = [editButton]
+        
+        title = "Room"
+        
     }
+    @objc func didTapEditButton(sender: AnyObject){
+        let vc: ProfileViewController = ProfileViewController()
+        self.navigationController?.pushViewController(vc, animated: true)
+    }
+    
+    @objc func didTapSearchButton(sender: AnyObject){
+        
+    }
+    
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         SocketManager.shared.registerToScoket(observer: self )
         let json: [String: Any] = ["request": "room",
                                    "type": "allRooms",
-                                   "userList": [UsernameViewController.tmpUserLogin.userId]
+//                                   "userList": [LoginUserModel.shared.userId]
+                                   "userList": []
         ]
         if let jsonString: NSString = JsonOperation.toJsonStringFrom(dictionary: json) {
-            SocketManager.shared.sendMessageToSocket(message: jsonString as String, observer: self)
+            SocketManager.shared.sendMessageToSocket(message: jsonString as String)
         }
     }
     

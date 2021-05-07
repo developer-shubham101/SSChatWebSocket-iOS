@@ -18,7 +18,7 @@
 
     <application
         android:name="in.newdevpoint.ssnodejschat.AppApplication"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:requestLegacyExternalStorage="true"
@@ -33,7 +33,7 @@
             android:theme="@style/Base.Theme.AppCompat" />
 
 
-        <activity android:name="in.newdevpoint.ssnodejschat.activity.LoginActivity">
+        <activity android:name=".activity.TmpUserListActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -52,13 +52,14 @@
         </activity>
 
 
-        <activity android:name="in.newdevpoint.ssnodejschat.activity.ContactListActivity" />
-        <activity android:name="in.newdevpoint.ssnodejschat.activity.PlayerActivity" />
+        <activity android:name=".activity.ContactListActivity" />
+        <activity android:name=".activity.PlayerActivity" />
         <activity android:name=".activity.RoomListActivity" />
         <activity android:name=".activity.AllUsersListActivity" />
         <activity android:name=".activity.ChatActivity" />
         <activity android:name=".activity.UpdateProfileActivity" />
         <activity android:name=".activity.ZoomImageActivity" />
+
         <!--        <activity android:name="in.newdevpoint.ssnodejschat.activity.LoginActivity" />-->
         <!--        <activity android:name="in.newdevpoint.ssnodejschat.activity.RoomListActivity" />-->
 

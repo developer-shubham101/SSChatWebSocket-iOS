@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">SSNodeJsChat</string>
+    <string name="password">Password</string>
+    <string name="login">LOGIN</string>
+    <string name="login_small">Login</string>
+    <string name="username_email">Username/Email</string>
+
+    <string name="loading">loading..</string>
+    <string name="validation_email">Please enter E-mail</string>
+    <string name="validation_password">Please enter Password</string>
+    <string name="validation_valid_email">Please enter valid E-mail</string>
+    <string name="default_notification_channel_id">Default</string>
+
+</resources>

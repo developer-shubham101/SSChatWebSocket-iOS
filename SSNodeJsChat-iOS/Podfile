@@ -22,6 +22,11 @@ target 'SSNodeJsChat' do
   
   #pod 'SSExtensions', :path => '/Users/ajitjain/Documents/Max/iOS/MyPod/SSExtensions/'
 
+  
+  pod 'Firebase/Core'
+  pod 'Firebase/Messaging'
+  pod 'Firebase/Analytics'
+  pod 'Firebase/Crashlytics'
 
   target 'SSNodeJsChatTests' do
     inherit! :search_paths
