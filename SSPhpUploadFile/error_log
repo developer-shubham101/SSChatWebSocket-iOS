@@ -1,0 +1,18 @@
+[12-Sep-2020 19:07:12 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[28000] [1045] Access denied for user 'root'@'localhost' (using password: NO) in /home/ywf65lkzi6kb/public_html/testapi.newdevpoint.in/DB.php:5
+Stack trace:
+#0 /home/ywf65lkzi6kb/public_html/testapi.newdevpoint.in/DB.php(5): PDO->__construct('mysql:host=loca...', 'root', '')
+#1 /home/ywf65lkzi6kb/public_html/testapi.newdevpoint.in/index.php(21): DB->__construct('localhost', 'sale', 'root', '')
+#2 /home/ywf65lkzi6kb/public_html/testapi.newdevpoint.in/index.php(94): RequestMaster->__construct()
+#3 {main}
+  thrown in /home/ywf65lkzi6kb/public_html/testapi.newdevpoint.in/DB.php on line 5
+[12-Sep-2020 19:07:25 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[28000] [1045] Access denied for user 'root'@'localhost' (using password: NO) in /home/ywf65lkzi6kb/public_html/testapi.newdevpoint.in/DB.php:5
+Stack trace:
+#0 /home/ywf65lkzi6kb/public_html/testapi.newdevpoint.in/DB.php(5): PDO->__construct('mysql:host=loca...', 'root', '')
+#1 /home/ywf65lkzi6kb/public_html/testapi.newdevpoint.in/index.php(21): DB->__construct('localhost', 'sale', 'root', '')
+#2 /home/ywf65lkzi6kb/public_html/testapi.newdevpoint.in/index.php(94): RequestMaster->__construct()
+#3 {main}
+  thrown in /home/ywf65lkzi6kb/public_html/testapi.newdevpoint.in/DB.php on line 5
+[12-Sep-2020 19:10:58 UTC] PHP Parse error:  syntax error, unexpected ')' in /home/ywf65lkzi6kb/public_html/testapi.newdevpoint.in/index.php on line 13
+[12-Sep-2020 19:11:53 UTC] PHP Parse error:  syntax error, unexpected ')' in /home/ywf65lkzi6kb/public_html/testapi.newdevpoint.in/index.php on line 13
+[11-Oct-2020 16:21:53 UTC] PHP Notice:  Undefined index: url in /home/ywf65lkzi6kb/public_html/testapi.newdevpoint.in/index.php on line 55
+[11-Oct-2020 16:21:53 UTC] PHP Notice:  Undefined index: url in /home/ywf65lkzi6kb/public_html/testapi.newdevpoint.in/index.php on line 68
