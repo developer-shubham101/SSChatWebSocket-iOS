@@ -10,5 +10,8 @@
     <string name="validation_password">Please enter Password</string>
     <string name="validation_valid_email">Please enter valid E-mail</string>
     <string name="default_notification_channel_id">Default</string>
+    <string name="dialog_delete">Delete</string>
+    <string name="dialog_edit">Edit</string>
+    <string name="chat_you_deleted">You deleted this message</string>
 
 </resources>

@@ -16,7 +16,7 @@ include_once 'Output.php';
 
 function url()
 {
-	return "http://192.168.1.6:8000";
+	return "http://192.168.1.7:8000";
 }
 
 class RequestMaster
@@ -58,7 +58,8 @@ class RequestMaster
 					$this->output->printError();
 				}
 			} else {
-				http_response_code(405);
+				echo "404";
+				http_response_code(404);
 			}
 		} else if ($_SERVER['REQUEST_METHOD'] == "POST") {
 			if ($_GET['url'] == "auth") {

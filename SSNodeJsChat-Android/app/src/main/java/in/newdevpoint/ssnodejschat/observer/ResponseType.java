@@ -12,6 +12,8 @@ public enum ResponseType {
     RESPONSE_TYPE_USER_MODIFIED("userModified"),
     RESPONSE_TYPE_ROOM_DETAILS("roomsDetails"),
     RESPONSE_TYPE_USER_BLOCK_MODIFIED("blockUser"),
+    RESPONSE_TYPE_MESSAGE_MODIFIED("updateMessage"),
+
     RESPONSE_TYPE_USER_ALL_BLOCK("allBlockUser");
 
     private final String name;

@@ -95,7 +95,7 @@ public class RoomListActivity extends AppCompatActivity implements WebSocketObse
         JSONObject jsonObject = new JSONObject();
         try {
             JSONArray userList = new JSONArray();
-            userList.put(UserDetails.myDetail.getId());
+            userList.put(UserDetails.getInstant().getMyDetail().getId());
             jsonObject.put("type", "allRooms");
             jsonObject.put("userList", userList);
             jsonObject.put(APIClient.KeyConstant.REQUEST_TYPE_KEY, APIClient.KeyConstant.REQUEST_TYPE_ROOM);
@@ -127,7 +127,7 @@ public class RoomListActivity extends AppCompatActivity implements WebSocketObse
                         for (FSRoomModel element : roomResponseModelResponseModel.getData().getRoomList()) {
 
                             for (String userId : element.getUserList()) {
-                                if (!userId.equals(UserDetails.myDetail.getId())) {
+                                if (!userId.equals(UserDetails.getInstant().getMyDetail().getId())) {
                                     element.setSenderUserDetail(UserDetails.chatUsers.get(userId));
                                     break;
                                 }
@@ -145,7 +145,7 @@ public class RoomListActivity extends AppCompatActivity implements WebSocketObse
                         ResponseModel<FSRoomModel> roomResponseModelResponseModel = gson.fromJson(response, type1);
 
                         for (String userId : roomResponseModelResponseModel.getData().getUserList()) {
-                            if (!userId.equals(UserDetails.myDetail.getId())) {
+                            if (!userId.equals(UserDetails.getInstant().getMyDetail().getId())) {
                                 roomResponseModelResponseModel.getData().setSenderUserDetail(UserDetails.chatUsers.get(userId));
                                 break;
                             }
@@ -172,7 +172,7 @@ public class RoomListActivity extends AppCompatActivity implements WebSocketObse
                         FSRoomModel element = roomResponseModelResponseModel.getData().getNewRoom();
 
                         for (String userId : element.getUserList()) {
-                            if (!userId.equals(UserDetails.myDetail.getId())) {
+                            if (!userId.equals(UserDetails.getInstant().getMyDetail().getId())) {
                                 element.setSenderUserDetail(UserDetails.chatUsers.get(userId));
                                 break;
                             }

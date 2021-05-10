@@ -119,7 +119,7 @@ public class TmpUserListActivity extends AppCompatActivity implements WebSocketO
 
                     ResponseModel<FSUsersModel> fsUsersModelResponseModel = gson.fromJson(response, type1);
                     if (fsUsersModelResponseModel.getStatus_code() == 200) {
-                        UserDetails.myDetail = fsUsersModelResponseModel.getData();
+                        UserDetails.getInstant().setMyDetail(fsUsersModelResponseModel.getData());
 
 //                        PreferenceUtils.loginUser(TmpUserListActivity.this, fsUsersModelResponseModel.getData());
                         startActivity(new Intent(TmpUserListActivity.this, RoomListActivity.class));

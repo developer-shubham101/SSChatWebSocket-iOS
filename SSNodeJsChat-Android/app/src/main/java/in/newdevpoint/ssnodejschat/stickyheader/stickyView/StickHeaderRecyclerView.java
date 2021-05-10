@@ -4,8 +4,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
-
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,28 +14,33 @@ import in.newdevpoint.ssnodejschat.model.StickyMainData;
 import in.newdevpoint.ssnodejschat.stickyheader.stickyData.HeaderData;
 import in.newdevpoint.ssnodejschat.utility.UserDetails;
 
-public abstract class StickHeaderRecyclerView<D extends ChatModel, H extends HeaderDataImpl> extends ChatAdapterBase implements StickHeaderItemDecoration.StickyHeaderInterface {
+public abstract class StickHeaderRecyclerView<D extends ChatModel,
+		H extends HeaderDataImpl>
+		extends ChatAdapterBase
+		implements StickHeaderItemDecoration.StickyHeaderInterface {
 
-	public static final int ROW_TYPE_HEADER = 1;
-	public static final int ROW_TYPE_LEFT_TEXT = 2;
-	public static final int ROW_TYPE_LEFT_IMAGE = 3;
-	public static final int ROW_TYPE_LEFT_DOCUMENT = 4;
-	public static final int ROW_TYPE_LEFT_LOCATION = 5;
-	public static final int ROW_TYPE_LEFT_CONTACT = 6;
-	public static final int ROW_TYPE_LEFT_VIDEO = 7;
-	public static final int ROW_TYPE_LEFT_REPlAY = 8;
+	public static final int ROW_TYPE_HEADER = 0;
+
+	public static final int ROW_TYPE_LEFT_TEXT = -1;
+	public static final int ROW_TYPE_LEFT_IMAGE = -2;
+	public static final int ROW_TYPE_LEFT_DOCUMENT = -3;
+	public static final int ROW_TYPE_LEFT_LOCATION = -4;
+	public static final int ROW_TYPE_LEFT_CONTACT = -5;
+	public static final int ROW_TYPE_LEFT_VIDEO = -6;
+	public static final int ROW_TYPE_LEFT_REPlAY = -7;
+	public static final int ROW_TYPE_LEFT_DELETE = -8;
+
+	public static final int ROW_TYPE_RIGHT_TEXT = 1;
+	public static final int ROW_TYPE_RIGHT_IMAGE = 2;
+	public static final int ROW_TYPE_RIGHT_DOCUMENT = 3;
+	public static final int ROW_TYPE_RIGHT_LOCATION = 4;
+	public static final int ROW_TYPE_RIGHT_CONTACT = 5;
+	public static final int ROW_TYPE_RIGHT_VIDEO = 6;
+	public static final int ROW_TYPE_RIGHT_REPlAY = 7;
+	public static final int ROW_TYPE_RIGHT_DELETE = 8;
 
 
-	public static final int ROW_TYPE_RIGHT_TEXT = 9;
-	public static final int ROW_TYPE_RIGHT_IMAGE = 10;
-	public static final int ROW_TYPE_RIGHT_DOCUMENT = 11;
-	public static final int ROW_TYPE_RIGHT_LOCATION = 12;
-	public static final int ROW_TYPE_RIGHT_CONTACT = 13;
-	public static final int ROW_TYPE_RIGHT_VIDEO = 14;
-	public static final int ROW_TYPE_RIGHT_REPlAY = 15;
-
-
-	private List<StickyMainData> mData = new ArrayList<>();
+	private final List<StickyMainData> mData = new ArrayList<>();
 
 	@Override
 	public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
@@ -58,7 +61,7 @@ public abstract class StickHeaderRecyclerView<D extends ChatModel, H extends Hea
 
 
 		//For Right Side
-		if (item.getSender_detail().getId().equals(UserDetails.myDetail.getId())) {
+		if (item.getSender_detail().getId().equals(UserDetails.getInstant().getMyDetail().getId())) {
 			switch (item.getMessage_type()) {
 				case text:
 					return ROW_TYPE_RIGHT_TEXT;
@@ -72,6 +75,8 @@ public abstract class StickHeaderRecyclerView<D extends ChatModel, H extends Hea
 					return ROW_TYPE_RIGHT_CONTACT;
 				case location:
 					return ROW_TYPE_RIGHT_LOCATION;
+				case delete:
+					return ROW_TYPE_RIGHT_DELETE;
 				case replay:
 					return ROW_TYPE_RIGHT_REPlAY;
 			}
@@ -89,6 +94,8 @@ public abstract class StickHeaderRecyclerView<D extends ChatModel, H extends Hea
 					return ROW_TYPE_LEFT_CONTACT;
 				case location:
 					return ROW_TYPE_LEFT_LOCATION;
+				case delete:
+					return ROW_TYPE_LEFT_DELETE;
 				case replay:
 					return ROW_TYPE_LEFT_REPlAY;
 			}
@@ -96,6 +103,17 @@ public abstract class StickHeaderRecyclerView<D extends ChatModel, H extends Hea
 
 		return ROW_TYPE_RIGHT_TEXT;
 
+	}
+
+	public void updateItem(D item) {
+		for (int i = 0; i < mData.size(); i++) {
+			if (!(mData.get(i) instanceof HeaderData) &&
+					item.getMessageId().endsWith(((ChatModel) mData.get(i)).getMessageId())) {
+				mData.set(i, item);
+				notifyDataSetChanged();
+				break;
+			}
+		}
 	}
 
 	@Override
@@ -129,6 +147,7 @@ public abstract class StickHeaderRecyclerView<D extends ChatModel, H extends Hea
 	public void clearAll() {
 		mData.clear();
 	}
+
 
 	public void setHeaderAndData(@NonNull List<D> datas, @Nullable HeaderData header) {
 //		mData.clear();

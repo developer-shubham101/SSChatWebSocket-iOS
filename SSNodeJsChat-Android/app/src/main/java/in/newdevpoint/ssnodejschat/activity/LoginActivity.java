@@ -119,7 +119,7 @@ public class LoginActivity extends AppCompatActivity implements WebSocketObserve
 
                     ResponseModel<FSUsersModel> fsUsersModelResponseModel = gson.fromJson(response, type1);
                     if (fsUsersModelResponseModel.getStatus_code() == 200) {
-                        UserDetails.myDetail = fsUsersModelResponseModel.getData();
+                        UserDetails.getInstant().setMyDetail(fsUsersModelResponseModel.getData());
 
                         PreferenceUtils.loginUser(LoginActivity.this, fsUsersModelResponseModel.getData());
                         startActivity(new Intent(LoginActivity.this, RoomListActivity.class));

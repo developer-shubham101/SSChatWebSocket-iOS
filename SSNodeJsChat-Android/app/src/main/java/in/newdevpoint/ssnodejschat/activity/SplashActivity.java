@@ -32,7 +32,7 @@ public class SplashActivity extends AppCompatActivity {
             handler.postDelayed(() -> {
 
                 if (PreferenceUtils.isUserLogin(this)) {
-                    UserDetails.myDetail = PreferenceUtils.getRegisterUser(this);
+                    UserDetails.getInstant().setMyDetail(PreferenceUtils.getRegisterUser(this));
                     startActivity(new Intent(SplashActivity.this, RoomListActivity.class));
 
 

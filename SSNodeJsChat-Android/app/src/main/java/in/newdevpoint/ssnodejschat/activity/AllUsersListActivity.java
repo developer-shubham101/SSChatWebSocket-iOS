@@ -126,10 +126,10 @@ public class AllUsersListActivity extends AppCompatActivity implements WebSocket
         try {
             JSONArray usersList = new JSONArray();
             usersList.put(connectWith.getId());
-            usersList.put(UserDetails.myDetail.getId());
+            usersList.put(UserDetails.getInstant().getMyDetail().getId());
             jsonObject.put("userList", usersList);
 
-            jsonObject.put("createBy", UserDetails.myDetail.getId());
+            jsonObject.put("createBy", UserDetails.getInstant().getMyDetail().getId());
 
             jsonObject.put("type", "createRoom");
 
@@ -164,7 +164,7 @@ public class AllUsersListActivity extends AppCompatActivity implements WebSocket
                 usersList.put(fsUsersModel.getId());
             }
 
-            usersList.put(UserDetails.myDetail.getId());
+            usersList.put(UserDetails.getInstant().getMyDetail().getId());
             jsonObject.put("userList", usersList);
             jsonObject.put("type", "createRoom");
 
@@ -215,7 +215,7 @@ public class AllUsersListActivity extends AppCompatActivity implements WebSocket
                         ArrayList<FSUsersModel> fsUsersModels = new ArrayList<>();
 
                         for (FSUsersModel element : arrayListResponseModel.getData()) {
-                            if (!element.getId().equals(UserDetails.myDetail.getId())) {
+                            if (!element.getId().equals(UserDetails.getInstant().getMyDetail().getId())) {
                                 fsUsersModels.add(element);
                             }
 
@@ -240,9 +240,9 @@ public class AllUsersListActivity extends AppCompatActivity implements WebSocket
                         }
 
                         FSRoomModel element = roomResponseModelResponseModel.getData().getNewRoom();
-                        if (element.getCreateBy().equals(UserDetails.myDetail.getId())) {
+                        if (element.getCreateBy().equals(UserDetails.getInstant().getMyDetail().getId())) {
                             for (String userId : element.getUserList()) {
-                                if (!userId.equals(UserDetails.myDetail.getId())) {
+                                if (!userId.equals(UserDetails.getInstant().getMyDetail().getId())) {
                                     element.setSenderUserDetail(UserDetails.chatUsers.get(userId));
                                     break;
                                 }

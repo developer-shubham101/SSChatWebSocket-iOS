@@ -31,12 +31,14 @@ import java.net.URL;
 
 import in.newdevpoint.ssnodejschat.R;
 import in.newdevpoint.ssnodejschat.databinding.RowLeftChatContactBinding;
+import in.newdevpoint.ssnodejschat.databinding.RowLeftChatDeleteBinding;
 import in.newdevpoint.ssnodejschat.databinding.RowLeftChatDocBinding;
 import in.newdevpoint.ssnodejschat.databinding.RowLeftChatImageBinding;
 import in.newdevpoint.ssnodejschat.databinding.RowLeftChatLocationBinding;
 import in.newdevpoint.ssnodejschat.databinding.RowLeftChatTextBinding;
 import in.newdevpoint.ssnodejschat.databinding.RowLeftChatVideoBinding;
 import in.newdevpoint.ssnodejschat.databinding.RowRightChatContactBinding;
+import in.newdevpoint.ssnodejschat.databinding.RowRightChatDeleteBinding;
 import in.newdevpoint.ssnodejschat.databinding.RowRightChatDocBinding;
 import in.newdevpoint.ssnodejschat.databinding.RowRightChatImageBinding;
 import in.newdevpoint.ssnodejschat.databinding.RowRightChatLocationBinding;
@@ -105,6 +107,13 @@ public class ChatAdapter extends StickHeaderRecyclerView<ChatModel, HeaderDataIm
                 return new RightContactViewHolder(binding);
             }
 
+            case StickHeaderRecyclerView.ROW_TYPE_RIGHT_DELETE: {
+                RowRightChatDeleteBinding binding = DataBindingUtil.inflate(
+                        LayoutInflater.from(parent.getContext()),
+                        R.layout.row_right_chat_delete, parent, false);
+                return new RightDeleteViewHolder(binding);
+            }
+
 
 //
 
@@ -147,6 +156,13 @@ public class ChatAdapter extends StickHeaderRecyclerView<ChatModel, HeaderDataIm
                         LayoutInflater.from(parent.getContext()),
                         R.layout.row_left_chat_contact, parent, false);
                 return new LeftContactViewHolder(binding);
+            }
+
+            case StickHeaderRecyclerView.ROW_TYPE_LEFT_DELETE: {
+                RowLeftChatDeleteBinding binding = DataBindingUtil.inflate(
+                        LayoutInflater.from(parent.getContext()),
+                        R.layout.row_left_chat_delete, parent, false);
+                return new LeftDeleteViewHolder(binding);
             }
 
 
@@ -470,6 +486,44 @@ public class ChatAdapter extends StickHeaderRecyclerView<ChatModel, HeaderDataIm
     }
 
 
+    class RightDeleteViewHolder extends BaseViewHolder {
+
+        RowRightChatDeleteBinding binding;
+
+        RightDeleteViewHolder(RowRightChatDeleteBinding binding) {
+            super(binding.getRoot());
+            this.binding = binding;
+
+//			itemView.setOnClickListener(v -> chatRowClicked.locationClicked(items.get(getAdapterPosition())));
+        }
+
+        @Override
+        void bindData(int position) {
+            ChatModel object = getDataInPosition(position);
+            ContactModel messageContent = (ContactModel) object.getMessage_content();
+
+//            String fullName = messageContent.getFirst_name() + " " + messageContent.getLast_name();
+
+            binding.chatRightDeleteTime.setText(object.getMessage_on());
+
+//            binding.getRoot().setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    chatCallbacks.onClickContact(object, messageContent);
+//                }
+//            });
+//            this.binding.getRoot().setOnLongClickListener(new View.OnLongClickListener() {
+//                @Override
+//                public boolean onLongClick(View v) {
+//                    chatCallbacks.onLongClick(object);
+//                    return true;
+//                }
+//            });
+
+        }
+    }
+
+
     class LeftLocationViewHolder extends BaseViewHolder {
 
         RowLeftChatLocationBinding binding;
@@ -542,6 +596,43 @@ public class ChatAdapter extends StickHeaderRecyclerView<ChatModel, HeaderDataIm
                     return true;
                 }
             });
+        }
+    }
+
+
+    class LeftDeleteViewHolder extends BaseViewHolder {
+
+        RowLeftChatDeleteBinding binding;
+
+        LeftDeleteViewHolder(RowLeftChatDeleteBinding binding) {
+            super(binding.getRoot());
+            this.binding = binding;
+
+//			itemView.setOnClickListener(v -> chatRowClicked.locationClicked(items.get(getAdapterPosition())));
+        }
+
+        @Override
+        void bindData(int position) {
+            ChatModel object = getDataInPosition(position);
+            ContactModel messageContent = (ContactModel) object.getMessage_content();
+
+//            String fullName = messageContent.getFirst_name() + " " + messageContent.getLast_name();
+//            binding.chatLeftContactName.setText(fullName);
+//            binding.chatLeftContactNumber.setText(messageContent.getMobile());
+            binding.chatLeftDeleteTime.setText(object.getMessage_on());
+//            binding.getRoot().setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    chatCallbacks.onClickContact(object, messageContent);
+//                }
+//            });
+//            this.binding.getRoot().setOnLongClickListener(new View.OnLongClickListener() {
+//                @Override
+//                public boolean onLongClick(View v) {
+//                    chatCallbacks.onLongClick(object);
+//                    return true;
+//                }
+//            });
         }
     }
 

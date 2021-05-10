@@ -65,10 +65,10 @@ public class RoomListAdapter extends RecyclerView.Adapter<RoomListAdapter.MyView
 
 
         holder.binding.rowChatUserLastMessage.setText(item.getLastMessage());
-        holder.binding.rowChatUserLastMessageTime.setText(TimeShow.TimeFormatYesterdayToDay(item.getLastMessageTime(), "yyyy-MM-dd'T'HH:mm:ss.SSS"));
+        holder.binding.rowChatUserLastMessageTime.setText(TimeShow.TimeFormatYesterdayToDay(item.getLastMessageTime(), "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
 
-        if (item.getUnread() != null && item.getUnread().get(UserDetails.myDetail.getId()) != null) {
-            Integer unreadCount = item.getUnread().get(UserDetails.myDetail.getId());
+        if (item.getUnread() != null && item.getUnread().get(UserDetails.getInstant().getMyDetail().getId()) != null) {
+            Integer unreadCount = item.getUnread().get(UserDetails.getInstant().getMyDetail().getId());
             if (unreadCount > 0) {
                 holder.binding.rowChatUserPendingMessages.setVisibility(View.VISIBLE);
             } else {

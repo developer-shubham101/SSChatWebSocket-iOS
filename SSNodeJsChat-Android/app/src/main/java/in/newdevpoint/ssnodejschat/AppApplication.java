@@ -5,6 +5,8 @@ import android.content.Context;
 
 import com.bumptech.glide.request.RequestOptions;
 
+import io.realm.Realm;
+
 
 // AAAA5sgZE7o:APA91bGdnxQsMAvPjrHmEdcjIWseqPMJA_89mq3Y-Wu9EZXiAtzUjGJx1ldPzEvu2YunT6xeFbzP2sEJkoZYP7Zqip0-bkzS3YX1KD8yVPm-DGL0RRHUso2Yrd1Rdjxc_B_sH56pnb4d
 public class AppApplication extends Application {
@@ -14,6 +16,7 @@ public class AppApplication extends Application {
 
     public void onCreate() {
         super.onCreate();
+        Realm.init(this);
         AppApplication.applicationContext = getApplicationContext();
     }
 
