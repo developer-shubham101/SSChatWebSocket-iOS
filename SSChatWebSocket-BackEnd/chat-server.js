@@ -4,29 +4,21 @@
 // Optional. You will see this name in eg. 'ps' or 'top' command
 process.title = 'node-chat';
 
-// Port where we'll run the websocket server
-var webSocketsServerPort = 1337;
 
 // websocket and http servers
 var webSocketServer = require('websocket').server;
 var http = require('http');
 var mongoose = require('mongoose');
+var config = require('./config');
 
-var FCM = require('fcm-node');
+let FCM = require('fcm-node');
+let Validator = require('validatorjs');
 
-// SSChat React
-var serverKey = 'AAAA5sgZE7o: APA91bGdnxQsMAvPjrHmEdcjIWseqPMJA_89mq3Y - Wu9EZXiAtzUjGJx1ldPzEvu2YunT6xeFbzP2sEJkoZYP7Zqip0 - bkzS3YX1KD8yVPm - DGL0RRHUso2Yrd1Rdjxc_B_sH56pnb4d';
+let fcm = new FCM(config.serverKey);
 
-//Tryst
-// var serverKey = 'AAAAP4u6PVI:APA91bEWx0iGiQT4_4RYXd5sW3eeQ3ThQwGfA2scuWWqrvObMs0OMiIpsPhBvcrXlW_oSJAJHw_qjq0ZDOeD1gI84Dd_5kLLJ1OM0XHwexvtdj5tsWftCLEb_dsQf0cZqFNQfZSUhati'; //put your server key here
-// var fcm = new FCM(serverKey);
+let allConnections = {};
+let loginUsers = {};
 
-var cons = {};
-var loginUsers = {}
-
-
-var dbUrl = 'mongodb://127.0.0.1:27017/ReactChat';
-// var dbUrl = 'mongodb://127.0.0.1:27017/Tryste-Tmp';
 
 var UsersModel = mongoose.model('Users', {
 
@@ -43,7 +35,7 @@ var UsersModel = mongoose.model('Users', {
 	is_online: Boolean
 });
 
-var MessageSchema = {
+var MessageModel = mongoose.model(`messages`, {
 	roomId: mongoose.Schema.Types.ObjectId,
 
 	message: String,
@@ -56,7 +48,7 @@ var MessageSchema = {
 
 	sender_id: String,
 	message_content: Object
-};
+});
 
 var RoomModel = mongoose.model('Room', {
 	users: Object,
@@ -81,38 +73,21 @@ var BlockModel = mongoose.model('Block', {
 	isBlock: Boolean
 });
 
-
-/**
- * Global variables
- */
-// latest 100 messages
-var history = [];
-// list of currently connected clients (users)
-var clients = [];
-
-/**
- * Helper function for escaping input strings
- */
-function htmlEntities(str) {
-	return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
-// Array with some colors
-var colors = ['red', 'green', 'blue', 'magenta', 'purple', 'plum', 'orange'];
-// ... in random order
-colors.sort(function (a, b) {
-	return Math.random() > 0.5;
-});
-
 /**
  * HTTP server
  */
 var server = http.createServer(function (request, response) {
-	// Not important for us. We're writing WebSocket server, not HTTP server
+	// set response header
+	response.writeHead(200, { 'Content-Type': 'text/html' });
+
+	// set response content
+	response.write('<html><body><p>This is home Page.</p></body></html>');
+	response.end();
 });
-server.listen(webSocketsServerPort, function () {
-	console.log((new Date()) + " Server is listening on port " + webSocketsServerPort);
+server.listen(config.webSocketsServerPort, function () {
+	// console.log((new Date()) + " Server is listening on port " + config.webSocketsServerPort);
+	console.log("Express server listening on port::: ", config.webSocketsServerPort);
+
 });
 
 /**
@@ -125,319 +100,320 @@ var wsServer = new webSocketServer({
 });
 
 
-var responseError = (code, type, message, toString) => {
-	let data = {
-		statusCode: code,
-		message: message,
-		data: {},
-		type: type
-	};
-	if (toString) {
-		return JSON.stringify(data);
-	} else {
-		return data;
+// This callback function is called every time someone
+// tries to connect to the WebSocket server
+wsServer.on('request', function (request) {
+	console.log(`Connection from origin ${request.origin}. At ${new Date()}`);
+
+
+	if (!ssChat.originIsAllowed(request)) {
+		// Make sure we only accept requests from an allowed origin
+		request.reject();
+		console.log(`Connection from origin ${request.origin} rejected. At ${new Date()}`);
+
+	}
+	// chatRequest(request);
+});
+
+
+class SSChatReact {
+	bookingConnectionList = {};
+
+	constructor() {
+
 	}
 
-}
+	responseError = (code, type, message, toString) => {
+		let data = {
+			statusCode: code,
+			message: message,
+			data: {},
+			type: type
+		};
+		if (toString) {
+			return JSON.stringify(data);
+		} else {
+			return data;
+		}
 
-var responseSuccess = (code, type, dataObject, message, toString) => {
-	let data = {
-		statusCode: code,
-		message: message,
-		data: dataObject,
-		type: type
-	};
-	if (toString) {
-		return JSON.stringify(data);
-	} else {
-		return data;
 	}
 
-}
+	responseSuccess = (code, type, dataObject, message, toString) => {
+		let data = {
+			statusCode: code,
+			message: message,
+			data: dataObject,
+			type: type
+		};
+		if (toString) {
+			return JSON.stringify(data);
+		} else {
+			return data;
+		}
 
-var MsgModel = {};
+	}
 
+	isFine = (item) => {
 
-function isFine(item) {
+		if (item == '' || item == 'undefined' || item == null) {
 
-	if (item == '' || item == 'undefined' || item == null) {
+			return false;
+		} else {
 
+			return true;
+		}
+	}
+
+	//MARK:- Private Functions
+
+	originIsAllowed = (request) => {
+		// put logic here to detect whether the specified origin is allowed.
+		console.log(`origin:::   ${request.resourceURL.pathname}`);
+		if (request.resourceURL.pathname === "/V1") {
+			this.acceptRequest(request);
+			return true;
+		}
 		return false;
-	} else {
-
-		return true;
-	}
-}
-
-
-function chatRequest(request) {
-
-	// accept connection - you should check 'request.origin' to make sure that
-	// client is connecting from your website
-	// (http://en.wikipedia.org/wiki/Same_origin_policy)
-	var connection = request.accept(null, request.origin);
-	// we need to know client index to remove them on 'close' event
-	var index = clients.push(connection) - 1;
-	var userName = false;
-	var userColor = false;
-
-	console.log((new Date()) + ' Connection accepted.');
-
-	// send back chat history
-	if (history.length > 0) {
-
-		connection.sendUTF(responseSuccess(200, "history", history, "Success.", true));
 	}
 
-	// user sent some message
-	connection.on('message', function (message) {
-		console.log("On Message on chat", message);
-
-		// UsersModel.find({}, (err, messages) => {
-		// 	//res.send(messages);
-		// 	console.log(`On connect Error:::${err} users:::`, messages);
-		// });
-
-
-		if (message.type === 'utf8') { // accept only text
-			if (userName === false) { // first message sent by user is their name
-				// remember user name
-				userName = htmlEntities(message.utf8Data);
-				// get random color and send it back to the user
-				userColor = colors.shift();
-
-
-				connection.sendUTF(responseSuccess(200, "color", userColor, "User list.", true));
-
-				console.log((new Date()) + ' User is known as: ' + userName
-					+ ' with ' + userColor + ' color.');
-
-			} else { // log and broadcast the message
-				console.log((new Date()) + ' Received Message from '
-					+ userName + ': ' + message.utf8Data);
-
-				// we want to keep history of all sent messages
-				var obj = {
-					time: (new Date()).getTime(),
-					text: htmlEntities(message.utf8Data),
-					author: userName,
-					color: userColor
-				};
-				history.push(obj);
-				history = history.slice(-100);
-
-				// broadcast message to all connected clients
-
-				var json = connection.sendUTF(responseSuccess(200, "message", obj, "Obj", true));
-
-				for (var i = 0; i < clients.length; i++) {
-					console.log("Message Data Sent To All Users");
-					clients[i].sendUTF(json);
-				}
-			}
+	getLastMessage = (message, type) => {
+		switch (type) {
+			case "TEXT":
+				return message.substring(0, 100);
+			case "IMAGE":
+				return "📷";
+			case "DOCUMENT":
+				return "📄";
+			case "LOCATION":
+				return "📍";
+			case "CONTACT":
+				return "📞";
+			case "VIDEO":
+				return "🎞️";
+			case "IMAGE_CANDY":
+				return "Candy Image";
+			case "VIDEO_CANDY":
+				return "Candy Video";
+			case "IMAGE_PACK_CANDY":
+				return "Candy Pack";
+			case "VIDEO_PACK_CANDY":
+				return "Candy Pack";
+			case "REPlAY":
+				return "Replay";
+			default:
+				return message.substring(0, 100);
 		}
-	});
 
-	// user disconnected
-	connection.on('close', function (connection) {
-		if (userName !== false && userColor !== false) {
-			console.log((new Date()) + " Peer "
-				+ connection.remoteAddress + " disconnected.");
-			// remove user from the list of connected clients
-			clients.splice(index, 1);
-			// push back user's color to be reused by another user
-			colors.push(userColor);
-		}
-	});
-}
-
-//MARK:- Private Functions
-
-function getLastMessage(message, type) {
-	switch (type) {
-		case "TEXT":
-			return message.substring(0, 100);
-		case "IMAGE":
-			return "📷";
-		case "DOCUMENT":
-			return "📄";
-		case "LOCATION":
-			return "📍";
-		case "CONTACT":
-			return "📞";
-		case "VIDEO":
-			return "🎞️";
-		case "REPlAY":
-			return "Replay";
-		default:
-			return message.substring(0, 100);
 	}
 
-}
+	sendMessageToAll = (message) => {
+		Object.keys(allConnections).forEach((element) => {
+			console.log(`Connection:: ${allConnections[element].length}`);
+			allConnections[element].forEach((connection) => {
+				connection.sendUTF(message);
+			});
+		});
+	}
 
-function updateOnlineStatus(userId, online) {
-	///Create new object to update online and lst seen status
-	let dataToUpdate = { last_seen: new Date(), is_online: online };
-
-	UsersModel.findOneAndUpdate({ userId: userId }, dataToUpdate, {
-		new: false,
-		useFindAndModify: false
-	}, (err, updated_user) => {
-		if (updated_user) {
-			console.log("On Update Online Status:: ", err, updated_user);
-
-			updated_user["is_online"] = online;
-
-			/// Notify to all active user about that user status
-			Object.keys(cons).forEach((element) => {
-				cons[element].sendUTF(responseSuccess(200, "userModified", updated_user, "Online/Offline Status Changed", true));
+	sendMessageToUser = (user, message) => {
+		if (allConnections[user]) {
+			console.log(`Connection:: ${user} ${allConnections[user].length}`);
+			allConnections[user].forEach((connection) => {
+				connection.sendUTF(message);
 			});
 		}
-	});
-}
+	}
 
-function createNewRoomNotify(savedMessage) {
-	let fondData = { userId: { $in: savedMessage.userList } };
-	// { "userName": requestData.userName, "password": requestData.password };
-	UsersModel.find(fondData, (err, userList) => {
-
-		userList = userList.map((element) => {
-			let x = Object.assign({}, {
-				"_id": "",
-				"userName": "",
-				"password": "",
-				"userId": 0,
-				"fcm_token": "",
-				"device_id": "",
-				"is_online": false,
-				"last_seen": "",
-				"firstName": "",
-				"profile_pic": ""
-			}, JSON.parse(JSON.stringify(element)))
-			// console.log(x);
-			return x;
-		})
-
-		let responseData = { newRoom: savedMessage, userList: userList };
-		// console.log(`Room Saved.`, savedMessage.userList);
-		savedMessage.userList.forEach(element => {
-			// console.log(`Room Saved.`, element, cons[element]);
-			if (cons[element]) {
-				cons[element].sendUTF(responseSuccess(200, "createRoom", responseData, "New Room Created", true));
-			}
-
-		});
-	});
-}
-
-function createNewRoom(findObject, connection) {
-
-	var room = new RoomModel(findObject);
-
-	room.save().then((savedMessage) => {
-		// console.log(`Room Saved.`, savedMessage);
-		if (savedMessage) {
-
-			createNewRoomNotify(savedMessage);
-
+	addConnectionToList = (connection, userId) => {
+		console.log({ "message": "addConnectionToList", userId, remoteAddresses: connection.remoteAddress });
+		connection['uId'] = `${userId}`;
+		// connection['connectionID'] = Date.now();
+		if (!allConnections[userId] || allConnections[userId] == undefined) {
+			allConnections[userId] = [connection];
 		} else {
-			connection.sendUTF(responseError(500, "createRoom", "Failed To create room", true));
-		}
-
-	}).catch((ex) => {
-		console.error(`Room Failed to Saved.`, ex);
-		connection.sendUTF(responseError(500, "createRoom", "Failed To create room", true));
-	});
-
-
-}
-
-//MARK:- Oprations
-async function roomRequest(requestData, connection) {
-
-	if (requestData.type == 'roomsDetails') {
-		if (!requestData.roomId) {
-			connection.sendUTF(responseError(400, "roomsDetails", "Please enter room id", true));
-		}
-		let roomId = requestData.roomId;
-
-		RoomModel.find({ _id: mongoose.Types.ObjectId(roomId) }).exec((err, messages) => {
-			//res.send(messages);
-			// console.log(`On connect Error:::${err} data:::`, messages);
-			// connection.sendUTF(`user login successfully ${messages}`);
-
-			if (messages && messages.length > 0) {
-				console.log(`Room Data Found....`, messages);
-				let usersList = [];
-				messages.forEach((element) => {
-					usersList = usersList.concat(Object.keys(element.users));
-				});
-
-				usersList = [...new Set(usersList)];
-
-				let fondData = { userId: { $in: usersList } };
-				// { "userName": requestData.userName, "password": requestData.password };
-				UsersModel.find(fondData, (err, userList) => {
-
-					userList = userList.map((element) => {
-						let x = Object.assign({}, {
-							"_id": "",
-							"userName": "",
-							"password": "",
-							"userId": 0,
-							"fcm_token": "",
-							"device_id": "",
-							"is_online": false,
-							"last_seen": "",
-							"firstName": "",
-							"profile_pic": ""
-						}, JSON.parse(JSON.stringify(element)))
-						// console.log(x);
-						return x;
-					})
-
-					let responseData = { roomList: messages, userList: userList };
-					// console.log(`responseData::: `, responseData);
-					connection.sendUTF(responseSuccess(200, "roomsDetails", responseData, "Data Found", true));
-					// userList
-				});
+			let alreadyHas = allConnections[userId].some((element) => {
+				return element.remoteAddress == connection.remoteAddress
+			});
+			if (alreadyHas) {
+				console.log(`connection is already available `); //${connection.remoteAddress}
 			} else {
-				connection.sendUTF(responseError(404, "roomsDetails", "Not Found", true));
+				console.log(`new connection `); //${connection.remoteAddress}
+				allConnections[userId].push(connection);
+			}
+
+		}
+	}
+
+	removeConnectionFromList = (connection) => {
+		let userId = connection.uId;
+		let remoteAddress = connection.remoteAddress;
+		if (!(!allConnections[userId] || allConnections[userId] == undefined)) {
+			let filteredConnections = allConnections[userId].filter((element) => {
+				return element.remoteAddress != remoteAddress;
+			});
+			allConnections[userId] = filteredConnections;
+		}
+	}
+
+	/* sendMessageToUser = (user, message) => {
+		if (allConnections[user]) {
+			allConnections[user].sendUTF(message);
+		}
+	}
+
+	addConnectionToList = (connection, userId) => {
+		connection['uId'] = userId;
+		connection['connectionID'] = Date.now();
+		allConnections[userId] = connection;
+	}
+
+	removeConnectionFromList = (connection) => {
+
+		delete allConnections[userId];
+		// let userId = connection.uId;
+		// let connectionID = connection.connectionID;
+		// if (!(!allConnections[userId] || allConnections[userId] == undefined)) {
+		// 	let filteredConnections = allConnections[userId].filter((element) => {
+		// 		return element.connectionID != connectionID;
+		// 	});
+		// 	allConnections[userId] = filteredConnections;
+		// }
+	} */
+
+	updateOnlineStatus = (userId, online) => {
+		///Create new object to update online and lst seen status
+		let dataToUpdate = { last_seen: new Date(), is_online: online };
+
+		UsersModel.findOneAndUpdate({ userId: userId }, dataToUpdate, {
+			new: false,
+			useFindAndModify: false
+		}, (err, updated_user) => {
+			if (updated_user) {
+				// console.log("On Update Online Status:: ", err, updated_user);
+
+				updated_user["is_online"] = online;
+
+				/// Notify to all active user about that user status
+				this.sendMessageToAll(this.responseSuccess(200, "userModified", updated_user, "Online/Offline Status Changed", true));
+
 			}
 		});
-	} else if (requestData.type == 'allRooms') {
-		if (!requestData.userList) {
-			connection.sendUTF(responseError(400, "allRooms", "Please enter user id", true));
-		}
-		let userList = requestData.userList;
+	}
 
-		let findObject = {};
-		userList.forEach((element) => {
-			findObject[`users.${element}`] = true;
+	createNewRoomNotify = (savedMessage) => {
+		let fondData = { userId: { $in: savedMessage.userList } };
+		// { "userName": requestData.userName, "password": requestData.password };
+		UsersModel.find(fondData, (err, userList) => {
+
+			userList = userList.map((element) => {
+				let x = Object.assign({}, {
+					"_id": "",
+					"userName": "",
+					"password": "",
+					"userId": 0,
+					"fcm_token": "",
+					"device_id": "",
+					"is_online": false,
+					"last_seen": "",
+					"firstName": "",
+					"profile_pic": ""
+				}, JSON.parse(JSON.stringify(element)))
+				// console.log(x);
+				return x;
+			})
+
+			let responseData = { newRoom: savedMessage, userList: userList };
+			// console.log(`Room Saved.`, savedMessage.userList);
+			savedMessage.userList.forEach(element => {
+				// console.log(`Room Saved.`, element, cons[element]);
+				this.sendMessageToUser(element, this.responseSuccess(200, "createRoom", responseData, "New Room Created", true));
+			});
+		});
+	}
+
+	createNewRoom = (findObject, connection) => {
+
+		var room = new RoomModel(findObject);
+
+		room.save().then((savedMessage) => {
+			// console.log(`Room Saved.`, savedMessage);
+			if (savedMessage) {
+
+				this.createNewRoomNotify(savedMessage);
+
+			} else {
+				connection.sendUTF(this.responseError(500, "createRoom", "Failed To create room", true));
+			}
+
+		}).catch((ex) => {
+			console.error(`Room Failed to Saved.`, ex);
+			connection.sendUTF(this.responseError(500, "createRoom", "Failed To create room", true));
 		});
 
-		console.log(findObject);
-		RoomModel.find(findObject).sort({ last_message_time: -1 }).exec((err, messages) => {
-			//res.send(messages);
-			// console.log(`On connect Error:::${err} data:::`, messages);
-			// connection.sendUTF(`user login successfully ${messages}`);
 
-			if (messages && messages.length > 0) {
-				console.log(`Room Data Found....`, messages);
-				let usersList = [];
-				messages.forEach((element) => {
-					usersList = usersList.concat(Object.keys(element.users));
-				});
+	}
 
-				usersList = [...new Set(usersList)];
+	currentLocation = async (requestData, connection) => {
 
-				let fondData = { userId: { $in: usersList } };
-				// { "userName": requestData.userName, "password": requestData.password };
-				UsersModel.find(fondData, (err, userList) => {
-					// console.log("userList", userList);
-					if (err) {
-						connection.sendUTF(responseError(500, "allRooms", "Some technical error", true));
-					} else {
+		if (requestData.type == 'update') {
+			if (!this.isFine(requestData.bookingId)) {
+				connection.sendUTF(this.responseError(400, "currentLocation", "bookingId required.", true));
+			} else {
+				if (bookingConnectionList[requestData.bookingId] != null) {
+					bookingConnectionList[requestData.bookingId].forEach((con) => {
+						let response = {
+							current_location: requestData.current_location,
+							userId: requestData.userId
+						};
+						con.sendUTF(this.responseSuccess(200, "currentLocation", response, "Block Status Changed", true));
+					});
+				}
+			}
+		} else if (requestData.type == 'register') {
+			if (!this.isFine(requestData.bookingId)) {
+				connection.sendUTF(this.responseError(400, "currentLocationRegister", "bookingId required.", true));
+			} else {
+				let tmpBookingConnectionList = bookingConnectionList[requestData.bookingId];
+				if (tmpBookingConnectionList != undefined) {
+					// tmpBookingConnectionList.push(requestData.userId);
+					tmpBookingConnectionList.push(connection);
+					// connection.sendUTF(this.responseError(400, "currentLocation", "user is required.", true));
+				} else {
+					// tmpBookingConnectionList = [requestData.userId];
+					tmpBookingConnectionList = [connection];
+				}
+				bookingConnectionList[requestData.bookingId] = tmpBookingConnectionList;
+			}
+		}
+	}
+
+	//MARK:- Oprations
+	roomRequest = async (requestData, connection) => {
+
+		if (requestData.type == 'roomsDetails') {
+			if (!requestData.roomId) {
+				connection.sendUTF(this.responseError(400, "roomsDetails", "Please enter room id", true));
+			}
+			let roomId = requestData.roomId;
+
+			RoomModel.find({ _id: mongoose.Types.ObjectId(roomId) }).exec((err, messages) => {
+				//res.send(messages);
+				// console.log(`On connect Error:::${err} data:::`, messages);
+				// connection.sendUTF(`user login successfully ${messages}`);
+
+				if (messages && messages.length > 0) {
+					console.log(`Room Data Found....`, messages);
+					let usersList = [];
+					messages.forEach((element) => {
+						usersList = usersList.concat(Object.keys(element.users));
+					});
+
+					usersList = [...new Set(usersList)];
+
+					let fondData = { userId: { $in: usersList } };
+					// { "userName": requestData.userName, "password": requestData.password };
+					UsersModel.find(fondData, (err, userList) => {
+
 						userList = userList.map((element) => {
 							let x = Object.assign({}, {
 								"_id": "",
@@ -457,803 +433,895 @@ async function roomRequest(requestData, connection) {
 
 						let responseData = { roomList: messages, userList: userList };
 						// console.log(`responseData::: `, responseData);
-						connection.sendUTF(responseSuccess(200, "allRooms", responseData, "Data Found", true));
+						connection.sendUTF(this.responseSuccess(200, "roomsDetails", responseData, "Data Found", true));
 						// userList
+					});
+				} else {
+					connection.sendUTF(this.responseError(404, "roomsDetails", "Not Found", true));
+				}
+			});
+		} else if (requestData.type == 'allRooms') {
+			let rules = {
+				// userList: 'required|array|min:1'
+				userList: 'array'
+			};
+
+			let validation = new Validator(requestData, rules);
+
+			if (validation.fails()) {
+				connection.sendUTF(this.responseError(400, "allRooms", validation.errors, true));
+			} else {
+
+				let userList = requestData.userList;
+
+				let findObject = {};
+				userList.forEach((element) => {
+					findObject[`users.${element}`] = true;
+				});
+
+				console.log(findObject);
+				RoomModel.find(findObject).sort({ last_message_time: -1 }).exec((err, messages) => {
+					//res.send(messages);
+					// console.log(`On connect Error:::${err} data:::`, messages);
+					// connection.sendUTF(`user login successfully ${messages}`);
+
+					if (messages && messages.length > 0) {
+						console.log(`Room Data Found....`, messages);
+						let usersList = [];
+						messages.forEach((element) => {
+							usersList = usersList.concat(Object.keys(element.users));
+						});
+
+						usersList = [...new Set(usersList)];
+
+						let fondData = { userId: { $in: usersList } };
+						// { "userName": requestData.userName, "password": requestData.password };
+						UsersModel.find(fondData, (err, userList) => {
+							// console.log("userList", userList);
+							if (err) {
+								connection.sendUTF(this.responseError(500, "allRooms", "Some technical error", true));
+							} else {
+								userList = userList.map((element) => {
+									let x = Object.assign({}, {
+										"_id": "",
+										"userName": "",
+										"password": "",
+										"userId": 0,
+										"fcm_token": "",
+										"device_id": "",
+										"is_online": false,
+										"last_seen": "",
+										"firstName": "",
+										"profile_pic": ""
+									}, JSON.parse(JSON.stringify(element)))
+									// console.log(x);
+									return x;
+								})
+
+								let responseData = { roomList: messages, userList: userList };
+								// console.log(`responseData::: `, responseData);
+								connection.sendUTF(this.responseSuccess(200, "allRooms", responseData, "Data Found", true));
+								// userList
+							}
+						});
+					} else {
+						connection.sendUTF(this.responseError(404, "allRooms", "Not Found", true));
 					}
 				});
-			} else {
-				connection.sendUTF(responseError(404, "allRooms", "Not Found", true));
 			}
-		});
-	} else if (requestData.type == 'createRoom') {
 
-		var userList = requestData.userList;
-		var createBy = requestData.createBy;
 
-		if (userList.length <= 1) {
-			connection.sendUTF(responseError(400, "createRoom", "Please add users list.", true));
-		} else if (!isFine(createBy)) {
-			connection.sendUTF(responseError(400, "createRoom", "Please createBy id not found.", true));
-		} else {
+		} else if (requestData.type == 'createRoom') {
+
+			let rules = {
+				userList: 'required|array|min:1',
+				createBy: 'required'
+			};
+
+			let validation = new Validator(requestData, rules);
+
+			let userList = requestData.userList;
+			let createBy = requestData.createBy;
+
+			if (validation.fails()) {
+				connection.sendUTF(this.responseError(400, "createRoom", validation.errors, true));
+			} else {
+				// var roomType = requestData.roomType;
+				let findObject = {};
+				userList.forEach((element) => {
+					findObject[`users.${element}`] = true;
+				});
+				if (requestData.room_type == "group") {
+					findObject["type"] = "group";
+					let groupDetails = Object.assign({}, {
+						group_name: "untitled group",
+					}, requestData.group_details);
+					findObject["group_details"] = groupDetails;
+					findObject["type"] = "group";
+				} else {
+					findObject["type"] = "individual";
+				}
+
+				findObject['last_message_time'] = new Date();
+				findObject['userList'] = userList;
+				findObject['createBy'] = createBy;
+
+				if (userList.length == 2) {
+
+					let group = await RoomModel.find({ userList: { $all: userList, $size: userList.length } });
+					// let group = await RoomModel.find({ 'users.anil' : true,  'users.shubhum' : true , userList: {$size : 2}});
+					// let group = await RoomModel.find({ 'users.anil' : true,  'users.shubhum' : true });
+					if (group.length) {
+						console.log('Group already exists');
+
+						this.createNewRoomNotify(group[0]);
+
+						// connection.sendUTF(this.responseSuccess(200, "createRoom", group[0], "New Room Created", true));
+					} else {
+						this.createNewRoom(findObject, connection);
+					}
+				} else {
+					this.createNewRoom(findObject, connection);
+				}
+
+			}
+
+
+		} else if (requestData.type == 'checkRoom') {
+
+			var userList = requestData.userList;
+
+
 			// var roomType = requestData.roomType;
 			let findObject = {};
 			userList.forEach((element) => {
 				findObject[`users.${element}`] = true;
 			});
-			if (requestData.room_type == "group") {
-				findObject["type"] = "group";
-				let groupDetails = Object.assign({}, {
-					group_name: "untitled group",
-				}, requestData.group_details);
-				findObject["group_details"] = groupDetails;
-				findObject["type"] = "group";
+
+
+			let group = await RoomModel.find({ userList: { $all: userList, $size: userList.length } });
+			// let group = await RoomModel.find({ 'users.anil' : true,  'users.shubhum' : true , userList: {$size : 2}});
+			// let group = await RoomModel.find({ 'users.anil' : true,  'users.shubhum' : true });
+			if (group.length) {
+				// console.log('Group already exists');
+				connection.sendUTF(this.responseSuccess(200, "checkRoom", group[0], "Room already exist", true));
 			} else {
-				findObject["type"] = "individual";
+				// console.log('Group not already exists');
+				connection.sendUTF(this.responseSuccess(404, "checkRoom", {}, "Room not exist", true));
 			}
+		} else if (requestData.type == 'roomsModify') {
 
-			findObject['last_message_time'] = new Date();
-			findObject['userList'] = userList;
-			findObject['createBy'] = createBy;
 
-			if (userList.length == 2) {
+			var roomId = requestData.roomId;
 
-				let group = await RoomModel.find({ userList: { $all: userList, $size: userList.length } });
-				// let group = await RoomModel.find({ 'users.anil' : true,  'users.shubhum' : true , userList: {$size : 2}});
-				// let group = await RoomModel.find({ 'users.anil' : true,  'users.shubhum' : true });
-				if (group.length) {
-					console.log('Group already exists');
-
-					createNewRoomNotify(group[0]);
-
-					// connection.sendUTF(responseSuccess(200, "createRoom", group[0], "New Room Created", true));
-				} else {
-					createNewRoom(findObject, connection);
-				}
+			if (!this.isFine(roomId)) {
+				connection.sendUTF(this.responseError(400, "roomsModified", "Please add room id.", true));
 			} else {
-				createNewRoom(findObject, connection);
-			}
-
-		}
-
-
-	} else if (requestData.type == 'checkRoom') {
-
-		var userList = requestData.userList;
-
-
-		// var roomType = requestData.roomType;
-		let findObject = {};
-		userList.forEach((element) => {
-			findObject[`users.${element}`] = true;
-		});
-
-
-		let group = await RoomModel.find({ userList: { $all: userList, $size: userList.length } });
-		// let group = await RoomModel.find({ 'users.anil' : true,  'users.shubhum' : true , userList: {$size : 2}});
-		// let group = await RoomModel.find({ 'users.anil' : true,  'users.shubhum' : true });
-		if (group.length) {
-			// console.log('Group already exists');
-			connection.sendUTF(responseSuccess(200, "checkRoom", group[0], "Room already exist", true));
-		} else {
-			// console.log('Group not already exists');
-			connection.sendUTF(responseSuccess(404, "checkRoom", {}, "Room not exist", true));
-		}
-	} else if (requestData.type == 'roomsModify') {
-
-
-		var roomId = requestData.roomId;
-
-		if (!isFine(roomId)) {
-			connection.sendUTF(responseError(400, "roomsModified", "Please add room id.", true));
-		} else {
-			let dataToUpdate = {};
-			if (isFine(requestData.unread)) {
-				dataToUpdate[`unread.${requestData.unread}`] = 0;
-			}
-
-			RoomModel.findOneAndUpdate({ _id: mongoose.Types.ObjectId(roomId) }, dataToUpdate, {
-				new: false,
-				useFindAndModify: false
-			}, (err, updatedRoom) => {
-				console.log("updatedRoom:::", updatedRoom);
-
-
-				if (err) {
-					connection.sendUTF(responseError(500, "roomsModified", "Internal Server Error.", true));
-				} else {
-					updatedRoom[`unread`][requestData.unread] = 0;
-					connection.sendUTF(responseSuccess(200, "roomsModified", updatedRoom, "Data updated successfully.", true));
+				let dataToUpdate = {};
+				if (this.isFine(requestData.unread)) {
+					dataToUpdate[`unread.${requestData.unread}`] = 0;
 				}
 
-			});
+				RoomModel.findOneAndUpdate({ _id: mongoose.Types.ObjectId(roomId) }, dataToUpdate, {
+					new: false,
+					useFindAndModify: false
+				}, (err, updatedRoom) => {
+					// console.log("updatedRoom:::", updatedRoom);
+
+
+					if (err) {
+						connection.sendUTF(this.responseError(500, "roomsModified", "Internal Server Error.", true));
+					} else {
+						updatedRoom[`unread`][requestData.unread] = 0;
+						connection.sendUTF(this.responseSuccess(200, "roomsModified", updatedRoom, "Data updated successfully.", true));
+					}
+
+				});
+			}
 		}
 	}
-}
 
-async function allUser(requestData, connection) {
-	if (requestData.type == 'allUsers') {
-		UsersModel.find({}, (err, messages) => {
-			//res.send(messages);
-			console.log(`On UsersModel.find Error:::${err} responses:::`, messages);
-			if (messages && messages.length > 0) {
-				connection.sendUTF(responseSuccess(200, "allUsers", messages, "User list.", true));
-			} else {
-				connection.sendUTF(responseError(404, "allUsers", "Not Found", true));
-			}
-		});
-	} else {
-		connection.sendUTF(responseError(500, "allUsers", "Action/Path not found.", true));
+	allUser = async (requestData, connection) => {
+		if (requestData.type == 'allUsers') {
+			UsersModel.find({}, (err, messages) => {
+				//res.send(messages);
+				console.log(`On UsersModel.find Error:::${err} responses:::`, messages);
+				if (messages && messages.length > 0) {
+					connection.sendUTF(this.responseSuccess(200, "allUsers", messages, "User list.", true));
+				} else {
+					connection.sendUTF(this.responseError(404, "allUsers", "Not Found", true));
+				}
+			});
+		} else {
+			connection.sendUTF(this.responseError(500, "allUsers", "Action/Path not found.", true));
+		}
+
 	}
 
-}
+	loginRequest = async (requestData, connection) => {
 
-async function loginRequest(requestData, connection) {
+		if (requestData.type == 'login') {
 
-	if (requestData.type == 'login') {
+			// login validation
+			if (!this.isFine(requestData.userName) || !this.isFine(requestData.password)) {
 
-		// login validation
-		if (!isFine(requestData.userName) || !isFine(requestData.password)) {
+				connection.sendUTF(this.responseError(400, "login", "Username and password are required.", true));
 
-			connection.sendUTF(responseError(400, "login", "Username and password are required.", true));
+			} else {
 
-		} else {
+				let fondData = {
+					"userName": requestData.userName,
+					"password": requestData.password,
 
-			let fondData = {
-				"userName": requestData.userName,
-				"password": requestData.password,
+				};
+				UsersModel.findOne(fondData, async (err, userData) => {
 
-			};
-			UsersModel.findOne(fondData, async (err, userData) => {
+					console.log('userData', userData);
 
-				console.log('userData', userData);
+					if (!userData) {
+						connection.sendUTF(this.responseError(401, "login", "Unauthorized", true));
+					} else if (!this.isFine(userData['userId'])) {
+						connection.sendUTF(this.responseError(401, "login", "UserId not found.", true));
 
-				if (!userData) {
-					connection.sendUTF(responseError(401, "login", "Unauthorized", true));
-				} else if (!isFine(userData['userId'])) {
-					connection.sendUTF(responseError(401, "login", "UserId not found.", true));
+					} else {
 
-				} else {
+						let userId = userData['userId'];
 
-					let userId = userData['_id'];
+						this.addConnectionToList(connection, userId);
 
-					connection['uId'] = userId;
-					cons[userId] = connection;
-					loginUsers[userId] = userData;
+						loginUsers[userId] = userData;
 
-					userData.fcm_token = isFine(requestData.fcm_token) ? requestData.fcm_token : '';
-					userData.device_id = isFine(requestData.device_id) ? requestData.device_id : '';
-					userData.is_online = true;
-					userData.last_seen = new Date();
+						userData.fcm_token = this.isFine(requestData.fcm_token) ? requestData.fcm_token : '';
+						userData.device_id = this.isFine(requestData.device_id) ? requestData.device_id : '';
+						userData.is_online = true;
+						userData.last_seen = new Date();
 
-					await userData.save();
+						await userData.save();
 
-					//res.send(messages);
-					// console.log(`On connect Error:::${err} users:::`, userData);
+						//res.send(messages);
+						// console.log(`On connect Error:::${err} users:::`, userData);
 
-					console.log(`user login successfully`, userData);
-					connection.sendUTF(responseSuccess(200, "login", userData, "Login Success", true));
+						console.log(`user login successfully`, userData);
+						connection.sendUTF(this.responseSuccess(200, "login", userData, "Login Success", true));
 
-					updateOnlineStatus(userId, true);
+						this.updateOnlineStatus(userId, true);
 
-				}
+					}
 
-			});
+				});
 
-		}
+			}
 
 
-	} else if (requestData.type == 'loginOrCreate') {
+		} else if (requestData.type == 'loginOrCreate') {
 
-		if (!isFine(requestData.userName)) {
-
-			connection.sendUTF(responseError(400, "loginOrCreate", "Username is required.", true));
-
-		} else if (!isFine(requestData.password)) {
-
-			connection.sendUTF(responseError(400, "loginOrCreate", "Password is required.", true));
-
-		} else if (!isFine(requestData.userId)) {
-
-			connection.sendUTF(responseError(400, "loginOrCreate", "UserId is required.", true));
-
-		} else {
-
-			let fondData = {
-				"userName": requestData.userName,
-				"password": requestData.password,
-				"userId": requestData.userId,
-
+			/*
+			* {
+	  "request": "login",
+	  "userId": "4",
+	  "fcm_token": "qasdfghfds",
+	  "password": "123456",
+	  "type": "loginOrCreate",
+	  "userName": "ali@yopmail.com"
+	}
+	* */
+			let rules = {
+				userId: 'required|integer|string',
+				password: 'required|string',
+				userName: 'required|email'
 			};
 
-			UsersModel.findOne(fondData, async (err, userData) => {
+			let errorMessage = {
+				email: 'userName must be Email'
+			};
 
-				if (!userData) {
+			let validation = new Validator(requestData, rules, errorMessage);
 
-					fondData.fcm_token = isFine(requestData.fcm_token) ? requestData.fcm_token : '';
-					fondData.device_id = isFine(requestData.device_id) ? requestData.device_id : '';
-					isFine(requestData.firstName) && (fondData.firstName = requestData.firstName);
+			// validation.fails(); // true
+			// validation.passes(); // false
 
-					fondData.is_online = true;
-					fondData.last_seen = new Date();
-					var user = new UsersModel(fondData);
-					user.save().then((savedMessage) => {
-						// console.log(`User Saved.`, savedMessage);
-						connection.sendUTF(responseSuccess(200, "loginOrCreate", savedMessage, "Success.", true));
-					}).catch((ex) => {
-						console.error(`User Failed to Saved.`, ex);
-						connection.sendUTF(responseError(500, "loginOrCreate", "Internal Server Error.", true));
-					});
+			if (validation.fails()) {
+				connection.sendUTF(this.responseError(400, "loginOrCreate", validation.errors, true));
 
-				} else {
-
-					let userId = userData['userId'];
-
-					connection['uId'] = userId;
-
-					cons[userId] = connection;
-
-					loginUsers[userId] = userData;
-
-					isFine(requestData.firstName) && (fondData.firstName = requestData.firstName);
-					// userData.lastName = isFine(requestData.lastName) ? requestData.lastName : "";
-
-					userData.fcm_token = isFine(requestData.fcm_token) ? requestData.fcm_token : '';
-					userData.device_id = isFine(requestData.device_id) ? requestData.device_id : '';
-					await userData.save();
-
-					connection.sendUTF(responseSuccess(200, "loginOrCreate", userData, "Login Success", true));
-
-					updateOnlineStatus(userId, true);
-				}
-
-			});
-		}
-
-	} else if (requestData.type == 'register') {
-
-		// register validation
-		if (!isFine(requestData.userName)) {
-			connection.sendUTF(responseError(400, "register", "Username is required.", true));
-
-		} else if (!isFine(requestData.password)) {
-
-			connection.sendUTF(responseError(400, "register", "Password is required.", true));
-
-		} else if (!isFine(requestData.userId)) {
-
-			connection.sendUTF(responseError(400, "register", "UserId is required.", true));
-
-		} else {
-
-			UsersModel.find({ userId: requestData.userId, userName: requestData.userName }).then((userData) => {
-				console.log('userData', userData);
-				if (userData.length) {
-					return connection.sendUTF(responseError(400, "register", "User is already exist.", true));
-				}
+			} else {
 
 				let fondData = {
 					"userName": requestData.userName,
 					"password": requestData.password,
 					"userId": requestData.userId,
-					"is_online": true,
-					"last_seen": new Date
 				};
-				var user = new UsersModel(fondData);
-				user.save().then((savedMessage) => {
-					console.log(`User Saved.`, savedMessage);
 
-					connection.sendUTF(responseSuccess(200, "register", savedMessage, "Success.", true));
-				}).catch((ex) => {
-					console.error(`User Failed to Saved.`, ex);
+				UsersModel.findOne(fondData, async (err, userData) => {
 
+					if (!userData) {
 
-					connection.sendUTF(responseError(500, "register", "Internal Server Error.", true));
-				});
+						this.isFine(requestData.fcm_token) && (fondData.fcm_token = requestData.fcm_token);
+						this.isFine(requestData.device_id) && (fondData.device_id = requestData.device_id);
+						this.isFine(requestData.firstName) && (fondData.firstName = requestData.firstName);
 
-			})
-		}
-
-	} else if (requestData.type == 'updateProfile') {
-
-		/* if (!isFine(requestData._id)) {
-			connection.sendUTF(responseError(400, "updateProfile", "ObjectId is not provided.", true));
-		} else */
-		if (!isFine(requestData.userId)) {
-			connection.sendUTF(responseError(400, "updateProfile", "userId is required.", true));
-		} else {
-			var dataToUpdate = {};
-			if (isFine(requestData.userName)) {
-				dataToUpdate['userName'] = requestData.userName;
-			}
-
-			if (isFine(requestData.password)) {
-				dataToUpdate['password'] = requestData.password;
-			}
-
-			// if (isFine(requestData.userId)) {
-			// 	dataToUpdate['userId'] = requestData.userId;
-			// }
-
-			if (isFine(requestData.firstName)) {
-				dataToUpdate['firstName'] = requestData.firstName;
-			}
-
-			if (isFine(requestData.lastName)) {
-				dataToUpdate['lastName'] = requestData.lastName;
-			}
-
-			if (isFine(requestData.profile_pic)) {
-				dataToUpdate['profile_pic'] = requestData.profile_pic;
-			}
-
-			if (isFine(requestData.email)) {
-				dataToUpdate['email'] = requestData.email;
-			}
-
-			if (isFine(requestData.fcm_token)) {
-				dataToUpdate['fcm_token'] = requestData.fcm_token;
-			}
-
-			if (isFine(requestData.device_id)) {
-				dataToUpdate['device_id'] = requestData.device_id;
-			}
-
-			UsersModel.findOneAndUpdate({ /* _id: requestData._id,  */
-				userId: requestData.userId
-			}, dataToUpdate, { new: false, useFindAndModify: false }, (err, updated_user) => {
-				if (err) {
-					connection.sendUTF(responseError(500, "updateProfile", "Internal Server Error.", true));
-				}
-
-				if (updated_user == null) {
-					connection.sendUTF(responseError(400, "updateProfile", "No user found.", true));
-				}
-
-				connection.sendUTF(responseSuccess(200, "updateProfile", updated_user, "Data updated successfully.", true));
-
-
-				UsersModel.find({ _id: mongoose.Types.ObjectId(updated_user._id) }, (err, findUser) => {
-
-					if (findUser && findUser.length > 0) {
-						/// Notify to all active user about that user profile
-						Object.keys(cons).forEach((element) => {
-							cons[element].sendUTF(responseSuccess(200, "userModified", findUser[0], "User Details Changed", true));
+						fondData.is_online = true;
+						fondData.last_seen = new Date();
+						let user = new UsersModel(fondData);
+						user.save().then((savedMessage) => {
+							// console.log(`User Saved.`, savedMessage);
+							connection.sendUTF(this.responseSuccess(200, "loginOrCreate", savedMessage, "Success.", true));
+						}).catch((ex) => {
+							console.error(`User Failed to Saved.`, ex);
+							connection.sendUTF(this.responseError(500, "loginOrCreate", "Internal Server Error.", true));
 						});
+
+					} else {
+
+						let userId = userData['userId'];
+						this.addConnectionToList(connection, userId);
+
+						loginUsers[userId] = userData;
+
+						this.isFine(requestData.firstName) && (userData.firstName = requestData.firstName);
+						this.isFine(requestData.fcm_token) && (userData.fcm_token = requestData.fcm_token);
+						this.isFine(requestData.device_id) && (userData.device_id = requestData.device_id);
+
+						await userData.save();
+
+						connection.sendUTF(this.responseSuccess(200, "loginOrCreate", userData, "Login Success", true));
+
+						this.updateOnlineStatus(userId, true);
+					}
+
+				});
+			}
+
+		} else if (requestData.type == 'register') {
+
+			// register validation
+			if (!this.isFine(requestData.userName)) {
+				connection.sendUTF(this.responseError(400, "register", "Username is required.", true));
+
+			} else if (!this.isFine(requestData.password)) {
+
+				connection.sendUTF(this.responseError(400, "register", "Password is required.", true));
+
+			} else if (!this.isFine(requestData.userId)) {
+
+				connection.sendUTF(this.responseError(400, "register", "UserId is required.", true));
+
+			} else {
+
+				UsersModel.find({ userId: requestData.userId, userName: requestData.userName }).then((userData) => {
+					console.log('userData', userData);
+					if (userData.length) {
+						return connection.sendUTF(this.responseError(400, "register", "User is already exist.", true));
+					}
+
+					let fondData = {
+						"userName": requestData.userName,
+						"password": requestData.password,
+						"userId": requestData.userId,
+						"is_online": true,
+						"last_seen": new Date
+					};
+					var user = new UsersModel(fondData);
+					user.save().then((savedMessage) => {
+						console.log(`User Saved.`, savedMessage);
+
+						connection.sendUTF(this.responseSuccess(200, "register", savedMessage, "Success.", true));
+					}).catch((ex) => {
+						console.error(`User Failed to Saved.`, ex);
+
+
+						connection.sendUTF(this.responseError(500, "register", "Internal Server Error.", true));
+					});
+
+				})
+			}
+
+		} else if (requestData.type == 'updateProfile') {
+
+			/* if (!this.isFine(requestData._id)) {
+				connection.sendUTF(this.responseError(400, "updateProfile", "ObjectId is not provided.", true));
+			} else */
+			if (!this.isFine(requestData.userId)) {
+				connection.sendUTF(this.responseError(400, "updateProfile", "userId is required.", true));
+			} else {
+				let dataToUpdate = {};
+				if (this.isFine(requestData.userName)) {
+					dataToUpdate['userName'] = requestData.userName;
+				}
+
+				if (this.isFine(requestData.password)) {
+					dataToUpdate['password'] = requestData.password;
+				}
+
+				// if (this.isFine(requestData.userId)) {
+				// 	dataToUpdate['userId'] = requestData.userId;
+				// }
+
+				if (this.isFine(requestData.firstName)) {
+					dataToUpdate['firstName'] = requestData.firstName;
+				}
+
+				if (this.isFine(requestData.lastName)) {
+					dataToUpdate['lastName'] = requestData.lastName;
+				}
+
+				if (this.isFine(requestData.profile_pic)) {
+					dataToUpdate['profile_pic'] = requestData.profile_pic;
+				}
+
+				if (this.isFine(requestData.email)) {
+					dataToUpdate['email'] = requestData.email;
+				}
+
+				if (this.isFine(requestData.fcm_token)) {
+					dataToUpdate['fcm_token'] = requestData.fcm_token;
+				}
+
+				if (this.isFine(requestData.device_id)) {
+					dataToUpdate['device_id'] = requestData.device_id;
+				}
+
+				UsersModel.findOneAndUpdate({ /* _id: requestData._id,  */
+					userId: requestData.userId
+				}, dataToUpdate, { new: false, useFindAndModify: false }, (err, updated_user) => {
+					if (err) {
+						connection.sendUTF(this.responseError(500, "updateProfile", "Internal Server Error.", true));
+					}
+
+					if (updated_user == null) {
+						connection.sendUTF(this.responseError(400, "updateProfile", "No user found.", true));
+					}
+
+					connection.sendUTF(this.responseSuccess(200, "updateProfile", updated_user, "Data updated successfully.", true));
+
+
+					UsersModel.find({ _id: mongoose.Types.ObjectId(updated_user._id) }, (err, findUser) => {
+
+						if (findUser && findUser.length > 0) {
+							/// Notify to all active user about that user profile
+							this.sendMessageToAll(this.responseSuccess(200, "userModified", findUser[0], "User Details Changed", true))
+						}
+					});
+
+				});
+			}
+
+		} else {
+			connection.sendUTF(this.responseError(404, "noActionInLogin", "Action/Path not found.", true));
+		}
+	}
+
+	formatTheMessages = (message) => {
+		message = JSON.parse(JSON.stringify(message));
+		// message["timestamp"] = new Date(message.time).getTime();
+
+		message = Object.assign({}, message, { "timestamp": new Date(message.time).getTime() });
+		// console.log("Message::::", message);
+		return message;
+
+	}
+	messageRequest = async (requestData, connection) => {
+
+		const key = requestData.room;
+		console.log('key-----', key);
+
+		if (!this.isFine(key)) {
+			connection.sendUTF(this.responseError(400, "message", "Room id is required {room}.", true));
+		} else {
+
+			if (requestData.type === 'allMessage') {
+
+				let findObject = {
+					roomId: mongoose.Types.ObjectId(key)
+				};
+
+				MessageModel.find(findObject, (err, messages) => {
+					//res.send(messages);
+					// console.log(`allMessage Error:::${err} data:::`, messages);
+
+					if (messages && messages.length > 0) {
+						console.log(`All Message Found....`);
+						let formatMessages = messages.map((element) => {
+							return this.formatTheMessages(element);
+						});
+
+						connection.sendUTF(this.responseSuccess(200, "message", formatMessages, "message All list", true));
+					} else {
+						connection.sendUTF(this.responseError(404, "message", "Data not found.", true));
 					}
 				});
 
-			});
-		}
-
-	} else {
-		connection.sendUTF(responseError(404, "noActionInLogin", "Action/Path not found.", true));
-	}
-}
-
-function formatTheMessages(message) {
-	message = JSON.parse(JSON.stringify(message));
-	// message["timestamp"] = new Date(message.time).getTime();
-
-	message = Object.assign({}, message, { "timestamp": new Date(message.time).getTime() });
-	// console.log("Message::::", message);
-	return message;
-
-}
-
-async function messageRequest(requestData, connection) {
-
-	const key = requestData.room;
-	console.log('key-----', key);
-
-	if (!isFine(key)) {
-		connection.sendUTF(responseError(400, "message", "Room id is required {room}.", true));
-	}
-
-	console.log("MsgModel:::", MsgModel);
-	if (MsgModel[`chat_${key}`] === undefined) {
-		MsgModel[`chat_${key}`] = mongoose.model(`chat_${key}`, MessageSchema);
-	}
+			} else if (requestData.type === 'addMessage') {
 
 
-	if (requestData.type === 'allMessage') {
+				/*
+				* {
+		  * "roomId": "608437be5c7a813378e455b5",
+		  * "room": "608437be5c7a813378e455b5",
+		  * "message": "Hiiiiiiiiiiii",
+		  * "receiver_id": "123456",
+		  * "message_type": "TEXT",
+		  *  "sender_id": "4",
+		  *
+		  "message_content": {
 
-		let findObject = {};
-
-		MsgModel[`chat_${key}`].find(findObject, (err, messages) => {
-			//res.send(messages);
-			console.log(`On connect Error:::${err} data:::`, messages);
-
-			if (messages && messages.length > 0) {
-				console.log(`All Message Found....`);
-				let formatMessages = messages.map((element) => {
-					return formatTheMessages(element);
-				});
-
-				connection.sendUTF(responseSuccess(200, "message", formatMessages, "message All list", true));
-			} else {
-				connection.sendUTF(responseError(404, "message", "Data not found.", true));
-			}
-		});
-
-	} else if (requestData.type === 'addMessage') {
-
-		let messageData = requestData;
-		console.log("Message Data" + messageData.roomId);
-		const messageModel = new MsgModel[`chat_${key}`]({
-			roomId: mongoose.Types.ObjectId(messageData.roomId),
-
-			message: messageData.message,
-			message_type: messageData.message_type,
-
-			media: "",
-
-			receiver_id: messageData.receiver_id,
-			time: new Date(),
-
-			sender_id: messageData.sender_id,
-			message_content: messageData.message_content
-		});
-		// try {
-		messageModel.save().then((savedMessage) => {
-			// console.log(`Message Saved.`, savedMessage);
+		  },
+		  "request": "message",
+		  "type": "addMessage"
+		}*/
 
 
-			RoomModel.findById(mongoose.Types.ObjectId(messageData.roomId)).then((room, err) => {
-				// console.log('messageRequest Room list::::', room);
-				// console.log('room list::::', cons);
+				let rules = {
+					roomId: 'required|string',
+					room: 'required|string',
+					message_type: 'required|string',
+					sender_id: 'required|integer|string',
+					//message: 'required|string'
+				};
+				let validation = new Validator(requestData, rules);
 
-				let newMessageInfo;
-				if (room["unread"] !== undefined) {
-					let unreadObject = room.users;
-					let userIdOfUnreadMessges = Object.keys(unreadObject);
+				// validation.fails(); // true
+				// validation.passes(); // false
 
-					let unread = room.unread;
-
-					userIdOfUnreadMessges.forEach((userId) => {
-						let oldCount = unread[userId];
-						let newUnreadMessage = oldCount ? oldCount + 1 : 1;
-						if (userId === messageData.sender_id) {
-							unread[userId] = 0;
-						} else {
-							unread[userId] = newUnreadMessage;
-						}
-					});
-					newMessageInfo = { unread: unread }
-
+				if (validation.fails()) {
+					connection.sendUTF(this.responseError(400, "message", validation.errors, true));
 				} else {
-					let unreadObject = room.users;
-					let userIdOfUnreadMessages = Object.keys(unreadObject);
+					let messageData = requestData;
+					console.log("Message Data" + messageData.roomId);
+					const messageModel = new MessageModel({
+						roomId: mongoose.Types.ObjectId(messageData.roomId),
 
-					let unread = {};
-					userIdOfUnreadMessages.forEach((userId) => {
-						let newUnreadMessage = 1;
-						if (userId === messageData.sender_id) {
-							unread[userId] = 0;
-						} else {
-							unread[userId] = newUnreadMessage;
-						}
+						message: messageData.message,
+						message_type: messageData.message_type,
 
+						media: "",
+
+						receiver_id: messageData.receiver_id,
+						time: new Date(),
+
+						sender_id: messageData.sender_id,
+						message_content: messageData.message_content
 					});
+					// try {
+					messageModel.save().then((savedMessage) => {
+						// console.log(`Message Saved.`, savedMessage);
 
-					newMessageInfo = { unread: unread }
+						RoomModel.findById(mongoose.Types.ObjectId(messageData.roomId)).then((room, err) => {
+							// console.log('messageRequest Room list::::', room);
+							// console.log('room list::::', cons);
+
+							let newMessageInfo = {};
+							if (room["unread"] !== undefined) {
+								let unreadObject = room.users;
+								let userIdOfUnreadMessges = Object.keys(unreadObject);
+
+								let unread = room.unread;
+
+								userIdOfUnreadMessges.forEach((userId) => {
+									let oldCount = unread[userId];
+									let newUnreadMessage = oldCount ? oldCount + 1 : 1;
+									if (userId === messageData.sender_id) {
+										unread[userId] = 0;
+									} else {
+										unread[userId] = newUnreadMessage;
+									}
+								});
+								newMessageInfo = { unread: unread }
+
+							} else {
+								let unreadObject = room.users;
+								let userIdOfUnreadMessages = Object.keys(unreadObject);
+
+								let unread = {};
+								userIdOfUnreadMessages.forEach((userId) => {
+									let newUnreadMessage = 1;
+									if (userId === messageData.sender_id) {
+										unread[userId] = 0;
+									} else {
+										unread[userId] = newUnreadMessage;
+									}
+
+								});
+
+								newMessageInfo = { unread: unread }
+							}
+
+							newMessageInfo["last_message"] = this.getLastMessage(messageData.message, messageData.message_type);
+							newMessageInfo["last_message_time"] = new Date();
+
+							console.log('MessageRequest:::: newMessageInfo:: ', newMessageInfo);
+
+
+							/* users: Object,
+
+				type: String, //group/individual
+				last_message: Object,
+				message_info: Object,
+				users_meta: Object,
+				userList: Array */
+							RoomModel.findOneAndUpdate({ _id: mongoose.Types.ObjectId(room._id) }, newMessageInfo, {
+								new: true,
+								useFindAndModify: false
+							}, (err, updatedRoom) => {
+								// console.log("RoomModel::: update", err, updatedRoom);
+								if (err) {
+
+								} else {
+									let messageToSend = this.responseSuccess(200, "roomsModified", updatedRoom, "Modified", true);
+									room.userList.forEach(user => {
+										this.sendMessageToUser(user, messageToSend);
+									});
+								}
+
+							});
+
+							let formattedMessages = this.formatTheMessages(savedMessage);
+
+							let messageToSend = this.responseSuccess(201, "message", formattedMessages, "Data Found", true);
+							room.userList.forEach(user => {
+								this.sendMessageToUser(user, messageToSend);
+							});
+
+							// let receverUserListId = room.userList.filter((element) => {
+							// 	return element != messageData.sender_id;
+							// });
+
+
+							let fondData = { userId: { $in: room.userList } };
+							// { "userName": requestData.userName, "password": requestData.password };
+							UsersModel.find(fondData, (err, userList) => {
+
+								let receiverUserList = userList.filter((element) => {
+									return element.userId != messageData.sender_id;
+								});
+								let senderUserDetail = userList.find((element) => {
+									return element.userId == messageData.sender_id;
+								});
+
+								let fcmTokens = receiverUserList.map((element) => {
+									return element.fcm_token;
+								});
+								console.log(`fcmTokens::: `, fcmTokens);
+
+								let message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
+									// to: 'dmR-mgKqSuGymuJNQ5CsSR:APA91bFkMkphaI-La1rfnNOX1P8ND8aAzy5hjt4qRN4wqpGjWgfHLB3TbkSEhrQsf9v7_dDwlpv7l8fqwTiPOiHAEItKKS0gePF9hTN5nSfNqzBu1BlRGJC04W9BVXPaNEgjJS3ouBzV',
+
+									"registration_ids": fcmTokens,
+									// collapse_key: 'your_collapse_key',
+
+									notification: {
+										title: `New message from ${senderUserDetail.firstName}`,
+										body: this.getLastMessage(messageData.message, messageData.message_type)
+									},
+
+									data: {
+										payload: {
+											payload: "17",
+											id: messageData.roomId
+										},
+									}
+								};
+
+
+								config.isSendPushNotification && fcm.send(message, function (err, response) {
+									if (err) {
+										console.log("Something has gone wrong!");
+									} else {
+										console.log("Successfully sent with response: ", response);
+									}
+								});
+							});
+						});
+					}).catch((ex) => {
+						console.error(`Message Failed to Saved.`, ex);
+						connection.sendUTF(this.responseError(500, "message", "message All list", true));
+					});
+					// }catch(ex){
+					// 	console.log("Save message error:: ",ex);
+					// }
+
 				}
 
-				newMessageInfo["last_message"] = getLastMessage(messageData.message, messageData.message_type);
-				newMessageInfo["last_message_time"] = new Date();
+			} else if (requestData.type === 'updateMessage') {
 
-				console.log('MessageRequest:::: newMessageInfo:: ', newMessageInfo);
+				/*{
+		  "room": "608437be5c7a813378e455b5",
+		  "messageId": "60845847bf1e5b470dba2ccb",
+		  "message_content": {
+			"asdasd": "sdasd"
+		  },
+		  "request": "message",
+		  "type": "updateMessage",
+		  "message": "asdasdasd"
+		}*/
 
+				let rules = {
+					//room: 'required|string',
+					messageId: 'required|string',
+					// message: 'string',
+					// message_content: 'object'
+				};
+				let validation = new Validator(requestData, rules);
 
-				/* users: Object,
+				// validation.fails(); // true
+				// validation.passes(); // false
 
-	type: String, //group/individual
-	last_message: Object,
-	message_info: Object,
-	users_meta: Object,
-	userList: Array */
-				RoomModel.findOneAndUpdate({ _id: mongoose.Types.ObjectId(room._id) }, newMessageInfo, {
-					new: true,
-					useFindAndModify: false
-				}, (err, updatedRoom) => {
-					// console.log("RoomModel::: update", err, updatedRoom);
-					if (err) {
+				if (validation.fails()) {
+					connection.sendUTF(this.responseError(400, "updateMessage", validation.errors, true));
+				} else {
+					let dataToUpdate = {};
 
-					} else {
-						room.userList.forEach(user => {
-							if (cons.hasOwnProperty(user)) {
-								cons[user].sendUTF(responseSuccess(200, "roomsModified", updatedRoom, "Modified", true));
-							} else {
-								console.log('user is not login', user);
+					this.isFine(requestData.message_content) && (dataToUpdate["message_content"] = requestData.message_content);
+					this.isFine(requestData.message) && (dataToUpdate["message"] = requestData.message);
+					this.isFine(requestData.isDelete) && (dataToUpdate["message_type"] = "DELETE");
+
+					MessageModel.findOneAndUpdate({ _id: mongoose.Types.ObjectId(requestData.messageId) }, dataToUpdate, {
+						new: true,
+						useFindAndModify: false
+					}, (err, data) => {
+						console.warn("updateMessage", err, data);
+						if (data.roomId) {
+							RoomModel.find({ _id: mongoose.Types.ObjectId(data.roomId) }).exec((err, roomData) => {
+								// console.log("updateMessage", err, roomData);
+								if (roomData.length > 0) {
+									roomData[0].userList.forEach((userId) => {
+										// console.log("Sending Message To", userId, data);
+										this.sendMessageToUser(userId, this.responseSuccess(200, "updateMessage", this.formatTheMessages(data), "Modified", true))
+									});
+								}
+							});
+
+						}
+					});
+				}
+			}
+
+		}
+	}
+	createConnection = (requestData, connection) => {
+		// console.log("createConnection::", requestData);
+		if (requestData.type == "create") {
+			if (this.isFine(requestData.user_id)) {
+				let userId = requestData.user_id;
+
+				this.addConnectionToList(connection, userId);
+
+				// console.log("Connection Updated", cons);
+				connection.sendUTF(this.responseSuccess(200, "create_connection", {}, "Connection Established.", true));
+			} else {
+				connection.sendUTF(this.responseError(404, "create_connection", "Action/Path not found.", true));
+			}
+		}
+
+	}
+	blockUser = async (requestData, connection) => {
+
+		if (requestData.type == 'allBlockUser') {
+			if (!this.isFine(requestData.user)) {
+				connection.sendUTF(this.responseError(400, "allBlockUser", "user is required.", true));
+			} else {
+
+				let dataToUpdate = [{
+					"blockedBy": requestData.user,
+				}, {
+					"blockedTo": requestData.user
+				}];
+
+				BlockModel.find({
+					$or: dataToUpdate
+				}, (err, data) => {
+					console.warn("allBlockUser", err, data);
+					if (data) {
+						// console.log("allBlockUser", data);
+						/// Notify to all active user about that user status
+						connection.sendUTF(this.responseSuccess(200, "allBlockUser", data, "Block Status Changed", true));
+					}
+				});
+			}
+		} else if (requestData.type == 'blockUser') {
+			// console.log(requestData);
+
+			// blockedBy: String,
+			// blockedTo: String,
+
+			// login validation
+			if (!this.isFine(requestData.blockedBy) || !this.isFine(requestData.blockedTo)) {
+				connection.sendUTF(this.responseError(400, "blockUser", "BlockedBy and BlockedTo is required.", true));
+			} else {
+
+				let dataToUpdate = {
+					"blockedBy": requestData.blockedBy,
+					"blockedTo": requestData.blockedTo,
+					"isBlock": requestData.isBlock,
+
+				};
+
+				BlockModel.updateOne({
+					"blockedBy": requestData.blockedBy,
+					"blockedTo": requestData.blockedTo
+				}, dataToUpdate, { upsert: true }, (err, data) => {
+					console.warn(err, data);
+					if (data) {
+
+						BlockModel.find({
+							"blockedBy": requestData.blockedBy,
+							"blockedTo": requestData.blockedTo
+						}, (err, data) => {
+							console.warn("allBlockUser", err, data);
+							if (data) {
+								// console.log("allBlockUser", data);
+								// Notify to all active user about that user status
+								this.sendMessageToUser(requestData.blockedBy, this.responseSuccess(200, "blockUser", data[0], "Block Status Changed", true));
+								this.sendMessageToUser(requestData.blockedTo, this.responseSuccess(200, "blockUser", data[0], "Block Status Changed", true));
+
 							}
 						});
 					}
-
 				});
+			}
+		} else {
+			connection.sendUTF(this.responseError(404, "noActionInBlockUser", "Action/Path not found.", true));
+		}
+	}
+	acceptRequest = (request) => {
 
-				let formattedMessages = formatTheMessages(savedMessage);
+		let connection = request.accept(null, request.origin);
 
-				room.userList.forEach(user => {
-					if (cons.hasOwnProperty(user)) {
-						console.log('user is login', user);
-
-						cons[user].sendUTF(responseSuccess(201, "message", formattedMessages, "Data Found", true));
-
-					} else {
-
-						console.log('user is not login', user);
-					}
-				});
-
-				// let receverUserListId = room.userList.filter((element) => {
-				// 	return element != messageData.sender_id;
-				// });
+		console.log({ time: new Date(), message: ' Connection accepted room.' });
 
 
-				let fondData = { userId: { $in: room.userList } };
-				// { "userName": requestData.userName, "password": requestData.password };
-				UsersModel.find(fondData, (err, userList) => {
+		// user sent some message
+		connection.on('message', async (message) => {
+			// console.log("On new request received" + message.utf8Data);
 
-					let receiverUserList = userList.filter((element) => {
-						return element.userId != messageData.sender_id;
-					});
-					let senderUserDetail = userList.find((element) => {
-						return element.userId == messageData.sender_id;
-					});
+			try {
+				let requestData = JSON.parse(message.utf8Data);
+				if (requestData.request === 'room') {
+					await this.roomRequest(requestData, connection);
+				} else if (requestData.request === 'users') {
+					await this.allUser(requestData, connection);
+				} else if (requestData.request === 'login') {
+					await this.loginRequest(requestData, connection);
+				} else if (requestData.request === 'message') {
+					await this.messageRequest(requestData, connection);
+				} else if (requestData.request === 'create_connection') {
+					this.createConnection(requestData, connection);
+				} else if (requestData.request === 'block_user') {
+					await this.blockUser(requestData, connection);
+				} else if (requestData.request === 'current_location') {
+					await this.currentLocation(requestData, connection);
+				} else {
+					connection.sendUTF(this.responseError(404, "unknown", "No route found", true));
+				}
+			} catch (ex) {
+				console.log("acceptRequest", ex);
+				connection.sendUTF(this.responseError(500, "unknown", "Server error occurred", true));
+			}
 
-					let fcmTokens = receiverUserList.map((element) => {
-						return element.fcm_token;
-					});
-					console.log(`fcmTokens::: `, fcmTokens);
-
-					var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
-						// to: 'dmR-mgKqSuGymuJNQ5CsSR:APA91bFkMkphaI-La1rfnNOX1P8ND8aAzy5hjt4qRN4wqpGjWgfHLB3TbkSEhrQsf9v7_dDwlpv7l8fqwTiPOiHAEItKKS0gePF9hTN5nSfNqzBu1BlRGJC04W9BVXPaNEgjJS3ouBzV',
-
-						"registration_ids": fcmTokens,
-						// collapse_key: 'your_collapse_key',
-
-						notification: {
-							title: `New message from ${senderUserDetail.firstName}`,
-							body: getLastMessage(messageData.message, messageData.message_type)
-						},
-
-						data: {
-							payload: {
-								payload: "17",
-								id: messageData.roomId
-							},
-						}
-					};
-
-					/* fcm.send(message, function (err, response) {
-						if (err) {
-							console.log("Something has gone wrong!");
-						} else {
-							console.log("Successfully sent with response: ", response);
-						}
-					}); */
-
-				});
-
-
-			});
-		}).catch((ex) => {
-			console.error(`Message Failed to Saved.`, ex);
-			connection.sendUTF(responseError(500, "message", "message All list", true));
 		});
-		// }catch(ex){
-		// 	console.log("Save message error:: ",ex);
-		// }
 
-	} else if (requestData.type === 'updateMessage') {
+		// user disconnected
+		connection.on('close', (event) => {
+			console.log({
+				time: new Date(),
+				message: 'connection closed',
+				id: connection.uId,
+				event
+			});
 
-		let dataToUpdate = {
-			message_content: requestData.message_content
-			// receiver_id: "shubham"
-		};
-
-
-
-		MsgModel[`chat_${key}`].findOneAndUpdate({ _id: mongoose.Types.ObjectId(requestData.messageId) }, dataToUpdate, {
-			new: false,
-			useFindAndModify: false
-		}, (err, data) => {
-			console.warn("updateMessage", err, data);
-			if (data) {
-
+			this.removeConnectionFromList(connection);
+			let userId = connection.uId;
+			if (userId) {
+				this.updateOnlineStatus(userId, false);
 			}
 		});
 	}
-
-
 }
 
-function createConnection(requestData, connection) {
-	// console.log("createConnection::", requestData);
-	if (requestData.type == "create") {
-		if (isFine(requestData.user_id)) {
-			let userId = requestData.user_id;
-
-			connection['uId'] = userId;
-			cons[userId] = connection;
-
-			// console.log("Connection Updated", cons);
-			connection.sendUTF(responseSuccess(200, "create_connection", {}, "Connection Established.", true));
-		} else {
-			connection.sendUTF(responseError(404, "create_connection", "Action/Path not found.", true));
-		}
-	}
-
-}
-
-async function blockUser(requestData, connection) {
-
-	if (requestData.type == 'allBlockUser') {
-		if (!isFine(requestData.user)) {
-			connection.sendUTF(responseError(400, "allBlockUser", "user is required.", true));
-		} else {
-
-			let dataToUpdate = [{
-				"blockedBy": requestData.user,
-			}, {
-				"blockedTo": requestData.user
-			}];
-
-			BlockModel.find({
-				$or: dataToUpdate
-			}, (err, data) => {
-				console.warn("allBlockUser", err, data);
-				if (data) {
-					console.log("allBlockUser", data);
-					/// Notify to all active user about that user status
-					connection.sendUTF(responseSuccess(200, "allBlockUser", data, "Block Status Changed", true));
-				}
-			});
-		}
-	} else if (requestData.type == 'blockUser') {
-		console.log(requestData);
-
-		// blockedBy: String,
-		// blockedTo: String,
-
-		// login validation
-		if (!isFine(requestData.blockedBy) || !isFine(requestData.blockedTo)) {
-			connection.sendUTF(responseError(400, "blockUser", "BlockedBy and BlockedTo is required.", true));
-		} else {
-
-			let dataToUpdate = {
-				"blockedBy": requestData.blockedBy,
-				"blockedTo": requestData.blockedTo,
-				"isBlock": requestData.isBlock,
-
-			};
-
-			BlockModel.updateOne({
-				"blockedBy": requestData.blockedBy,
-				"blockedTo": requestData.blockedTo
-			}, dataToUpdate, { upsert: true }, (err, data) => {
-				console.warn(err, data);
-				if (data) {
-
-					BlockModel.find({
-						"blockedBy": requestData.blockedBy,
-						"blockedTo": requestData.blockedTo
-					}, (err, data) => {
-						console.warn("allBlockUser", err, data);
-						if (data) {
-							console.log("allBlockUser", data);
-							// Notify to all active user about that user status
-							cons[requestData.blockedBy] && cons[requestData.blockedBy].sendUTF(responseSuccess(200, "blockUser", data[0], "Block Status Changed", true));
-							cons[requestData.blockedTo] && cons[requestData.blockedTo].sendUTF(responseSuccess(200, "blockUser", data[0], "Block Status Changed", true));
-
-						}
-					});
-
-
-				}
-			});
-		}
-
-
-	} else {
-		connection.sendUTF(responseError(404, "noActionInBlockUser", "Action/Path not found.", true));
-	}
-}
-
-function acceptRequest(request) {
-
-	var connection = request.accept(null, request.origin);
-
-	console.log((new Date()) + ' Connection accepted room.');
-
-
-	// user sent some message
-	connection.on('message', async function (message) {
-		console.log("On new request receved" + message.utf8Data);
-
-		try {
-			let requestData = JSON.parse(message.utf8Data);
-			if (requestData.request == 'room') {
-				roomRequest(requestData, connection);
-			} else if (requestData.request == 'users') {
-				allUser(requestData, connection);
-			} else if (requestData.request == 'login') {
-				loginRequest(requestData, connection);
-			} else if (requestData.request == 'message') {
-				messageRequest(requestData, connection);
-			} else if (requestData.request == 'create_connection') {
-				createConnection(requestData, connection);
-			} else if (requestData.request == 'block_user') {
-				blockUser(requestData, connection);
-			} else {
-				connection.sendUTF(responseError(404, "unknown", "No route found", true));
-			}
-		} catch (ex) {
-			connection.sendUTF(responseError(500, "unknown", "No route found", true));
-		}
-
-	});
-
-	// user disconnected
-	connection.on('close', function (event) {
-		console.log((new Date()) + 'connection closed', connection.uId, event);
-
-		let userId = connection.uId;
-		if (userId) {
-			updateOnlineStatus(userId, false);
-		}
-	});
-}
-
-function originIsAllowed(request) {
-	// put logic here to detect whether the specified origin is allowed.
-	console.log(`origin:::   ${request.resourceURL.pathname}`);
-	acceptRequest(request);
-	/* 	if ("/v1/chat" === request.resourceURL.pathname) {
-			chatRequest(request);
-			return true;
-		} else if ("/v1/login" === request.resourceURL.pathname) {
-			loginRequest(request);
-			return true;
-		} else if ("/v1/room" === request.resourceURL.pathname) {
-			roomRequest(request);
-			return true;
-		} else if ("/v1/message" === request.resourceURL.pathname) {
-			console.log('request........', request.resourceURL.query.key);
-			messageRequest(request);
-			return true;
-		} else if ('/v1/register' === request.resourceURL.pathname) {
-			registerRequest(request);
-			return true;
-		} else if ('/v1/users' === request.resourceURL.pathname) {
-			console.log('all_users request');
-			allUser(request);
-			return true;
-		} */
-
-	return true
-
-}
-
-// This callback function is called every time someone
-// tries to connect to the WebSocket server
-wsServer.on('request', function (request) {
-	console.log((new Date()) + ' Connection from origin ' + request.origin + '.');
-
-
-	if (!originIsAllowed(request)) {
-		// Make sure we only accept requests from an allowed origin
-		request.reject();
-		console.log((new Date()) + ' Connection from origin ' + request.origin + ' rejected.');
-
-	}
-	// chatRequest(request);
-});
-
-
-mongoose.connect(dbUrl, {
+let ssChat = new SSChatReact();
+mongoose.connect(config.dbUrl, {
 	useNewUrlParser: true,
 	useUnifiedTopology: true,
 
-}, (err) => {
-	console.log('mongodb connected', err);
+}, (error) => {
+	console.log({ message: 'mongodb connected', error });
 })
